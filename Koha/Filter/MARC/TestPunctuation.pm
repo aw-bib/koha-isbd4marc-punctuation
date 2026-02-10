@@ -60,10 +60,9 @@ record.
 =cut
 
 sub _decorate_245 {
-
     my ($field) = @_;
-
     # simple chars _preceeding_ a subfield
+    # Note: they are _appended_ to the subfield just in front
     my %pchrs = (
         'b' => ' : ',
         'c' => ' / ',
@@ -77,16 +76,24 @@ sub _decorate_245 {
         's' => '. ',
     );
 
+    my @subfields = $field->subfields;
     my @new_subfields = ();
-    foreach my $subfield ( $field->subfields ) {
-        my ( $sf, $value ) = @$subfield;
-        if ( defined $value ) {
 
-            # Clean spaces at the end of a value
+    for my $i (0 .. $#subfields) {
+        my $subfield = $subfields[$i];
+        my ( $sf, $value ) = @$subfield;
+
+        if ( defined $value ) {
             $value =~ s/\s+$//;
 
-            if ( exists $pchrs{$sf} ) {
-                $value = $pchrs{$sf} . $value;
+            # Look ahead to the next subfield to determine what to append
+            my $next_subfield = $subfields[$i + 1] if $i < $#subfields;
+
+            if (defined $next_subfield) {
+                my ( $next_sf, $next_value ) = @$next_subfield;
+                if (exists $pchrs{$next_sf}) {
+                    $value = $value . $pchrs{$next_sf};
+                }
             }
 
             # media type needs to be enclosed
@@ -95,9 +102,6 @@ sub _decorate_245 {
             }
 
             push( @new_subfields, $sf, $value );
-
-            # TBD do titles always end with a `.` e.g.
-            # $value .= '.' unless $value =~ /[\.,;:\/?!]$/;
         }
     }
     return @new_subfields;
@@ -113,9 +117,7 @@ is part of the record.
 =cut
 
 sub _decorate_246_247 {
-
     my ($field) = @_;
-
     my %pchrs = (
         'b' => ' : ',
         'f' => ', ',
@@ -125,33 +127,36 @@ sub _decorate_246_247 {
         't' => ' = ',
     );
 
+    my @subfields = $field->subfields;
     my @new_subfields = ();
-    foreach my $subfield ( $field->subfields ) {
+
+    for my $i (0 .. $#subfields) {
+        my $subfield = $subfields[$i];
         my ( $sf, $value ) = @$subfield;
 
         if ( defined $value ) {
-            if ( exists $pchrs{$sf} ) {
-                $value = $pchrs{$sf} . $value;
+            # Look ahead to the next subfield to determine what to append
+            my $next_subfield = $subfields[$i + 1] if $i < $#subfields;
+            if (defined $next_subfield) {
+                my ( $next_sf, $next_value ) = @$next_subfield;
+                if (exists $pchrs{$next_sf}) {
+                    $value = $value . $pchrs{$next_sf};
+                }
             }
 
             if ( $sf eq 'i' ) {
-
                 # _append_ a char to i
                 $value .= ': ';
             }
             if ( $sf eq 'g' ) {
                 $value = '(' . $value . ')';
             }
-
             # media type needs to be enclosed
             if ( $sf eq 'h' ) {
                 $value = '[' . $value . ']';
             }
-
             push( @new_subfields, $sf, $value );
-
         }
-        # TBD do titles always end with a `.`?
     }
     return @new_subfields;
 }
@@ -165,35 +170,40 @@ called if no punctuation is part of the record.
 =cut
 
 sub _decorate_260 {
-
     my ($field) = @_;
-
     # simple chars _preceeding_ a subfield
     my %pchrs = (
-
         # 'a' => ' ; ',   # only for multiple $a
         'b' => ' : ',
         'c' => ', ',
-
         # 'f' => ' : ',
         # 'g' => ',  ',
         'r' => ' = ',
         't' => ' = ',
     );
-
     # simple chars _appended_ to a subfield
     my %achars = (
         '3' => ': ',
     );
 
-    my $lastsf        = '';
+    my @subfields = $field->subfields();
+    my $lastsf = '';
     my @new_subfields = ();
 
-    foreach my $subfield ( $field->subfields() ) {
+    for my $i (0 .. $#subfields) {
+        my $subfield = $subfields[$i];
         my ( $sf, $value ) = @$subfield;
 
         if ( defined $value ) {
+            my $next_subfield = $subfields[$i + 1] if $i < $#subfields;
 
+            if (defined $next_subfield) {
+                my ( $next_sf, $next_value ) = @$next_subfield;
+                if (exists $pchrs{$next_sf}) {
+                    $value = $value . $pchrs{$next_sf};
+                }
+            }
+            # Handle special cases for current subfield
             if ( ( $sf eq 'a' ) and ( $lastsf eq 'a' ) ) {
                 $value = ";  $value";
             }
@@ -205,7 +215,6 @@ sub _decorate_260 {
             if ( $sf eq 'e' ) {
                 $value = " ($value ";
             }
-
             if ( $sf eq 'f' ) {
                 if ( $lastsf eq 'e' ) {
                     $value = " : $value";
@@ -213,7 +222,6 @@ sub _decorate_260 {
                     $value = " ($value";
                 }
             }
-
             if ( $sf eq 'g' ) {
                 if ( $lastsf ne 'f' ) {
                     $value = ", ($value)";
@@ -223,21 +231,13 @@ sub _decorate_260 {
             }
 
             $lastsf = $sf;
-
             if ( $sf eq 'q' ) {
                 $value = "($value)";
             }
 
-            if ( exists $pchrs{$sf} ) {
-                $value = $pchrs{$sf} . $value;
-            }
-
-            # FIXME something seems wrong here, however $3 is
-            # not used by Koha
-            # if ( exists $achrs{$sf} ) {
-            #     $value = $value . $achrs{$sf};
+            # if ( exists $achars{$sf} ) {
+            #     $value = $value . $achars{$sf};
             # }
-
             push( @new_subfields, $sf, $value );
         }
     }
