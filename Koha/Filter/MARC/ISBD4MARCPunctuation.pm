@@ -1,4 +1,4 @@
-package Koha::Filter::MARC::TestPunctuation;
+package Koha::Filter::MARC::ISBD4MARCPunctuation;
 
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -21,13 +21,13 @@ use MARC::Field;
 
 use base qw(Koha::RecordProcessor::Base);
 
-our $NAME = 'TestPunctuation';
+our $NAME = 'ISBD4MARCPunctuation';
 our $VERSION = '0.01';
 
 
 =head1 NAME
 
-Koha::Filter::MARC::Punctuation - Automatically add punctuation to
+Koha::Filter::MARC::ISBD4MARCPunctuation - Automatically add punctuation to
 Marc records if the leader specifies they were catalogued without it.
 
 Documentation for proper punctuation:

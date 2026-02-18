@@ -1,4 +1,4 @@
-package Koha::Plugin::HKS3::TestPunctuation;
+package Koha::Plugin::HKS3::ISBD4MARCPunctuation;
 
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -21,10 +21,10 @@ use base qw(Koha::Plugins::Base);
 our $VERSION = "0.01";
 
 our $metadata = {
-    name            => 'Test Punctuation',
-    author          => 'HKS3 - Mark Hofstetter',
-    description     => 'Test punctuation filter hook for XSLT display',
-    namespace       => 'testpunctuation',
+    name            => 'ISBD4MARC Punctuation',
+    author          => 'Andreas Wagner, HKS3 - Mark Hofstetter',
+    description     => 'Add ISBD punctuation during XSLT display processing',
+    namespace       => 'isbd4marcpunctuation',
     date_authored   => '2026-02-06',
     date_updated    => '2026-02-06',
     minimum_version => '23.11',
@@ -48,7 +48,7 @@ sub xslt_record_processor_filters {
     my ( $self, $params ) = @_;
 
     my $filters = $params->{filters} || [];
-    push @$filters, 'TestPunctuation';
+    push @$filters, 'ISBD4MARCPunctuation';
 
     return;
 }
