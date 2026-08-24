@@ -21,229 +21,316 @@ use MARC::Field;
 
 use base qw(Koha::RecordProcessor::Base);
 
-our $NAME = 'ISBD4MARCPunctuation';
-our $VERSION = '0.01';
-
+our $NAME    = 'ISBD4MARCPunctuation';
+our $VERSION = '0.02';
 
 =head1 NAME
 
-Koha::Filter::MARC::ISBD4MARCPunctuation - Automatically add punctuation to
-Marc records if the leader specifies they were catalogued without it.
+Koha::Filter::MARC::ISBD4MARCPunctuation - Automatically add ISBD punctuation
+to MARC21 records if the leader specifies they were catalogued without it.
 
 Documentation for proper punctuation:
 https://www.loc.gov/aba/pcc/documents/isbdmarc2016.pdf
 
 =head1 DESCRIPTION
 
-If the Marc leader 18 specifies, that the record was catalogued
-without punctuation add the proper punctuation chars to the individual
-fields before passing the record on to fruther processing. Once this
-filter is applied it should be safe for further steps to assume that
-the record holds Marc punctuation. (The records in the database are
-_not_ changed.)
+If the MARC leader byte 18 specifies that the record was catalogued
+without punctuation (values C<n> or C<c>), this filter injects the
+proper ISBD punctuation into the individual fields before passing the
+record on to further processing. The records in the database are I<not>
+changed.
 
-Trigger to add punctuation: leader 18 is either `n` or `c`.
-
-Currently handled fields:
-
-- 245
-- 246
-- 247
+The punctuation rules are defined in a static hash and the core
+loop in C<_decorate_field> handles them generically. Adding support
+for a new field is as simple as adding an entry to the C<RULES>
+constant.
 
 =cut
 
-=head2 _decorate_245
+=head1 PUNCTUATION RULES
 
-Add punctuation to MARC field 245 (title statement). The function
-assumes that it is only called if no punctuation is part of the
-record.
-=cut
+Each rule hash supports the following keys:
 
-sub _decorate_245 {
-    my ($field) = @_;
-    # simple chars _preceeding_ a subfield
-    # Note: they are _appended_ to the subfield just in front
-    my %pchrs = (
-        'b' => ' : ',
-        'c' => ' / ',
-        'd' => ' ; ',
-        'e' => '. ',
-        'f' => ', ',
-        'g' => ', ',
-        'k' => ' : ',
-        'n' => '. ',
-        'p' => ', ',
-        's' => '. ',
-    );
+=over
 
-    my @subfields = $field->subfields;
-    my @new_subfields = ();
+=item C<pchrs>
 
-    for my $i (0 .. $#subfields) {
-        my $subfield = $subfields[$i];
-        my ( $sf, $value ) = @$subfield;
+Hashref of preceding characters. Key is the I<next> subfield tag,
+value is the punctuation to append to the I<current> subfield.
+E.g. C<< { b => ' : ' } >> means "if the next subfield is C<$b>,
+append ' : ' to the current subfield."
 
-        if ( defined $value ) {
-            $value =~ s/\s+$//;
+=item C<post>
 
-            # Look ahead to the next subfield to determine what to append
-            my $next_subfield = $subfields[$i + 1] if $i < $#subfields;
+Hashref of always-appended suffixes. The value is appended to the
+current subfield after all other processing. E.g. C<< { 3 => ': ' } >>
 
-            if (defined $next_subfield) {
-                my ( $next_sf, $next_value ) = @$next_subfield;
-                if (exists $pchrs{$next_sf}) {
-                    $value = $value . $pchrs{$next_sf};
-                }
-            }
+=item C<wrap>
 
-            # media type needs to be enclosed
-            if ( $sf eq 'h' ) {
-                $value = '[' . $value . ']';
-            }
+Hashref of wrapping pairs. Key is the subfield tag, value is an
+arrayref of C<[prefix, suffix]>. E.g. C<< { h => [ '[', ']' ] } >>
+wraps C<$h> content in square brackets.
 
-            push( @new_subfields, $sf, $value );
-        }
-    }
-    return @new_subfields;
-}
+=item C<cb_pre>
 
+Optional callback run I<before> wrapping and look-ahead logic.
+Receives C<< ($sf, $value, $i, \@subfields, \$last_sf) >>.
+Use this for grouping logic (e.g. C<$e/$f/$g> in 260).
+Must return the (possibly modified) value.
 
-=head2 _decorate_246_247
+=item C<cb_post>
 
-Add punctuation to MARC field 246 (varying form title), 247 (former
-title). The function assumes that it is only called if no punctuation
-is part of the record.
+Optional callback run I<after> wrapping but I<before> look-ahead.
+Same signature as C<cb_pre>.
+
+=item C<use_rules>
+
+Alias to another tag's rules. Only one level of indirection is
+resolved. E.g. C<< { use_rules => 246 } >> means "use the same
+rules as field 246."
+
+=back
 
 =cut
 
-sub _decorate_246_247 {
-    my ($field) = @_;
-    my %pchrs = (
-        'b' => ' : ',
-        'f' => ', ',
-        'n' => '. ',
-        'q' => ', ',
-        'r' => ' = ',
-        't' => ' = ',
-    );
+use constant RULES => {
 
-    my @subfields = $field->subfields;
-    my @new_subfields = ();
+    # 245 – Title Statement
+    # ISBD punct: $a : $b / $c ; $d . $e , $f , $g [h] . $n , $p : $k . $s
+    245 => {
+        pchrs => {
+            b => ' : ',
+            c => ' / ',
+            d => ' ; ',
+            e => '. ',
+            f => ', ',
+            g => ', ',
+            k => ' : ',
+            n => '. ',
+            p => ', '
+            , # Could be `, ` or `. ` depending on context. Pick `, ` as more likely
+            q => ', ',
+            r => ' = ',
+            s => '. ',
+            t => ' = ',
 
-    for my $i (0 .. $#subfields) {
-        my $subfield = $subfields[$i];
-        my ( $sf, $value ) = @$subfield;
+            # Missing subfields:
+            # o: puncuation is context dependend and the context is
+            #    not encoded in MARC.
+            #
+        },
+        wrap => { h => [ '[', ']' ] },
+    },
 
-        if ( defined $value ) {
-            # Look ahead to the next subfield to determine what to append
-            my $next_subfield = $subfields[$i + 1] if $i < $#subfields;
-            if (defined $next_subfield) {
-                my ( $next_sf, $next_value ) = @$next_subfield;
-                if (exists $pchrs{$next_sf}) {
-                    $value = $value . $pchrs{$next_sf};
-                }
-            }
+    # 246 – Varying Form of Title
+    # 247 – Former Title
+    # ISBD punct: $i: $a : $b / $c . $n , $p , $f = $r
+    246 => {
+        pchrs => {
+            b => ' : ',
+            f => ', ',
+            n => '. ',
+            p => ', ',
+            q => ', ',
+            r => ' = ',
+            t => ' = ',
+        },
+        wrap   => { g => [ '(', ')' ], h => [ '[', ']' ] },
+        cb_pre => sub {
+            my ( $sf, $value ) = @_;
+            return $sf eq 'i' ? "$value: " : $value;
+        },
+    },
 
-            if ( $sf eq 'i' ) {
-                # _append_ a char to i
-                $value .= ': ';
-            }
-            if ( $sf eq 'g' ) {
-                $value = '(' . $value . ')';
-            }
-            # media type needs to be enclosed
-            if ( $sf eq 'h' ) {
-                $value = '[' . $value . ']';
-            }
-            push( @new_subfields, $sf, $value );
-        }
-    }
-    return @new_subfields;
-}
+  # 247 – Former Title
+  # ISBD punct: $a : $b / $c . $n , $p , $f = $r (no $i)
+  # Similar to 246 but has no $i subfield, and has $x (ISSN) with no punctuation
+    247 => {
+        pchrs => {
+            b => ' : ',
+            f => ', ',
+            n => '. ',
+            p => ', ',
+            q => ', ',
+            r => ' = ',
+            t => ' = ',
+        },
+        wrap => { g => [ '(', ')' ], h => [ '[', ']' ] },
 
+        # NOTE: No cb_pre — 247 has no $i subfield
+    },
 
-=head2 _decorate_260
+    # 260 – Publication, Distribution, etc. (Imprint)
+    # ISBD punct: $a ; $a : $b , $c ( $e : $f , $g ) (q)
+    # Note: $e/$f/$g form a grouped parenthetical: ($e : $f , $g)
+    260 => {
+        pchrs => {
+            b => ' : ',
+            c => ', ',
+            r => ' = ',
+            t => ' = ',
+        },
+        post   => { 3 => ': ' },
+        wrap   => { q => [ '(', ')' ] },
+        cb_pre => \&_decorate_260_pre,
+    },
 
-Add punctuation to MARC field 260. The function assumes that it is only
-called if no punctuation is part of the record.
-
-=cut
-
-sub _decorate_260 {
-    my ($field) = @_;
-    # simple chars _preceeding_ a subfield
-    my %pchrs = (
-        # 'a' => ' ; ',   # only for multiple $a
-        'b' => ' : ',
-        'c' => ', ',
-        # 'f' => ' : ',
-        # 'g' => ',  ',
-        'r' => ' = ',
-        't' => ' = ',
-    );
-    # simple chars _appended_ to a subfield
-    my %achars = (
-        '3' => ': ',
-    );
-
-    my @subfields = $field->subfields();
-    my $lastsf = '';
-    my @new_subfields = ();
-
-    for my $i (0 .. $#subfields) {
-        my $subfield = $subfields[$i];
-        my ( $sf, $value ) = @$subfield;
-
-        if ( defined $value ) {
-            my $next_subfield = $subfields[$i + 1] if $i < $#subfields;
-
-            if (defined $next_subfield) {
-                my ( $next_sf, $next_value ) = @$next_subfield;
-                if (exists $pchrs{$next_sf}) {
-                    $value = $value . $pchrs{$next_sf};
-                }
-            }
-            # Handle special cases for current subfield
-            if ( ( $sf eq 'a' ) and ( $lastsf eq 'a' ) ) {
-                $value = ";  $value";
-            }
-            if ( ( $sf eq 'a' ) and ( $lastsf eq 'b' ) ) {
+    # 264 – Production, Publication, Distribution, Manufacture, and Copyright
+    # Similar to 260 but without $e/$f/$g grouping
+    264 => {
+        pchrs => {
+            b => ' : ',
+            c => ', ',
+            r => ' = ',
+            t => ' = ',
+        },
+        post   => { 3 => ': ' },
+        wrap   => { q => [ '(', ')' ] },
+        cb_pre => sub {
+            my ( $sf, $value, $i, $subfields, $last_sf_ref ) = @_;
+            my $last_sf = $$last_sf_ref;
+            if ( $sf eq 'a' and $last_sf eq 'a' ) {
                 $value = " ; $value";
             }
+            if ( $sf eq 'a' and $last_sf eq 'b' ) {
+                $value = " ; $value";
+            }
+            return $value;
+        },
+    },
+};
 
-            # for $e: assume that we always have either $f or $g
-            if ( $sf eq 'e' ) {
-                $value = " ($value ";
-            }
-            if ( $sf eq 'f' ) {
-                if ( $lastsf eq 'e' ) {
-                    $value = " : $value";
-                } else {
-                    $value = " ($value";
-                }
-            }
-            if ( $sf eq 'g' ) {
-                if ( $lastsf ne 'f' ) {
-                    $value = ", ($value)";
-                } else {
-                    $value = ", $value)";
-                }
-            }
+=head2 _decorate_field
 
-            $lastsf = $sf;
-            if ( $sf eq 'q' ) {
-                $value = "($value)";
-            }
+Generic field decorator. Takes a MARC::Field object and a rules
+hashref (as defined in C<RULES>). Returns a list of subfield
+key/value pairs suitable for constructing a new field.
 
-            # if ( exists $achars{$sf} ) {
-            #     $value = $value . $achars{$sf};
-            # }
-            push( @new_subfields, $sf, $value );
+=cut
+
+sub _decorate_field {
+    my ( $field, $rules ) = @_;
+
+    # Resolve use_rules alias (single level)
+    if ( my $alias = $rules->{use_rules} ) {
+        $rules = RULES->{$alias};
+    }
+
+    my @subfields     = $field->subfields;
+    my @new_subfields = ();
+    my $last_sf       = '';
+
+    for my $i ( 0 .. $#subfields ) {
+        my ( $sf, $value ) = @{ $subfields[$i] };
+        next unless defined $value;
+        $value =~ s/\s+$//;
+
+        # 1) Pre-callback (for complex grouping / prefixing)
+        if ( my $cb = $rules->{cb_pre} ) {
+            $value = $cb->( $sf, $value, $i, \@subfields, \$last_sf );
         }
+
+        # 2) Wrap (brackets / parentheses)
+        if ( my $wrap = $rules->{wrap}{$sf} ) {
+            $value = $wrap->[0] . $value . $wrap->[1];
+        }
+
+        # 3) Post-callback
+        if ( my $cb = $rules->{cb_post} ) {
+            $value = $cb->( $sf, $value, $i, \@subfields, \$last_sf );
+        }
+
+        # 4) Look-ahead: append punctuation before the next subfield
+        my $next = $subfields[ $i + 1 ];
+        if ( defined $next ) {
+            my ($next_sf) = @$next;
+            if ( exists $rules->{pchrs}{$next_sf} ) {
+                $value .= $rules->{pchrs}{$next_sf};
+            }
+        }
+
+        # 5) Always-append suffix
+        if ( exists $rules->{post}{$sf} ) {
+            $value .= $rules->{post}{$sf};
+        }
+
+        push @new_subfields, $sf, $value;
+        $last_sf = $sf;
     }
     return @new_subfields;
 }
 
+=head2 _decorate_260_pre
+
+Pre-callback for field 260. Handles the complex grouping logic
+for C<$e> (producer), C<$f> (producer place), and C<$g>
+(production date) which form a parenthetical group together.
+
+Also handles multiple C<$a> and C<$a> after C<$b> for 260.
+
+=cut
+
+sub _decorate_260_pre {
+    my ( $sf, $value, $i, $subfields, $last_sf_ref ) = @_;
+    my $last_sf = $$last_sf_ref;
+
+    # Multiple $a: separate with " ; "
+    if ( $sf eq 'a' and $last_sf eq 'a' ) {
+        $value = " ; $value";
+    }
+
+    # $a after $b: separate with " ; "
+    if ( $sf eq 'a' and $last_sf eq 'b' ) {
+        $value = " ; $value";
+    }
+
+    # $e/$f/$g grouping: open parenthetical
+    if ( $sf eq 'e' ) {
+        $value = " ($value ";
+    }
+    if ( $sf eq 'f' ) {
+        if ( $last_sf eq 'e' ) {
+            $value = " : $value";
+        }
+        else {
+            $value = " ($value";
+        }
+    }
+    if ( $sf eq 'g' ) {
+        if ( $last_sf ne 'f' ) {
+            $value = ", ($value)";
+        }
+        else {
+            $value = ", $value)";
+        }
+    }
+
+    return $value;
+}
+
+=head2 log
+
+Logging hook. By default prints to STDERR via C<warn>. In Koha
+this can be overridden (or the method can be monkey-patched) to
+use Koha's internal logging. Set C<$ENV{ISBD_DEBUG}> to enable
+debug output.
+
+=cut
+
+sub log {
+    my ( $self, $level, $message ) = @_;
+    return unless $ENV{ISBD_DEBUG} or $level eq 'error';
+    warn "[ISBD-$level] $message\n";
+}
+
+=head2 filter
+
+Main filter entry point. Called by Koha's record processor
+pipeline. Checks the leader byte 18 and, if punctuation was
+omitted, iterates over all fields and applies the rules defined
+in C<RULES>.
+
+=cut
 
 sub filter {
     my ( $self, $record ) = @_;
@@ -253,51 +340,34 @@ sub filter {
     my $leader = $record->leader();
 
     # Add automatic punctuation only if the record requests it
-    my $punctuation_omitted =
-        ( ( substr( $leader, 18, 1 ) eq 'c' ) or ( substr( $leader, 18, 1 ) eq 'n' ) );
+    my $leader18            = substr( $leader, 18, 1 );
+    my $punctuation_omitted = ( $leader18 eq 'c' or $leader18 eq 'n' );
 
     if ($punctuation_omitted) {
-        my @new_subfields = ();
+        $self->log( 'debug', "Processing record (leader18=$leader18)" );
+
         foreach my $field ( $record->fields ) {
-            @new_subfields = ();
+            my $tag   = $field->tag();
+            my $rules = RULES->{$tag};
+            next unless $rules;
 
-            # Process the implemented filters
+            $self->log( 'debug', "  Applying rules for field $tag" );
 
-            # 24x - Title fields
-            if ( $field->tag() eq "245" ) {
-                @new_subfields = _decorate_245($field);
-            }
+            my @new_subfields = _decorate_field( $field, $rules );
 
-            if (   ( $field->tag() eq "246" )
-                or ( $field->tag() eq "247" ) )
-            {
-                @new_subfields = _decorate_246_247($field);
-            }
-
-            # 260 – Publication, Distribution, etc. (Imprint)
-            if ( $field->tag() eq '260' ) {
-                @new_subfields = _decorate_260($field);
-            }
-
-            # 264 – Production, Publication, Distribution, Manufacture, and Copyright Notice
-            # 264 is similar to 260, but does not hold some subfields
-            if ( $field->tag() eq '264' ) {
-                @new_subfields = _decorate_260($field);
-            }
-
-            # If filtered, replace the field content
             if (@new_subfields) {
+                $self->log( 'debug', "    Old: " . $field->as_string() );
                 $field->replace_with(
                     MARC::Field->new(
-                        $field->tag(),
-                        $field->indicator(1),
-                        $field->indicator(2),
-                        @new_subfields
+                        $field->tag(),        $field->indicator(1),
+                        $field->indicator(2), @new_subfields
                     )
                 );
+                $self->log( 'debug', "    New: " . $field->as_string() );
             }
         }
     }
+
     return $record;
 }
 
