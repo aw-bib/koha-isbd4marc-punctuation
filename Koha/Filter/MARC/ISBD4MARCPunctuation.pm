@@ -198,18 +198,45 @@ use constant RULES => {
             return $value;
         },
     },
+
+    # 490 – Series Statement
+    # ISBD punct: $a : $b / $c ; $d (. $n , $p) ; $v , $x = $r = $t = $y
+    # $3 gets ': ' appended via post, $l wrapped in (...)
+    490 => {
+        pchrs => {
+            b => ' : ',
+            c => ' / ',
+            d => ' ; ',
+            n => '. ',
+            p => ', ',    # Could be `. ` or `, ` depending on context
+            r => ' = ',
+            t => ' = ',
+            v => ' ; ',
+            x => ', ',
+            y => ' = ',
+        },
+        post => { 3 => ': ' },
+        wrap => { l => [ '(', ')' ] },
+    },
 };
 
 =head2 _decorate_field
 
-Generic field decorator. Takes a MARC::Field object and a rules
-hashref (as defined in C<RULES>). Returns a list of subfield
+Generic field decorator. Takes a MARC::Field object, a rules
+hashref (as defined in C<RULES>), and an optional attachment mode
+(C<'postfix'> or C<'prefix'>). Returns a list of subfield
 key/value pairs suitable for constructing a new field.
+
+In C<'postfix'> mode (default), punctuation is appended to the
+I<current> subfield (look-ahead). In C<'prefix'> mode, punctuation
+is prepended to the I<next> subfield (look-behind), which prevents
+orphaned punctuation when subfields like C<245 $c> are not displayed.
 
 =cut
 
 sub _decorate_field {
-    my ( $field, $rules ) = @_;
+    my ( $field, $rules, $attach_mode ) = @_;
+    $attach_mode //= 'postfix';
 
     # Resolve use_rules alias (single level)
     if ( my $alias = $rules->{use_rules} ) {
@@ -219,11 +246,18 @@ sub _decorate_field {
     my @subfields     = $field->subfields;
     my @new_subfields = ();
     my $last_sf       = '';
+    my $pending       = '';
 
     for my $i ( 0 .. $#subfields ) {
         my ( $sf, $value ) = @{ $subfields[$i] };
         next unless defined $value;
         $value =~ s/\s+$//;
+
+        # 0) Prefix mode: prepend pending punctuation from previous subfield
+        if ( $attach_mode eq 'prefix' && $pending ) {
+            $value   = $pending . $value;
+            $pending = '';
+        }
 
         # 1) Pre-callback (for complex grouping / prefixing)
         if ( my $cb = $rules->{cb_pre} ) {
@@ -240,12 +274,18 @@ sub _decorate_field {
             $value = $cb->( $sf, $value, $i, \@subfields, \$last_sf );
         }
 
-        # 4) Look-ahead: append punctuation before the next subfield
+        # 4) Punctuation attachment based on mode
         my $next = $subfields[ $i + 1 ];
         if ( defined $next ) {
             my ($next_sf) = @$next;
             if ( exists $rules->{pchrs}{$next_sf} ) {
-                $value .= $rules->{pchrs}{$next_sf};
+                my $punct = $rules->{pchrs}{$next_sf};
+                if ( $attach_mode eq 'prefix' ) {
+                    $pending = $punct;
+                }
+                else {
+                    $value .= $punct;
+                }
             }
         }
 
@@ -353,7 +393,7 @@ sub filter {
 
             $self->log( 'debug', "  Applying rules for field $tag" );
 
-            my @new_subfields = _decorate_field( $field, $rules );
+            my @new_subfields = _decorate_field( $field, $rules, 'prefix' );
 
             if (@new_subfields) {
                 $self->log( 'debug', "    Old: " . $field->as_string() );
