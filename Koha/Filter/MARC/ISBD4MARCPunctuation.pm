@@ -508,7 +508,16 @@ sub filter {
 
             $self->log( 'debug', "  Applying rules for field $tag" );
 
-            my @new_subfields = _decorate_field( $field, $rules, 'prefix' );
+            # Default to postfix addition:
+            # = add punctuation to the end of a subfield depending on
+            # the subsequent subfield.
+            #
+            # prefix notation would also be possible and add the
+            # punctuation to the beginning of a subfield depending on
+            # the previous subfield. This might be advantageous in
+            # case a subfield is not rendered in display to avoid
+            # dangling punctuation.
+            my @new_subfields = _decorate_field( $field, $rules, 'postfix' );
 
             if (@new_subfields) {
                 $self->log( 'debug', "    Old: " . $field->as_string() );
