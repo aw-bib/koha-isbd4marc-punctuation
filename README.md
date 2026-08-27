@@ -24,6 +24,8 @@ Trigger condition:
 Implemented fields:
 
 - `020`: ISBD
+- `100`: Main Entry-Personal Name
+- `700`: Added Entry-Personal Name
 - `245`: Title Statement
 - `246`: Varying Form of Title
 - `247`: Former Title
@@ -34,6 +36,8 @@ Implemented fields:
 - `502`: Dissertation Note
 - `505`: Formatted Contents Note
 - `520`: Summary
+- `600`: Subject Added Entry-Personal Name
+- `800`: Series Added Entry-Personal Name
 
 
 ### Why it does this

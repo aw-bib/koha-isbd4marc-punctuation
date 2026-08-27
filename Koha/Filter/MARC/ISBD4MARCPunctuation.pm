@@ -262,6 +262,7 @@ use constant RULES => {
         wrap => { h => [ '(', ')' ] },
     },
 
+    # 490 - Series statement
     # $3 gets ': ' appended via post, $l wrapped in (...)
     490 => {
         pchrs => {
@@ -269,7 +270,7 @@ use constant RULES => {
             c => ' / ',
             d => ' ; ',
             n => '. ',
-            p => ', ',     # Could be `. ` or `, ` depending on context
+            p => ', ',    # Could be `. ` or `, ` depending on context
             r => ' = ',
             t => ' = ',
             v => ' ; ',
@@ -331,6 +332,98 @@ use constant RULES => {
         pchrs => {
             z => ' -- ',
         },
+    },
+
+    # 100 – Main Entry – Personal Name
+    # Also covers 700 (Added Entry) via use_rules
+    # ISBD separating punctuation between subfields:
+    #   $a alone: no change (inversion comma already in $a)
+    #   $b:  '. '  $c:  ', '  $d:  ', '  $e:  ', '  $f:  '. '
+    #   $j:  ', '  $k:  '. '  $l:  '. '  $m:  ', '  $n:  ', '
+    #   $o:  '; '  $p:  '. '  $q:  '()'  $r:  ', '  $s:  '. '
+    #   $t:  '. '  $v:  ' ;'  (only for 800)
+    #   $i: '' (ends with ':' via cataloger input; we leave it)
+    #
+    # Note: $a/$h split (spec section 5.2) is NOT in use yet.
+    # Real records have $a with inversion comma (e.g. "Morgan, Robert").
+    # We pass $a through unchanged and only add separating punctuation
+    # between subfields.
+    '100' => {
+        pchrs => {
+            b => '. ',
+            c => ', ',
+            d => ', ',
+            e => ', ',
+            f => '. ',
+            j => ', ',
+            k => '. ',
+            l => '. ',
+            m => ', ',
+            n => ', ',
+            o => '; ',
+            p => '. ',
+            r => ', ',
+            s => '. ',
+            t => '. ',
+        },
+        wrap => {
+            q => [ '(', ')' ],
+        },
+    },
+
+    # 700 – Added Entry – Personal Name
+    # Identical structure to 100
+    '700' => {
+        use_rules => '100',
+    },
+
+  # 600 – Subject Added Entry – Personal Name
+  # Same pchrs/wrap as 100 but:
+  #   - $v (form subdivision) gets NO punctuation (deliberately excluded)
+  #   - $x, $y, $z (general/chronological/geographic subdivisions) also excluded
+    '600' => {
+        pchrs => {
+            b => '. ',
+            c => ', ',
+            d => ', ',
+            e => ', ',
+            f => '. ',
+            j => ', ',
+            k => '. ',
+            l => '. ',
+            m => ', ',
+            n => ', ',
+            o => '; ',
+            p => '. ',
+            r => ', ',
+            s => '. ',
+            t => '. ',
+        },
+        wrap => { q => [ '(', ')' ] },
+    },
+
+    # 800 – Series Added Entry – Personal Name
+    # Same as 100 but $v (volume) gets ' ;' punctuation (600 differs)
+    '800' => {
+        pchrs => {
+            b => '. ',
+            c => ', ',
+            d => ', ',
+            e => ', ',
+            f => '. ',
+            j => ', ',
+            k => '. ',
+            l => '. ',
+            m => ', ',
+            n => ', ',
+            o => '; ',
+            p => '. ',
+            r => ', ',
+            s => '. ',
+            t => '. ',
+            v => ' ;',
+        },
+        wrap => { q => [ '(', ')' ] },
     },
 
 };
