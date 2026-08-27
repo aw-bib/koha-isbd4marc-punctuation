@@ -23,11 +23,18 @@ Trigger condition:
 
 Implemented fields:
 
-- `245`
-- `246`
-- `247`
-- `260`
-- `264`
+- `020`: ISBD
+- `245`: Title Statement
+- `246`: Varying Form of Title
+- `247`: Former Title
+- `260`: Publication, Distribution, etc. (Imprint)
+- `264`: Production, Publication, Distribution, Manufacture, and Copyright Notice
+- `300`: Physical Description
+- `490`: Series Statement
+- `502`: Dissertation Note
+- `505`: Formatted Contents Note
+- `520`: Summary
+
 
 ### Why it does this
 
