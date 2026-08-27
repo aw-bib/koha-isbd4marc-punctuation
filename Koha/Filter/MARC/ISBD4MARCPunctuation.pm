@@ -426,6 +426,91 @@ use constant RULES => {
         wrap => { q => [ '(', ')' ] },
     },
 
+# 110 – Main Entry – Corporate Name
+# Also covers 710 (Added Entry) via use_rules
+# Also 610 (Subject) and 810 (Series) with the usual subdivision differences.
+# Full ISBDX10 rules (spec §5.3):
+#   $a:  no change          $b:  '. '   $c:  ', '  $d:  ', '  $e:  ', '
+#   $p:  ', '   $r:  ', '   $s:  '. '   $t:  '. '
+#   $g:  '()'  (qualifying information) — wrap
+#   compound keys: cc => '; '  dc => ' : '  nd => ' : ' (inside n/d/c group)
+#   $n, $o, $u, $x, $y, $z: no punctuation
+#
+# $n/$d/$c (meeting number / date / location) are grouped in one pair of
+# parentheses by _decorate_x10_pre (matches enclose_in_parentheses('n','d','c')).
+#
+# KNOWN GAPS / DECISIONS:
+#   - $u (affiliation): NO punctuation, following spec §5.3 (N/A). NOTE for
+#     reviewers: 'u' => '. ' might be possible as well; we
+#     chose to follow the PDF (no punct). Revisit if real data shows a need.
+#   - $n: deliberately NOT individually wrapped  to avoid double-paren on
+#     the $n/$d/$c group (cb_pre already groups them).
+#   - MULTIPLE $g (e.g. $g 1981-1989 $g Reagan): each $g gets its own (),
+#     i.e. (a)(b), NOT the ideal (a : b). Left as a known imperfection.
+    '110' => {
+        pchrs => {
+            b => '. ',
+            e => ', ',
+            p => ', ',
+            r => ', ',
+            s => '. ',
+            t => '. ',
+
+            # compound keys (preceded subfield + followed subfield), take
+            # precedence over the single next_sf keys in _decorate_field
+            cc => ' ; ',
+            dc => ' : ',
+            nd => ' : ',
+        },
+        wrap   => { g => [ ' (', ')' ] },
+        cb_pre => \&_decorate_x10_pre,
+    },
+
+    # 710 – Added Entry – Corporate Name
+    # Identical structure to 110
+    '710' => {
+        use_rules => '110',
+    },
+
+  # 610 – Subject Added Entry – Corporate Name
+  # Same pchrs/wrap as 110 but:
+  #   - $v (form subdivision) gets NO punctuation (deliberately excluded)
+  #   - $x, $y, $z (general/chronological/geographic subdivisions) also excluded
+    '610' => {
+        pchrs => {
+            b  => '. ',
+            e  => ', ',
+            p  => ', ',
+            r  => ', ',
+            s  => '. ',
+            t  => '. ',
+            cc => '; ',
+            dc => ' : ',
+            nd => ' : ',
+        },
+        wrap   => { g => [ ' (', ')' ] },
+        cb_pre => \&_decorate_x10_pre,
+    },
+
+    # 810 – Series Added Entry – Corporate Name
+    # Same as 110 but $v (volume) gets ' ;' punctuation (610 differs)
+    '810' => {
+        pchrs => {
+            b  => '. ',
+            e  => ', ',
+            p  => ', ',
+            r  => ', ',
+            s  => '. ',
+            t  => '. ',
+            v  => ' ;',
+            cc => '; ',
+            dc => ' : ',
+            nd => ' : ',
+        },
+        wrap   => { g => [ ' (', ')' ] },
+        cb_pre => \&_decorate_x10_pre,
+    },
+
 };
 
 =head2 _decorate_field
@@ -483,11 +568,20 @@ sub _decorate_field {
         }
 
         # 4) Punctuation attachment based on mode
+        # Look up punctuation by COMPOUND key (sf . next_sf) first, falling
+        # back to the single key (next_sf).
         my $next = $subfields[ $i + 1 ];
         if ( defined $next ) {
             my ($next_sf) = @$next;
-            if ( exists $rules->{pchrs}{$next_sf} ) {
-                my $punct = $rules->{pchrs}{$next_sf};
+            my $compound = $sf . $next_sf;
+            my $punct;
+            if ( exists $rules->{pchrs}{$compound} ) {
+                $punct = $rules->{pchrs}{$compound};
+            }
+            elsif ( exists $rules->{pchrs}{$next_sf} ) {
+                $punct = $rules->{pchrs}{$next_sf};
+            }
+            if ( defined $punct ) {
                 if ( $attach_mode eq 'prefix' ) {
                     $pending = $punct;
                 }
@@ -532,7 +626,15 @@ sub _decorate_260_pre {
         $value = " ; $value";
     }
 
-    # $e/$f/$g grouping: open parenthetical
+   # $e/$f/$g grouping: open parenthetical
+   #
+   # KNOWN GAPS:
+   #  - Double SPACE: $e emits a trailing space (" ($value ") and $f/$g emit a
+   #    leading space, so clean data yields "(Twickenham  : CTD Printers" (two
+   #    spaces before ':'). Not fixed — clean-up is risky and low-value.
+   #  - Messy records where the cataloguer already typed '(' in $e / ')' in $f/g
+   #    (e.g. glued "1974-(Oak") produce a DOUBLE '('. Data-dependent; cannot be
+   #    uniquely decoded, left for cataloguers (leader/18).
     if ( $sf eq 'e' ) {
         $value = " ($value ";
     }
@@ -551,6 +653,51 @@ sub _decorate_260_pre {
         else {
             $value = ", $value)";
         }
+    }
+
+    return $value;
+}
+
+=head2 _decorate_x10_pre
+
+Pre-callback for the corporate/meeting-name fields (110/610/710/810). Groups
+consecutive C<$n> (meeting number), C<$d> (date of meeting) and C<$c>
+(location of meeting) subfields into a single pair of parentheses, e.g.
+
+    $d 1857 $c Waco, Tex.  ->  (1857 : Waco, Tex.)
+
+This mirrors I<enclose_in_parentheses(datafield, 'n', 'd', 'c')>
+The internal C<' : '> / C<'; '> separators are supplied by
+the compound pchrs keys C<nd>/C<dc>/C<cc> in step 4 of C<_decorate_field>.
+
+A leading space is added before the opening paren when the group is preceded
+by other content (e.g. C<$b State Convention (1857 : ...>).
+
+=cut
+
+sub _decorate_x10_pre {
+    my ( $sf, $value, $i, $subfields, $last_sf_ref ) = @_;
+    my $last_sf = $$last_sf_ref;
+
+    my %group_sf = map { $_ => 1 } qw(n d c);
+
+    # Not part of the n/d/c meeting group — leave untouched
+    return $value unless $group_sf{$sf};
+
+    my $next    = $subfields->[ $i + 1 ];
+    my $next_sf = $next ? $next->[0] : '';
+
+    my $is_first = !$group_sf{$last_sf};
+    my $is_last  = ( !defined $next_sf || !$group_sf{$next_sf} );
+
+    if ($is_first) {
+
+        # Leading space unless this is the very first subfield of the field
+        my $lead = ( defined $last_sf && length $last_sf ) ? ' ' : '';
+        $value = $lead . '(' . $value;
+    }
+    if ($is_last) {
+        $value .= ')';
     }
 
     return $value;

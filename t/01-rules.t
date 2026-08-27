@@ -18,7 +18,7 @@ my $rules = Koha::Filter::MARC::ISBD4MARCPunctuation::RULES;
 ok( defined $rules, 'RULES constant is defined' );
 
 # 2. Expected tags are present
-my @expected_tags = qw(020 100 245 246 247 250 260 264 300 490 502 505 520 600 700 800);
+my @expected_tags = qw(020 100 110 245 246 247 250 260 264 300 490 502 505 520 600 610 700 710 800 810);
 my @got_tags = sort keys %$rules;
 is_deeply( \@got_tags, \@expected_tags, 'RULES has exactly the expected field tags' );
 
