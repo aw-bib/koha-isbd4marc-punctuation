@@ -95,6 +95,42 @@ rules as field 246."
 
 use constant RULES => {
 
+    # 020 – International Standard Book Number
+    # ISBD punct: $a ($q ; $q) : $c
+    # Full implementation with $q parenthetical grouping via cb_pre
+    '020' => {
+        pchrs => {
+            c => ' : ',
+        },
+        cb_pre => sub {
+            my ( $sf, $value, $i, $subfields, $last_sf_ref ) = @_;
+            return $value unless $sf eq 'q';
+
+            my $last_sf = $$last_sf_ref;
+            my $next    = $subfields->[ $i + 1 ];
+            my $next_sf = $next ? $next->[0] : '';
+
+            if ( $last_sf ne 'q' && $next_sf eq 'q' ) {
+
+                # First $q in a multi-$q group: open paren
+                return "($value";
+            }
+            elsif ( $last_sf eq 'q' && $next_sf eq 'q' ) {
+
+                # Middle $q: separator only
+                return " ; $value";
+            }
+            elsif ( $last_sf eq 'q' && $next_sf ne 'q' ) {
+
+                # Last $q in group: separator + close paren
+                return " ; $value)";
+            }
+
+            # Single $q: wrap entirely
+            return "($value)";
+        },
+    },
+
     # 245 – Title Statement
     # ISBD punct: $a : $b / $c ; $d . $e , $f , $g [h] . $n , $p : $k . $s
     245 => {
@@ -160,6 +196,18 @@ use constant RULES => {
         # NOTE: No cb_pre — 247 has no $i subfield
     },
 
+    # 250 – Edition Statement
+    # ISBD punct: $a / $c ; $d = $r = $t
+    # $b is obsolete, replaced by $c and $r in the future form
+    250 => {
+        pchrs => {
+            c => ' / ',
+            d => ' ; ',
+            r => ' = ',
+            t => ' = ',
+        },
+    },
+
     # 260 – Publication, Distribution, etc. (Imprint)
     # ISBD punct: $a ; $a : $b , $c ( $e : $f , $g ) (q)
     # Note: $e/$f/$g form a grouped parenthetical: ($e : $f , $g)
@@ -198,18 +246,112 @@ use constant RULES => {
             return $value;
         },
     },
+
+    # 300 – Physical Description
+    # ISBD punct: $a : $b ; $c + $e
+    # $h wrapped in parentheses
+    # $a-to-$a (scores with parts) gets preceding +
+    # Known gaps: $h/$i/$j accompanying material grouping (rare)
+    300 => {
+        pchrs => {
+            b => ' : ',
+            c => ' ; ',
+            e => ' + ',
+            a => ' + ',    # second+ $a in multi-$a fields (scores with parts)
+        },
+        wrap => { h => [ '(', ')' ] },
+    },
+
+    # $3 gets ': ' appended via post, $l wrapped in (...)
+    490 => {
+        pchrs => {
+            b => ' : ',
+            c => ' / ',
+            d => ' ; ',
+            n => '. ',
+            p => ', ',     # Could be `. ` or `, ` depending on context
+            r => ' = ',
+            t => ' = ',
+            v => ' ; ',
+            x => ', ',
+            y => ' = ',
+        },
+        post => { 3 => ': ' },
+        wrap => { l => [ '(', ')' ] },
+    },
+
+    # 502 – Dissertation Note
+    # ISBD punct: (b) -- c, d
+    # $b wrapped in parentheses, $c gets preceding dash, $d gets preceding comma
+    502 => {
+        pchrs => {
+            c => ' -- ',
+            d => ', ',
+        },
+        wrap => {
+            b => [ '(', ')' ],
+        },
+    },
+
+ # 505 – Formatted Contents Note
+ # ISBD punct: $t -- $t / $r  (between titles), $g wrapped in (...)
+ # $t gets preceding -- when another $t or $r follows
+ # $r gets preceding /
+ # $i (display text) gets trailing ': ' via cb_pre
+ # $n (part designation): $n gets ' -- ' when $t follows (via pchrs t => ' -- ')
+ # $t/$g get ' -- ' when $n follows (via cb_post, NOT pchrs —
+ #   because pchrs would also fire on $i when $n follows, which is wrong)
+    505 => {
+        pchrs => {
+            r => ' / ',
+            t => ' -- ',
+        },
+        wrap   => { g => [ '(', ')' ] },
+        cb_pre => sub {
+            my ( $sf, $value ) = @_;
+            return $sf eq 'i' ? "$value: " : $value;
+        },
+        cb_post => sub {
+            my ( $sf, $value, $i, $subfields, $last_sf_ref ) = @_;
+            my $next_sf =
+                $subfields->[ $i + 1 ]
+              ? $subfields->[ $i + 1 ]->[0]
+              : '';
+            if ( $next_sf eq 'n' && ( $sf eq 't' || $sf eq 'g' ) ) {
+                return "$value -- ";
+            }
+            return $value;
+        },
+    },
+
+    # 520 – Summary, etc.
+    # ISBD punct: $a $z (takes preceding -- or .)
+    # $z gets ' -- ' prepended (from eliminated preceding dash or period-space)
+    520 => {
+        pchrs => {
+            z => ' -- ',
+        },
+    },
+
 };
 
 =head2 _decorate_field
 
-Generic field decorator. Takes a MARC::Field object and a rules
-hashref (as defined in C<RULES>). Returns a list of subfield
+Generic field decorator. Takes a MARC::Field object, a rules
+hashref (as defined in C<RULES>), and an optional attachment mode
+(C<'postfix'> or C<'prefix'>). Returns a list of subfield
 key/value pairs suitable for constructing a new field.
+
+In C<'postfix'> mode (default), punctuation is appended to the
+I<current> subfield (look-ahead). In C<'prefix'> mode, punctuation
+is prepended to the I<next> subfield (look-behind), which prevents
+orphaned punctuation when subfields like C<245 $c> are not displayed.
 
 =cut
 
 sub _decorate_field {
-    my ( $field, $rules ) = @_;
+    my ( $field, $rules, $attach_mode ) = @_;
+    $attach_mode //= 'postfix';
 
     # Resolve use_rules alias (single level)
     if ( my $alias = $rules->{use_rules} ) {
@@ -219,11 +361,18 @@ sub _decorate_field {
     my @subfields     = $field->subfields;
     my @new_subfields = ();
     my $last_sf       = '';
+    my $pending       = '';
 
     for my $i ( 0 .. $#subfields ) {
         my ( $sf, $value ) = @{ $subfields[$i] };
         next unless defined $value;
         $value =~ s/\s+$//;
+
+        # 0) Prefix mode: prepend pending punctuation from previous subfield
+        if ( $attach_mode eq 'prefix' && $pending ) {
+            $value   = $pending . $value;
+            $pending = '';
+        }
 
         # 1) Pre-callback (for complex grouping / prefixing)
         if ( my $cb = $rules->{cb_pre} ) {
@@ -240,12 +389,18 @@ sub _decorate_field {
             $value = $cb->( $sf, $value, $i, \@subfields, \$last_sf );
         }
 
-        # 4) Look-ahead: append punctuation before the next subfield
+        # 4) Punctuation attachment based on mode
         my $next = $subfields[ $i + 1 ];
         if ( defined $next ) {
             my ($next_sf) = @$next;
             if ( exists $rules->{pchrs}{$next_sf} ) {
-                $value .= $rules->{pchrs}{$next_sf};
+                my $punct = $rules->{pchrs}{$next_sf};
+                if ( $attach_mode eq 'prefix' ) {
+                    $pending = $punct;
+                }
+                else {
+                    $value .= $punct;
+                }
             }
         }
 
@@ -353,7 +508,16 @@ sub filter {
 
             $self->log( 'debug', "  Applying rules for field $tag" );
 
-            my @new_subfields = _decorate_field( $field, $rules );
+            # Default to postfix addition:
+            # = add punctuation to the end of a subfield depending on
+            # the subsequent subfield.
+            #
+            # prefix notation would also be possible and add the
+            # punctuation to the beginning of a subfield depending on
+            # the previous subfield. This might be advantageous in
+            # case a subfield is not rendered in display to avoid
+            # dangling punctuation.
+            my @new_subfields = _decorate_field( $field, $rules, 'postfix' );
 
             if (@new_subfields) {
                 $self->log( 'debug', "    Old: " . $field->as_string() );
