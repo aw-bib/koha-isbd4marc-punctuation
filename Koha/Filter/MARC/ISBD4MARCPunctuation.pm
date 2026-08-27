@@ -488,7 +488,8 @@ in C<RULES>.
 =cut
 
 sub filter {
-    my ( $self, $record ) = @_;
+    my ( $self, $record, $attach_mode ) = @_;
+    $attach_mode //= 'postfix';
 
     return $record unless defined $record and ref($record) eq 'MARC::Record';
 
@@ -517,7 +518,7 @@ sub filter {
             # the previous subfield. This might be advantageous in
             # case a subfield is not rendered in display to avoid
             # dangling punctuation.
-            my @new_subfields = _decorate_field( $field, $rules, 'postfix' );
+            my @new_subfields = _decorate_field( $field, $rules, $attach_mode );
 
             if (@new_subfields) {
                 $self->log( 'debug', "    Old: " . $field->as_string() );
