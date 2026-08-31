@@ -505,6 +505,71 @@ use constant RULES => {
         cb_pre => \&_decorate_x10_pre,
     },
 
+    # 111 – Main Entry – Meeting Name
+    # ISBD meeting-name punctuation (spec §5.4), mirroring the x10
+    # structure: $n/$d/$c grouped in one paren pair by _decorate_x10_pre;
+    # $g wrapped with leading space. Meeting-specific keys per §5.4:
+    #   $e (SUBORDINATE UNIT) -> period-space '. '  [NOTE: differs from
+    #     x10's $e which is a RELATOR -> ', '; user confirmed follow spec]
+    #   $j (relator term)     -> comma-space ', '
+    #   $q (name after jurisdiction) -> period-space '. '
+    # $a, $u: no punctuation. $n/$d/$c (number/date/location) via compound
+    #   group keys nd/dc/cc (same as x10). No $b/$p/$r/$s/$t keys: the
+    #   §5.4 table defines punctuation only for the subfields above.
+    # KNOWN GAP: MULTIPLE $g -> each wrapped (a)(b), not (a : b) (same as x10).
+    '111' => {
+        pchrs => {
+            e => '. ',
+            j => ', ',
+            q => '. ',
+
+            # compound keys (group $n/$d/$c), take precedence in _decorate_field
+            cc => ' ; ',
+            dc => ' : ',
+            nd => ' : ',
+        },
+        wrap   => { g => [ ' (', ')' ] },
+        cb_pre => \&_decorate_x10_pre,
+    },
+
+    # 711 – Added Entry – Meeting Name
+    # Identical structure to 111
+    '711' => {
+        use_rules => '111',
+    },
+
+    # 611 – Subject Added Entry – Meeting Name
+    # Same as 111 but $v/$x/$y/$z (subject subdivisions) get NO punctuation
+    # (111's pchrs already omit them, so structure is identical).
+    '611' => {
+        pchrs => {
+            e => '. ',
+            j => ', ',
+            q => '. ',
+            cc => ' ; ',
+            dc => ' : ',
+            nd => ' : ',
+        },
+        wrap   => { g => [ ' (', ')' ] },
+        cb_pre => \&_decorate_x10_pre,
+    },
+
+    # 811 – Series Added Entry – Meeting Name
+    # Same as 111 but $v (volume) gets ' ;' punctuation (subject 611 differs)
+    '811' => {
+        pchrs => {
+            e => '. ',
+            j => ', ',
+            q => '. ',
+            v => ' ;',
+            cc => ' ; ',
+            dc => ' : ',
+            nd => ' : ',
+        },
+        wrap   => { g => [ ' (', ')' ] },
+        cb_pre => \&_decorate_x10_pre,
+    },
+
 };
 
 =head2 _decorate_field
