@@ -22,6 +22,7 @@ ok( defined $rules, '245 rules loaded' );
 
 # --- Test 1: $a alone (no punctuation needed) ---
 {
+    # render: 245 00 $a The great book
     my $field = make_field( '245', '0', '0', a => 'The great book' );
 
     my @result =
@@ -44,6 +45,7 @@ ok( defined $rules, '245 rules loaded' );
 
 # --- Test 2: $a followed by $b ---
 {
+    # render: 245 00 $a The great book $b a subtitle
     my $field = make_field(
         '245', '0', '0',
         a => 'The great book',
@@ -71,6 +73,7 @@ ok( defined $rules, '245 rules loaded' );
 
 # --- Test 3: $a followed by $b followed by $c ---
 {
+    # render: 245 00 $a The great book $b a subtitle $c by an author
     my $field = make_field(
         '245', '0', '0',
         a => 'The great book',
@@ -107,6 +110,7 @@ ok( defined $rules, '245 rules loaded' );
 # $n (number of part) is followed by $p (name of part).
 # Since input has no punctuation (per leader/18), values are clean.
 {
+    # render: 245 00 $n Part one $p Chapter two
     my $field = make_field(
         '245', '0', '0',
         n => 'Part one',
@@ -135,6 +139,7 @@ ok( defined $rules, '245 rules loaded' );
 
 # --- Test 5: $h gets wrapped in brackets ---
 {
+    # render: 245 00 $a The great book $h electronic resource $c by an author
     my $field = make_field(
         '245', '0', '0',
         a => 'The great book',

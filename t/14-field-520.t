@@ -17,6 +17,7 @@ ok( defined $rules_520, '520 rules loaded' );
 # Doc: Future:  520 ## $a Papers "originally commissioned as course material for a series of continuing legal education seminars" $z Pref., v. 1
 # Doc: Current: 520 ## $a Papers "originally commissioned as course material for a series of continuing legal education seminars"--Pref., v. 1.
 {
+    # render: 520 ## $a Papers "originally commissioned as course material for a series of continuing legal education seminars" $z Pref., v. 1
     my $field = make_field(
         '520', ' ', ' ',
         a =>
@@ -62,6 +63,7 @@ ok( defined $rules_520, '520 rules loaded' );
 # Doc: Future:  520 1# $a "Combines the most frequently asked questions regarding AIDS with the most prominent US physician, former Surgeon General C. Everett Koop, resulting in an informative 38-minute production" $z Cf. Video rating guide for libraries, winter 1990
 # Doc: Current: 520 1# $a "Combines the most frequently asked questions regarding AIDS with the most prominent US physician, former Surgeon General C. Everett Koop, resulting in an informative 38-minute production"--Cf. Video rating guide for libraries, winter 1990.
 {
+    # render: 520 1# $a "Combines the most frequently asked questions regarding AIDS with the most prominent US physician, former Surgeon General C. Everett Koop, resulting in an informative 38-minute production" $z Cf. Video rating guide for libraries, winter 1990
     my $field = make_field(
         '520', '1', '#',
         a =>
@@ -106,6 +108,7 @@ ok( defined $rules_520, '520 rules loaded' );
 
 # --- Edge case: $a only, no $z ---
 {
+    # render: 520 ## $a Just a summary with no source note
     my $field =
       make_field( '520', ' ', ' ', a => 'Just a summary with no source note', );
 
@@ -136,6 +139,7 @@ ok( defined $rules_520, '520 rules loaded' );
 
 # --- Edge case: $z only (unusual but valid) ---
 {
+    # render: 520 ## $z Source only
     my $field = make_field( '520', ' ', ' ', z => 'Source only', );
 
     my @result =

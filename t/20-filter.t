@@ -23,52 +23,33 @@ sub _leader_with {
     return $leader;
 }
 
-# --- Test 1: Leader/18 = 'c' → filter active ---
-{
+# Helper: run filter with a specific attach_mode
+sub _filter {
+    my ( $leader18, $mode, @fields ) = @_;
     my $record = MARC::Record->new;
-    $record->leader( _leader_with('c') );
-    $record->add_fields(
-        '245', '0', '0',
-        a => 'The great book',
-        b => 'a subtitle',
-    );
-
-    my $result = $filter->filter($record);
-    my $field  = $result->field('245');
-    is(
-        $field->subfield('a'),
-        'The great book',
-        'filter: leader/c → $a unchanged (prefix mode)'
-    );
-    is(
-        $field->subfield('b'),
-        ' : a subtitle',
-        'filter: $b gets " : " prepended (prefix mode)'
-    );
+    $record->leader( _leader_with($leader18) );
+    for my $f (@fields) { $record->add_fields(@$f); }
+    return $filter->filter( $record, $mode );
 }
 
-# --- Test 2: Leader/18 = 'n' → filter active ---
+# --- Test 1: Leader/18 = 'c' → filter active, prefix mode ---
 {
-    my $record = MARC::Record->new;
-    $record->leader( _leader_with('n') );
-    $record->add_fields(
-        '245', '0', '0',
-        a => 'Another book',
-        b => 'another subtitle',
+    my $result = _filter( 'c', 'prefix',
+        [ '245', '0', '0', a => 'The great book', b => 'a subtitle' ]
     );
+    my $field = $result->field('245');
+    is( $field->subfield('a'), 'The great book',       'filter: c/prefix → $a clean' );
+    is( $field->subfield('b'), ' : a subtitle',         'filter: c/prefix → $b gets " : "' );
+}
 
-    my $result = $filter->filter($record);
-    my $field  = $result->field('245');
-    is(
-        $field->subfield('a'),
-        'Another book',
-        'filter: leader/n → $a unchanged (prefix mode)'
+# --- Test 2: Leader/18 = 'n' → filter active, prefix mode ---
+{
+    my $result = _filter( 'n', 'prefix',
+        [ '245', '0', '0', a => 'Another book', b => 'another subtitle' ]
     );
-    is(
-        $field->subfield('b'),
-        ' : another subtitle',
-        'filter: leader/n → $b gets " : " prepended (prefix mode)'
-    );
+    my $field = $result->field('245');
+    is( $field->subfield('a'), 'Another book',         'filter: n/prefix → $a clean' );
+    is( $field->subfield('b'), ' : another subtitle',  'filter: n/prefix → $b gets " : "' );
 }
 
 # --- Test 3: Leader/18 = space → filter inactive ---

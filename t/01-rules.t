@@ -18,7 +18,7 @@ my $rules = Koha::Filter::MARC::ISBD4MARCPunctuation::RULES;
 ok( defined $rules, 'RULES constant is defined' );
 
 # 2. Expected tags are present
-my @expected_tags = qw(245 246 247 260 264 490);
+my @expected_tags = qw(020 100 110 111 245 246 247 250 260 264 300 490 502 505 520 600 610 611 700 710 711 800 810 811);
 my @got_tags = sort keys %$rules;
 is_deeply( \@got_tags, \@expected_tags, 'RULES has exactly the expected field tags' );
 
@@ -26,7 +26,7 @@ is_deeply( \@got_tags, \@expected_tags, 'RULES has exactly the expected field ta
 my @valid_keys = qw(pchrs post wrap cb_pre cb_post use_rules);
 for my $tag (@expected_tags) {
     my $entry = $rules->{$tag};
-    ok( defined $entry, "Rules entry for $tag is defined" );
+ok( defined $entry, "Rules entry for $tag is defined" );
 
     for my $key ( keys %$entry ) {
         ok( grep( /^$key$/, @valid_keys ), "Key '$key' in $tag is a valid rule key" );

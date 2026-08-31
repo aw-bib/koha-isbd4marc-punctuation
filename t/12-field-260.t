@@ -40,6 +40,7 @@ ok( defined $rules, '260 rules loaded' );
 
 # --- Test 2: $a followed by $b followed by $c ---
 {
+    # render: 260 ## $a New York $b Penguin $c 2005
     my $field = make_field(
         '260', ' ', ' ',
         a => 'New York',
@@ -69,8 +70,10 @@ ok( defined $rules, '260 rules loaded' );
 }
 
 # --- Test 3: Multiple $a (e.g. New York ; London) ---
-# Note: " ; " is PREPENDED to second $a via cb_pre (not via pchrs), so same in both modes.
+# " ; " is attached via the COMPOUND pchrs key aa, so ownership swaps
+# between modes (postfix: appended to first $a; prefix: prepended to second).
 {
+    # render: 260 ## $a New York $a London
     my $field = make_field(
         '260', ' ', ' ',
         a => 'New York',
@@ -80,16 +83,16 @@ ok( defined $rules, '260 rules loaded' );
     my @result =
       Koha::Filter::MARC::ISBD4MARCPunctuation::_decorate_field( $field,
         $rules, 'postfix' );
-    is( $result[1], 'New York', '260: first $a unchanged' );
-    is( $result[3], ' ; London',
-        '260: second $a gets " ; " prefix via cb_pre' );
+    is( $result[1], 'New York ; ',
+        '260: first $a gets " ; " (compound aa)' );
+    is( $result[3], 'London', '260: second $a (last) unchanged' );
 
     my @result_pr =
       Koha::Filter::MARC::ISBD4MARCPunctuation::_decorate_field( $field,
         $rules, 'prefix' );
     is( $result_pr[1], 'New York', '260 prefix: first $a unchanged' );
     is( $result_pr[3], ' ; London',
-        '260 prefix: second $a still gets " ; " via cb_pre' );
+        '260 prefix: second $a gets " ; " prepended (pending from aa)' );
 
     is(
         join( '', @result[ 1, 3 ] ),
@@ -101,6 +104,7 @@ ok( defined $rules, '260 rules loaded' );
 # --- Test 4: $q wrapped in parentheses ---
 # $q is handled via wrap (not pchrs), so same in both modes.
 {
+    # render: 260 ## $a New York $q some qualifier
     my $field = make_field(
         '260', ' ', ' ',
         a => 'New York',
@@ -136,6 +140,7 @@ ok( defined $rules, '260 rules loaded' );
 # $g closes: ", $value)"
 # This is entirely handled by cb_pre, so same in both modes.
 {
+    # render: 260 ## $a New York $e a manufacturer $f a place $g 2005
     my $field = make_field(
         '260', ' ', ' ',
         a => 'New York',
@@ -180,6 +185,7 @@ ok( defined $rules, '260 rules loaded' );
 # --- Test 6: $3 always gets ": " appended ---
 # $3 uses "post" (always-appended suffix), not pchrs, so same in both modes.
 {
+    # render: 260 ## $3 1990 $a New York
     my $field = make_field(
         '260', ' ', ' ',
         '3' => '1990',

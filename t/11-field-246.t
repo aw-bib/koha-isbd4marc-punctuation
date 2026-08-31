@@ -21,6 +21,7 @@ ok( defined $rules, '246 rules loaded' );
 
 # --- Test 1: $a alone ---
 {
+    # render: 246 1# $a Alternate title
     my $field = make_field( '246', '1', ' ', a => 'Alternate title' );
 
     my @result =
@@ -43,6 +44,7 @@ ok( defined $rules, '246 rules loaded' );
 # --- Test 2: $i followed by $a ---
 # Note: $i gets ": " appended via cb_pre (not via pchrs), so it's the same in both modes.
 {
+    # render: 246 1# $i Cover title $a Alternate title
     my $field = make_field(
         '246', '1', ' ',
         i => 'Cover title',
@@ -78,6 +80,7 @@ ok( defined $rules, '246 rules loaded' );
 
 # --- Test 3: $a followed by $b ---
 {
+    # render: 246 1# $a Alternate title $b a subtitle
     my $field = make_field(
         '246', '1', ' ',
         a => 'Alternate title',
@@ -106,6 +109,7 @@ ok( defined $rules, '246 rules loaded' );
 
 # --- Test 4: $a followed by $f ---
 {
+    # render: 246 1# $a Alternate title $f 2005
     my $field = make_field(
         '246', '1', ' ',
         a => 'Alternate title',
@@ -133,6 +137,7 @@ ok( defined $rules, '246 rules loaded' );
 
 # --- Test 5: $g wrapped in parentheses ---
 {
+    # render: 246 1# $a Alternate title $g some info
     my $field = make_field(
         '246', '1', ' ',
         a => 'Alternate title',
@@ -160,6 +165,7 @@ ok( defined $rules, '246 rules loaded' );
 
 # --- Test 6: $h wrapped in brackets ---
 {
+    # render: 246 1# $a Alternate title $h electronic
     my $field = make_field(
         '246', '1', ' ',
         a => 'Alternate title',

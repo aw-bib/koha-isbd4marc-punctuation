@@ -211,12 +211,18 @@ use constant RULES => {
     # 260 – Publication, Distribution, etc. (Imprint)
     # ISBD punct: $a ; $a : $b , $c ( $e : $f , $g ) (q)
     # Note: $e/$f/$g form a grouped parenthetical: ($e : $f , $g)
+    # Repeated $a (and $b followed by $a) are separated with " ; " via the
+    # COMPOUND pchrs keys aa/ba (fires when a subfield is followed by $a).
+    # A bare single `a` would also fire on $3$a, producing a spurious ' ;'
+    # before the post ' : '. Compound keys avoid that (see also 264).
     260 => {
         pchrs => {
-            b => ' : ',
-            c => ', ',
-            r => ' = ',
-            t => ' = ',
+            aa => ' ; ',
+            ba => ' ; ',
+            b  => ' : ',
+            c  => ', ',
+            r  => ' = ',
+            t  => ' = ',
         },
         post   => { 3 => ': ' },
         wrap   => { q => [ '(', ')' ] },
@@ -225,26 +231,21 @@ use constant RULES => {
 
     # 264 – Production, Publication, Distribution, Manufacture, and Copyright
     # Similar to 260 but without $e/$f/$g grouping
+    # Repeated $a (and $b followed by $a) are separated with " ; " via the
+    # COMPOUND pchrs keys aa/ba (fires when a subfield is followed by $a).
+    # A bare single `a` would also fire on $3$a (e.g. $3 August 1990 $a Berlin),
+    # producing a spurious ' ;' before the post ' : '. Compound keys avoid that.
     264 => {
         pchrs => {
-            b => ' : ',
-            c => ', ',
-            r => ' = ',
-            t => ' = ',
+            aa => ' ; ',
+            ba => ' ; ',
+            b  => ' : ',
+            c  => ', ',
+            r  => ' = ',
+            t  => ' = ',
         },
-        post   => { 3 => ': ' },
-        wrap   => { q => [ '(', ')' ] },
-        cb_pre => sub {
-            my ( $sf, $value, $i, $subfields, $last_sf_ref ) = @_;
-            my $last_sf = $$last_sf_ref;
-            if ( $sf eq 'a' and $last_sf eq 'a' ) {
-                $value = " ; $value";
-            }
-            if ( $sf eq 'a' and $last_sf eq 'b' ) {
-                $value = " ; $value";
-            }
-            return $value;
-        },
+        post => { 3 => ': ' },
+        wrap => { q => [ '(', ')' ] },
     },
 
     # 300 – Physical Description
@@ -262,6 +263,7 @@ use constant RULES => {
         wrap => { h => [ '(', ')' ] },
     },
 
+    # 490 - Series statement
     # $3 gets ': ' appended via post, $l wrapped in (...)
     490 => {
         pchrs => {
@@ -269,7 +271,7 @@ use constant RULES => {
             c => ' / ',
             d => ' ; ',
             n => '. ',
-            p => ', ',     # Could be `. ` or `, ` depending on context
+            p => ', ',    # Could be `. ` or `, ` depending on context
             r => ' = ',
             t => ' = ',
             v => ' ; ',
@@ -293,34 +295,27 @@ use constant RULES => {
         },
     },
 
- # 505 – Formatted Contents Note
- # ISBD punct: $t -- $t / $r  (between titles), $g wrapped in (...)
- # $t gets preceding -- when another $t or $r follows
- # $r gets preceding /
- # $i (display text) gets trailing ': ' via cb_pre
- # $n (part designation): $n gets ' -- ' when $t follows (via pchrs t => ' -- ')
- # $t/$g get ' -- ' when $n follows (via cb_post, NOT pchrs —
- #   because pchrs would also fire on $i when $n follows, which is wrong)
+    # 505 – Formatted Contents Note
+    # ISBD punct: $t -- $t / $r  (between titles), $g wrapped in (...)
+    # $t gets preceding -- when another $t or $r follows
+    # $r gets preceding /
+    # $i (display text) gets trailing ': ' via cb_pre
+    # $n (part designation): $n gets ' -- ' when $t follows
+    #   (single pchrs key `t`, fires whenever a subfield is followed by $t)
+    # $t/$g get ' -- ' when $n follows via COMPOUND keys tn/gn — this is the
+    #   precise fix: a plain single key `n` would also fire on $i when $n
+    #   follows, which would be wrong. Compound keys only fire on $t/$g+n.
     505 => {
         pchrs => {
-            r => ' / ',
-            t => ' -- ',
+            r  => ' / ',
+            t  => ' -- ',
+            tn => ' -- ',
+            gn => ' -- ',
         },
         wrap   => { g => [ '(', ')' ] },
         cb_pre => sub {
             my ( $sf, $value ) = @_;
             return $sf eq 'i' ? "$value: " : $value;
-        },
-        cb_post => sub {
-            my ( $sf, $value, $i, $subfields, $last_sf_ref ) = @_;
-            my $next_sf =
-                $subfields->[ $i + 1 ]
-              ? $subfields->[ $i + 1 ]->[0]
-              : '';
-            if ( $next_sf eq 'n' && ( $sf eq 't' || $sf eq 'g' ) ) {
-                return "$value -- ";
-            }
-            return $value;
         },
     },
 
@@ -331,6 +326,248 @@ use constant RULES => {
         pchrs => {
             z => ' -- ',
         },
+    },
+
+    # 100 – Main Entry – Personal Name
+    # Also covers 700 (Added Entry) via use_rules
+    # ISBD separating punctuation between subfields:
+    #   $a alone: no change (inversion comma already in $a)
+    #   $b:  '. '  $c:  ', '  $d:  ', '  $e:  ', '  $f:  '. '
+    #   $j:  ', '  $k:  '. '  $l:  '. '  $m:  ', '  $n:  ', '
+    #   $o:  '; '  $p:  '. '  $q:  '()'  $r:  ', '  $s:  '. '
+    #   $t:  '. '  $v:  ' ;'  (only for 800)
+    #   $i: '' (ends with ':' via cataloger input; we leave it)
+    #
+    # Note: $a/$h split (spec section 5.2) is NOT in use yet.
+    # Real records have $a with inversion comma (e.g. "Morgan, Robert").
+    # We pass $a through unchanged and only add separating punctuation
+    # between subfields.
+    '100' => {
+        pchrs => {
+            b => '. ',
+            c => ', ',
+            d => ', ',
+            e => ', ',
+            f => '. ',
+            j => ', ',
+            k => '. ',
+            l => '. ',
+            m => ', ',
+            n => ', ',
+            o => '; ',
+            p => '. ',
+            r => ', ',
+            s => '. ',
+            t => '. ',
+        },
+        wrap => {
+            q => [ '(', ')' ],
+        },
+    },
+
+    # 700 – Added Entry – Personal Name
+    # Identical structure to 100
+    '700' => {
+        use_rules => '100',
+    },
+
+  # 600 – Subject Added Entry – Personal Name
+  # Same pchrs/wrap as 100 but:
+  #   - $v (form subdivision) gets NO punctuation (deliberately excluded)
+  #   - $x, $y, $z (general/chronological/geographic subdivisions) also excluded
+    '600' => {
+        pchrs => {
+            b => '. ',
+            c => ', ',
+            d => ', ',
+            e => ', ',
+            f => '. ',
+            j => ', ',
+            k => '. ',
+            l => '. ',
+            m => ', ',
+            n => ', ',
+            o => '; ',
+            p => '. ',
+            r => ', ',
+            s => '. ',
+            t => '. ',
+        },
+        wrap => { q => [ '(', ')' ] },
+    },
+
+    # 800 – Series Added Entry – Personal Name
+    # Same as 100 but $v (volume) gets ' ;' punctuation (600 differs)
+    '800' => {
+        pchrs => {
+            b => '. ',
+            c => ', ',
+            d => ', ',
+            e => ', ',
+            f => '. ',
+            j => ', ',
+            k => '. ',
+            l => '. ',
+            m => ', ',
+            n => ', ',
+            o => '; ',
+            p => '. ',
+            r => ', ',
+            s => '. ',
+            t => '. ',
+            v => ' ;',
+        },
+        wrap => { q => [ '(', ')' ] },
+    },
+
+# 110 – Main Entry – Corporate Name
+# Also covers 710 (Added Entry) via use_rules
+# Also 610 (Subject) and 810 (Series) with the usual subdivision differences.
+# Full ISBDX10 rules (spec §5.3):
+#   $a:  no change          $b:  '. '   $c:  ', '  $d:  ', '  $e:  ', '
+#   $p:  ', '   $r:  ', '   $s:  '. '   $t:  '. '
+#   $g:  '()'  (qualifying information) — wrap
+#   compound keys: cc => '; '  dc => ' : '  nd => ' : ' (inside n/d/c group)
+#   $n, $o, $u, $x, $y, $z: no punctuation
+#
+# $n/$d/$c (meeting number / date / location) are grouped in one pair of
+# parentheses by _decorate_x10_pre (matches enclose_in_parentheses('n','d','c')).
+#
+# KNOWN GAPS / DECISIONS:
+#   - $u (affiliation): NO punctuation, following spec §5.3 (N/A). NOTE for
+#     reviewers: 'u' => '. ' might be possible as well; we
+#     chose to follow the PDF (no punct). Revisit if real data shows a need.
+#   - $n: deliberately NOT individually wrapped  to avoid double-paren on
+#     the $n/$d/$c group (cb_pre already groups them).
+#   - MULTIPLE $g (e.g. $g 1981-1989 $g Reagan): each $g gets its own (),
+#     i.e. (a)(b), NOT the ideal (a : b). Left as a known imperfection.
+    '110' => {
+        pchrs => {
+            b => '. ',
+            e => ', ',
+            p => ', ',
+            r => ', ',
+            s => '. ',
+            t => '. ',
+
+            # compound keys (preceded subfield + followed subfield), take
+            # precedence over the single next_sf keys in _decorate_field
+            cc => ' ; ',
+            dc => ' : ',
+            nd => ' : ',
+        },
+        wrap   => { g => [ ' (', ')' ] },
+        cb_pre => \&_decorate_x10_pre,
+    },
+
+    # 710 – Added Entry – Corporate Name
+    # Identical structure to 110
+    '710' => {
+        use_rules => '110',
+    },
+
+  # 610 – Subject Added Entry – Corporate Name
+  # Same pchrs/wrap as 110 but:
+  #   - $v (form subdivision) gets NO punctuation (deliberately excluded)
+  #   - $x, $y, $z (general/chronological/geographic subdivisions) also excluded
+    '610' => {
+        pchrs => {
+            b  => '. ',
+            e  => ', ',
+            p  => ', ',
+            r  => ', ',
+            s  => '. ',
+            t  => '. ',
+            cc => '; ',
+            dc => ' : ',
+            nd => ' : ',
+        },
+        wrap   => { g => [ ' (', ')' ] },
+        cb_pre => \&_decorate_x10_pre,
+    },
+
+    # 810 – Series Added Entry – Corporate Name
+    # Same as 110 but $v (volume) gets ' ;' punctuation (610 differs)
+    '810' => {
+        pchrs => {
+            b  => '. ',
+            e  => ', ',
+            p  => ', ',
+            r  => ', ',
+            s  => '. ',
+            t  => '. ',
+            v  => ' ;',
+            cc => '; ',
+            dc => ' : ',
+            nd => ' : ',
+        },
+        wrap   => { g => [ ' (', ')' ] },
+        cb_pre => \&_decorate_x10_pre,
+    },
+
+    # 111 – Main Entry – Meeting Name
+    # ISBD meeting-name punctuation (spec §5.4), mirroring the x10
+    # structure: $n/$d/$c grouped in one paren pair by _decorate_x10_pre;
+    # $g wrapped with leading space. Meeting-specific keys per §5.4:
+    #   $e (SUBORDINATE UNIT) -> period-space '. '  [NOTE: differs from
+    #     x10's $e which is a RELATOR -> ', '; user confirmed follow spec]
+    #   $j (relator term)     -> comma-space ', '
+    #   $q (name after jurisdiction) -> period-space '. '
+    # $a, $u: no punctuation. $n/$d/$c (number/date/location) via compound
+    #   group keys nd/dc/cc (same as x10). No $b/$p/$r/$s/$t keys: the
+    #   §5.4 table defines punctuation only for the subfields above.
+    # KNOWN GAP: MULTIPLE $g -> each wrapped (a)(b), not (a : b) (same as x10).
+    '111' => {
+        pchrs => {
+            e => '. ',
+            j => ', ',
+            q => '. ',
+
+            # compound keys (group $n/$d/$c), take precedence in _decorate_field
+            cc => ' ; ',
+            dc => ' : ',
+            nd => ' : ',
+        },
+        wrap   => { g => [ ' (', ')' ] },
+        cb_pre => \&_decorate_x10_pre,
+    },
+
+    # 711 – Added Entry – Meeting Name
+    # Identical structure to 111
+    '711' => {
+        use_rules => '111',
+    },
+
+    # 611 – Subject Added Entry – Meeting Name
+    # Same as 111 but $v/$x/$y/$z (subject subdivisions) get NO punctuation
+    # (111's pchrs already omit them, so structure is identical).
+    '611' => {
+        pchrs => {
+            e => '. ',
+            j => ', ',
+            q => '. ',
+            cc => ' ; ',
+            dc => ' : ',
+            nd => ' : ',
+        },
+        wrap   => { g => [ ' (', ')' ] },
+        cb_pre => \&_decorate_x10_pre,
+    },
+
+    # 811 – Series Added Entry – Meeting Name
+    # Same as 111 but $v (volume) gets ' ;' punctuation (subject 611 differs)
+    '811' => {
+        pchrs => {
+            e => '. ',
+            j => ', ',
+            q => '. ',
+            v => ' ;',
+            cc => ' ; ',
+            dc => ' : ',
+            nd => ' : ',
+        },
+        wrap   => { g => [ ' (', ')' ] },
+        cb_pre => \&_decorate_x10_pre,
     },
 
 };
@@ -390,11 +627,20 @@ sub _decorate_field {
         }
 
         # 4) Punctuation attachment based on mode
+        # Look up punctuation by COMPOUND key (sf . next_sf) first, falling
+        # back to the single key (next_sf).
         my $next = $subfields[ $i + 1 ];
         if ( defined $next ) {
             my ($next_sf) = @$next;
-            if ( exists $rules->{pchrs}{$next_sf} ) {
-                my $punct = $rules->{pchrs}{$next_sf};
+            my $compound = $sf . $next_sf;
+            my $punct;
+            if ( exists $rules->{pchrs}{$compound} ) {
+                $punct = $rules->{pchrs}{$compound};
+            }
+            elsif ( exists $rules->{pchrs}{$next_sf} ) {
+                $punct = $rules->{pchrs}{$next_sf};
+            }
+            if ( defined $punct ) {
                 if ( $attach_mode eq 'prefix' ) {
                     $pending = $punct;
                 }
@@ -417,11 +663,13 @@ sub _decorate_field {
 
 =head2 _decorate_260_pre
 
-Pre-callback for field 260. Handles the complex grouping logic
-for C<$e> (producer), C<$f> (producer place), and C<$g>
-(production date) which form a parenthetical group together.
+Pre-callback for field 260. Handles the parenthetical grouping of C
+(producer), C (producer place) and C (production date)/C
+which form the C<($e : $f , $g)> group together.
 
-Also handles multiple C<$a> and C<$a> after C<$b> for 260.
+The  C< ; > separators between repeated C and after C
+are provided declaratively by the COMPOUND C<pchrs aa/ba keys> in step 4.
+This callback handles only the group's parentheses.
 
 =cut
 
@@ -429,17 +677,15 @@ sub _decorate_260_pre {
     my ( $sf, $value, $i, $subfields, $last_sf_ref ) = @_;
     my $last_sf = $$last_sf_ref;
 
-    # Multiple $a: separate with " ; "
-    if ( $sf eq 'a' and $last_sf eq 'a' ) {
-        $value = " ; $value";
-    }
-
-    # $a after $b: separate with " ; "
-    if ( $sf eq 'a' and $last_sf eq 'b' ) {
-        $value = " ; $value";
-    }
-
-    # $e/$f/$g grouping: open parenthetical
+   # $e/$f/$g grouping: open parenthetical
+   #
+   # KNOWN GAPS:
+   #  - Double SPACE: $e emits a trailing space (" ($value ") and $f/$g emit a
+   #    leading space, so clean data yields "(Twickenham  : CTD Printers" (two
+   #    spaces before ':'). Not fixed — clean-up is risky and low-value.
+   #  - Messy records where the cataloguer already typed '(' in $e / ')' in $f/g
+   #    (e.g. glued "1974-(Oak") produce a DOUBLE '('. Data-dependent; cannot be
+   #    uniquely decoded, left for cataloguers (leader/18).
     if ( $sf eq 'e' ) {
         $value = " ($value ";
     }
@@ -458,6 +704,51 @@ sub _decorate_260_pre {
         else {
             $value = ", $value)";
         }
+    }
+
+    return $value;
+}
+
+=head2 _decorate_x10_pre
+
+Pre-callback for the corporate/meeting-name fields (110/610/710/810). Groups
+consecutive C<$n> (meeting number), C<$d> (date of meeting) and C<$c>
+(location of meeting) subfields into a single pair of parentheses, e.g.
+
+    $d 1857 $c Waco, Tex.  ->  (1857 : Waco, Tex.)
+
+This mirrors I<enclose_in_parentheses(datafield, 'n', 'd', 'c')>
+The internal C<' : '> / C<'; '> separators are supplied by
+the compound pchrs keys C<nd>/C<dc>/C<cc> in step 4 of C<_decorate_field>.
+
+A leading space is added before the opening paren when the group is preceded
+by other content (e.g. C<$b State Convention (1857 : ...>).
+
+=cut
+
+sub _decorate_x10_pre {
+    my ( $sf, $value, $i, $subfields, $last_sf_ref ) = @_;
+    my $last_sf = $$last_sf_ref;
+
+    my %group_sf = map { $_ => 1 } qw(n d c);
+
+    # Not part of the n/d/c meeting group — leave untouched
+    return $value unless $group_sf{$sf};
+
+    my $next    = $subfields->[ $i + 1 ];
+    my $next_sf = $next ? $next->[0] : '';
+
+    my $is_first = !$group_sf{$last_sf};
+    my $is_last  = ( !defined $next_sf || !$group_sf{$next_sf} );
+
+    if ($is_first) {
+
+        # Leading space unless this is the very first subfield of the field
+        my $lead = ( defined $last_sf && length $last_sf ) ? ' ' : '';
+        $value = $lead . '(' . $value;
+    }
+    if ($is_last) {
+        $value .= ')';
     }
 
     return $value;
@@ -488,7 +779,8 @@ in C<RULES>.
 =cut
 
 sub filter {
-    my ( $self, $record ) = @_;
+    my ( $self, $record, $attach_mode ) = @_;
+    $attach_mode //= 'postfix';
 
     return $record unless defined $record and ref($record) eq 'MARC::Record';
 
@@ -517,7 +809,7 @@ sub filter {
             # the previous subfield. This might be advantageous in
             # case a subfield is not rendered in display to avoid
             # dangling punctuation.
-            my @new_subfields = _decorate_field( $field, $rules, 'postfix' );
+            my @new_subfields = _decorate_field( $field, $rules, $attach_mode );
 
             if (@new_subfields) {
                 $self->log( 'debug', "    Old: " . $field->as_string() );

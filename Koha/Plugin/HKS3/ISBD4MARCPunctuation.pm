@@ -18,7 +18,7 @@ package Koha::Plugin::HKS3::ISBD4MARCPunctuation;
 use Modern::Perl;
 use base qw(Koha::Plugins::Base);
 
-our $VERSION = "0.02";
+our $VERSION = "0.03";
 
 our $metadata = {
     name   => 'ISBD4MARC Punctuation',
@@ -27,7 +27,7 @@ our $metadata = {
     description     => 'Add ISBD punctuation during XSLT display processing',
     namespace       => 'isbd4marcpunctuation',
     date_authored   => '2026-02-06',
-    date_updated    => '2026-08-20',
+    date_updated    => '2026-08-31',
     minimum_version => '23.11',
     maximum_version => undef,
     version         => $VERSION,

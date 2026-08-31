@@ -3,7 +3,8 @@
 # Derived from isbdmarc2016.pdf Current/Future examples.
 #
 # Simple approach: pchrs for $t ( -- ) and $r ( / ), wrap for $g (()).
-# Known gaps: $n (part designation), $i (display text).
+# $t/$g get " -- " before $n via the COMPOUND pchrs keys tn/gn.
+# Note: $i (display text) ends with ': ' via cb_pre.
 
 use strict;
 use warnings;
@@ -23,6 +24,7 @@ ok( defined $rules_505, '505 rules loaded' );
 # Note: doc shows $a in current, but subfields are reconstructed as $t in future.
 # We test the $t-based future form reconstruction.
 {
+    # render: 505 00 $t Future land use plan $t Recommended capital improvements $t Existing land use $t Existing zoning
     my $field = make_field(
         '505', '0', '0',
         t => 'Future land use plan',
@@ -88,6 +90,7 @@ ok( defined $rules_505, '505 rules loaded' );
 
 # --- Example 2: Multiple $t (area titles, same pattern) ---
 {
+    # render: 505 00 $t Area 1, Lone Pine to Big Pine $t Area 2, Bishop to Mammoth Lakes $t Area 3, June Lake to Bridgeport $t Area 4, White Mountains area
     my $field = make_field(
         '505', '0', '0',
         t => 'Area 1, Lone Pine to Big Pine',
@@ -155,6 +158,7 @@ ok( defined $rules_505, '505 rules loaded' );
 # Doc: Future:  505 00 $t Quatrain II $g 16:35 $t Water ways $g 1:57 $t Waves $g 10:49
 # Doc: Current: 505 00 $t Quatrain II (16:35) -- $t Water ways (1:57) -- $t Waves (10:49).
 {
+    # render: 505 00 $t Quatrain II $g 16:35 $t Water ways $g 1:57 $t Waves $g 10:49
     my $field = make_field(
         '505', '0', '0',
         t => 'Quatrain II',
@@ -212,6 +216,7 @@ ok( defined $rules_505, '505 rules loaded' );
 # Doc: Future:  505 20 $t Baptisms, 1816-1872 $t Church members, 1816-1831 $t History of the Second Presbyterian Church of West Durham $r by L.H. Fellows
 # Doc: Current: 505 20 $t Baptisms, 1816-1872 -- $t Church members, 1816-1831 -- $t History of the Second Presbyterian Church of West Durham / $r by L.H. Fellows.
 {
+    # render: 505 20 $t Baptisms, 1816-1872 $t Church members, 1816-1831 $t History of the Second Presbyterian Church of West Durham $r by L.H. Fellows
     my $field = make_field(
         '505', '2', '0',
         t => 'Baptisms, 1816-1872',
@@ -273,6 +278,7 @@ ok( defined $rules_505, '505 rules loaded' );
 
 # --- Standard: $t alone ---
 {
+    # render: 505 00 $t Single title
     my $field = make_field( '505', '0', '0', t => 'Single title', );
 
     my @result =
@@ -294,6 +300,7 @@ ok( defined $rules_505, '505 rules loaded' );
 
 # --- Edge case: $g alone ---
 {
+    # render: 505 00 $g 16:35
     my $field = make_field( '505', '0', '0', g => '16:35', );
 
     my @result =
@@ -316,6 +323,7 @@ ok( defined $rules_505, '505 rules loaded' );
 # --- Edge case: $a alone (basic format, second indicator #) ---
 # $a has no ISBD punctuation rules
 {
+    # render: 505 0# $a Future land use plan -- Recommended capital improvements -- Existing land use -- Existing zoning
     my $field = make_field( '505', '0', '#',
         a =>
 'Future land use plan -- Recommended capital improvements -- Existing land use -- Existing zoning',
@@ -348,6 +356,7 @@ ok( defined $rules_505, '505 rules loaded' );
 
 # --- Edge case: $t + $r (single title with responsibility) ---
 {
+    # render: 505 20 $t Quark models $r J. Rosner
     my $field = make_field(
         '505', '2', '0',
         t => 'Quark models',
@@ -381,6 +390,7 @@ ok( defined $rules_505, '505 rules loaded' );
 
 # --- Edge case: $g + $t (misc info followed by title, no preceding punct on $g) ---
 {
+    # render: 505 10 $g 16:35 $t Waves
     my $field = make_field(
         '505', '1', '0',
         g => '16:35',
@@ -416,9 +426,11 @@ ok( defined $rules_505, '505 rules loaded' );
 # Doc: Current: 505 10 $g Nr. 1. $t Region Neusiedlersee -- $g Nr. 2. $t Region Rosalia/Lithagebirge ...
 # Note: In the Future form, $n replaces $g for part designations.
 # $n gets -- when $t follows (via pchrs t => ' -- ').
-# $t gets -- when $n follows (via cb_post, not pchrs — avoids firing on $i).
+# $t gets -- when $n follows (via COMPOUND pchrs key tn, the precise fix
+#   that avoids firing on $i).
 # Combined string: "Nr. 1 -- Region Neusiedlersee -- Nr. 2 -- ..."
 {
+    # render: 505 10 $n Nr. 1 $t Region Neusiedlersee $n Nr. 2 $t Region Rosalia/Lithagebirge $n Nr. 3 $t Region Mettelburgenland $n Nr. 4 $t Region s\u00fcdliches Burgenland $n Nr. 5 $t Region S\u00fcdburgland
     my $field = make_field(
         '505', '1', '0',
         n => 'Nr. 1',
@@ -461,25 +473,25 @@ ok( defined $rules_505, '505 rules loaded' );
       Koha::Filter::MARC::ISBD4MARCPunctuation::_decorate_field( $field,
         $rules_505, 'prefix' );
     is( $result_pr[1],  'Nr. 1',
-        '505 ex5 prefix: first $n unchanged' );
-    is( $result_pr[3],  ' -- Region Neusiedlersee -- ',
-        '505 ex5 prefix: $t gets " -- " prepended (pending $n) + " -- " appended (cb_post)' );
-    is( $result_pr[5],  'Nr. 2',
-        '505 ex5 prefix: $n clean (no pending — $t used cb_post but pchrs{n} removed)' );
-    is( $result_pr[7],  ' -- Region Rosalia/Lithagebirge -- ',
-        '505 ex5 prefix: next $t gets " -- " prepended + appended' );
-    is( $result_pr[9],  'Nr. 3',
-        '505 ex5 prefix: $n clean' );
-    is( $result_pr[11], ' -- Region Mettelburgenland -- ',
-        '505 ex5 prefix: $t gets prepended + appended' );
-    is( $result_pr[13], 'Nr. 4',
-        '505 ex5 prefix: $n clean' );
-    is( $result_pr[15], ' -- Region s\u00fcdliches Burgenland -- ',
-        '505 ex5 prefix: $t prepended + appended' );
-    is( $result_pr[17], 'Nr. 5',
-        '505 ex5 prefix: $n clean' );
+        '505 ex5 prefix: first $n clean (no preceding sf)' );
+    is( $result_pr[3],  ' -- Region Neusiedlersee',
+        '505 ex5 prefix: $t gets " -- " prepended (pending from $n, single key t)' );
+    is( $result_pr[5],  ' -- Nr. 2',
+        '505 ex5 prefix: $n gets " -- " prepended (pending from $t via compound tn)' );
+    is( $result_pr[7],  ' -- Region Rosalia/Lithagebirge',
+        '505 ex5 prefix: next $t gets " -- " prepended (pending from $n)' );
+    is( $result_pr[9],  ' -- Nr. 3',
+        '505 ex5 prefix: $n gets " -- " prepended (compound tn)' );
+    is( $result_pr[11], ' -- Region Mettelburgenland',
+        '505 ex5 prefix: $t gets " -- " prepended' );
+    is( $result_pr[13], ' -- Nr. 4',
+        '505 ex5 prefix: $n gets " -- " prepended (compound tn)' );
+    is( $result_pr[15], ' -- Region s\u00fcdliches Burgenland',
+        '505 ex5 prefix: $t gets " -- " prepended' );
+    is( $result_pr[17], ' -- Nr. 5',
+        '505 ex5 prefix: $n gets " -- " prepended (compound tn)' );
     is( $result_pr[19], ' -- Region S\u00fcdburgland',
-        '505 ex5 prefix: last $t gets " -- " prepended only (no cb_post — last sf)' );
+        '505 ex5 prefix: last $t gets " -- " prepended (pending from $n)' );
 
     is(
         join( '', @result[ 1, 3, 5, 7, 9, 11, 13, 15, 17, 19 ] ),
@@ -491,8 +503,9 @@ ok( defined $rules_505, '505 rules loaded' );
 # --- Doc Example 6: $i + $n + $t (display text with part designation and title) ---
 # Doc: Future:  505 00 $i Contents of disc 1 $n Episode 1 $t The last of the free $n Episode 2 $t Hammers of the Scots $n Episode 3 $t Bishop makes kings
 # Doc: Current: 505 0# $a Contents of disc 1: Episode 1. The last of the free -- Episode 2. Hammers of the Scots -- Episode 3. Bishop makes kings.
-# $i gets ": " via cb_pre. $n gets " -- " when $t follows (pchrs). $t gets " -- " when $n follows (cb_post).
+# $i gets ": " via cb_pre. $n gets " -- " when $t follows (pchrs t). $t gets " -- " when $n follows (COMPOUND key tn).
 {
+    # render: 505 00 $i Contents of disc 1 $n Episode 1 $t The last of the free $n Episode 2 $t Hammers of the Scots $n Episode 3 $t Bishop makes kings
     my $field = make_field(
         '505', '0', '0',
         i => 'Contents of disc 1',
@@ -529,16 +542,16 @@ ok( defined $rules_505, '505 rules loaded' );
         '505 ex6 prefix: $i gets ": " via cb_pre (no pchrs pending from $i)' );
     is( $result_pr[3],  'Episode 1',
         '505 ex6 prefix: first $n unchanged (no pending — $i does not generate pchrs)' );
-    is( $result_pr[5],  ' -- The last of the free -- ',
-        '505 ex6 prefix: $t gets " -- " prepended (pending from $n) + " -- " appended (cb_post)' );
-    is( $result_pr[7],  'Episode 2',
-        '505 ex6 prefix: $n clean (no pending — $t uses cb_post not pchrs)' );
-    is( $result_pr[9],  ' -- Hammers of the Scots -- ',
-        '505 ex6 prefix: $t gets " -- " prepended (pending from $n) + appended (cb_post)' );
-    is( $result_pr[11], 'Episode 3',
-        '505 ex6 prefix: $n clean' );
+    is( $result_pr[5],  ' -- The last of the free',
+        '505 ex6 prefix: $t gets " -- " prepended (pending from $n, single key t)' );
+    is( $result_pr[7],  ' -- Episode 2',
+        '505 ex6 prefix: $n gets " -- " prepended (pending from $t via compound tn)' );
+    is( $result_pr[9],  ' -- Hammers of the Scots',
+        '505 ex6 prefix: $t gets " -- " prepended (pending from $n)' );
+    is( $result_pr[11], ' -- Episode 3',
+        '505 ex6 prefix: $n gets " -- " prepended (compound tn)' );
     is( $result_pr[13], ' -- Bishop makes kings',
-        '505 ex6 prefix: last $t gets " -- " prepended only (pending from $n, no cb_post)' );
+        '505 ex6 prefix: last $t gets " -- " prepended (pending from $n)' );
 
     is(
         join( '', @result[ 1, 3, 5, 7, 9, 11, 13 ] ),
@@ -549,6 +562,7 @@ ok( defined $rules_505, '505 rules loaded' );
 
 # --- Edge case: $t + $g (title with misc info, no punct between them) ---
 {
+    # render: 505 00 $t Quatrain II $g 16:35
     my $field = make_field(
         '505', '0', '0',
         t => 'Quatrain II',
