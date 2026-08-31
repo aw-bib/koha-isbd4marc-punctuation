@@ -17,6 +17,7 @@ ok( defined $rules_020, '020 rules loaded' );
 # Doc: Future:  020 ## $a 9780060723804 $q acid-free paper
 # Doc: Current: 020 ## $a 9780060723804 $q (acid-free paper)
 {
+    # render: 020 ## $a 9780060723804 $q acid-free paper
     my $field = make_field(
         '020', ' ', ' ',
         a => '9780060723804',
@@ -54,6 +55,7 @@ ok( defined $rules_020, '020 rules loaded' );
 # Doc: Future:  020 ## $a 9780060799748 $q trade
 # Doc: Current: 020 ## $a 9780060799748 $q (trade)
 {
+    # render: 020 ## $a 9780060799748 $q trade
     my $field = make_field(
         '020', ' ', ' ',
         a => '9780060799748',
@@ -83,6 +85,7 @@ ok( defined $rules_020, '020 rules loaded' );
 # Doc: Future:  020 ## $a 0717941728 $q folded $c $0.45
 # Doc: Current: 020 ## $a 0717941728 $q (folded) : $c $0.45
 {
+    # render: 020 ## $a 0717941728 $q folded $c \$0.45
     my $field = make_field(
         '020', ' ', ' ',
         a => '0717941728',
@@ -117,6 +120,7 @@ ok( defined $rules_020, '020 rules loaded' );
 # Doc: Future:  020 ## $a 0914378260 $q pbk. $q v. 1 $c $5.00
 # Doc: Current: 020 ## $a 0914378260 $q (pbk. ; $q v. 1) : $c $5.00
 {
+    # render: 020 ## $a 0914378260 $q pbk. $q v. 1 $c \$5.00
     my $field = make_field(
         '020', ' ', ' ',
         a => '0914378260',
@@ -156,6 +160,7 @@ ok( defined $rules_020, '020 rules loaded' );
 
 # --- Edge case: $a alone ---
 {
+    # render: 020 ## $a 9780060723804
     my $field = make_field( '020', ' ', ' ', a => '9780060723804', );
 
     my @result =

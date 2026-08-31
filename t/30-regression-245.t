@@ -19,6 +19,7 @@ ok( defined $rules, '245 rules loaded' );
 # Doc: Future: 245 14 $a The plays of Oscar Wilde $c Alan Bird
 # Doc: Current: 245 14 $a The plays of Oscar Wilde / $c Alan Bird.
 {
+    # render: 245 14 $a The plays of Oscar Wilde $c Alan Bird
     my $field = make_field( '245', '1', '4',
         a => 'The plays of Oscar Wilde',
         c => 'Alan Bird',
@@ -39,6 +40,7 @@ ok( defined $rules, '245 rules loaded' );
 # Doc: Future: 245 10 $a Rock mechanics $b journal... $r Felsmechanik
 # Doc: Current: 245 10 $a Rock mechanics : $b journal... = $r Felsmechanik.
 {
+    # render: 245 10 $a Rock mechanics $b journal of the International Society for Rock Mechanics $r Felsmechanik
     my $field = make_field( '245', '1', '0',
         a => 'Rock mechanics',
         b => 'journal of the International Society for Rock Mechanics',
@@ -62,6 +64,7 @@ ok( defined $rules, '245 rules loaded' );
 # Doc: Future: 245 00 $a Retail et volaille $c Bureau... $r Livestock... $c Quebec...
 # Doc: Current: 245 00 $a Retail et volaille / $c Bureau... = $r Livestock... / $c Quebec...
 {
+    # render: 245 00 $a Retail et volaille $c Bureau des statistiques de Québec $r Livestock and poultry $c Quebec Bureau of Statistics
     my $field = make_field( '245', '0', '0',
         a => 'Retail et volaille',
         c => 'Bureau des statistiques de Québec',
@@ -88,6 +91,7 @@ ok( defined $rules, '245 rules loaded' );
 # Doc: Future: 245 10 $a How to play chess $c Kevin Wicker $d with a foreword... $d illustrated...
 # Doc: Current: 245 10 $a How to play chess / $c Kevin Wicker ; $d with a foreword... ; $d illustrated...
 {
+    # render: 245 10 $a How to play chess $c Kevin Wicker $d with a foreword by David Pritchard $d illustrated by Karel Feuerstein
     my $field = make_field( '245', '1', '0',
         a => 'How to play chess',
         c => 'Kevin Wicker',

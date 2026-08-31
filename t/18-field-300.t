@@ -22,6 +22,7 @@ ok( defined $rules_300, '300 rules loaded' );
 # Doc: Future:  300 ## $a 149 pages $c 23 cm
 # Doc: Current: 300 ## $a 149 pages ; $c 23 cm.
 {
+    # render: 300 ## $a 149 pages $c 23 cm
     my $field = make_field(
         '300', '#', '#',
         a => '149 pages',
@@ -52,6 +53,7 @@ ok( defined $rules_300, '300 rules loaded' );
 # Doc: Future:  300 ## $a 1 score (16 pages) $c 29 cm
 # Doc: Current: 300 ## $a 1 score (16 pages) ; $c 29 cm.
 {
+    # render: 300 ## $a 1 score (16 pages) $c 29 cm
     my $field = make_field(
         '300', '#', '#',
         a => '1 score (16 pages)',
@@ -85,6 +87,7 @@ ok( defined $rules_300, '300 rules loaded' );
 # Doc: Future:  300 ## $a 1 audio disc (20 min.) $b analog, 33 1/3 rpm, stereo $c 12 in.
 # Doc: Current: 300 ## $a 1 audio disc (20 min.) : $b analog, 33 1/3 rpm, stereo ; $c 12 in.
 {
+    # render: 300 ## $a 1 audio disc (20 min.) $b analog, 33 1/3 rpm, stereo $c 12 in.
     my $field = make_field(
         '300', '#', '#',
         a => '1 audio disc (20 min.)',
@@ -133,6 +136,7 @@ ok( defined $rules_300, '300 rules loaded' );
 # Doc: Future:  300 ## $a 1 score (30 pages) $c 20 cm $a 16 parts $c 32 cm
 # Doc: Current: 300 ## $a 1 score (30 pages) ; $c 20 cm. + $a 16 parts ; $c 32 cm.
 {
+    # render: 300 ## $a 1 score (30 pages) $c 20 cm $a 16 parts $c 32 cm
     my $field = make_field(
         '300', '#', '#',
         a => '1 score (30 pages)',
@@ -180,6 +184,7 @@ ok( defined $rules_300, '300 rules loaded' );
 # Doc: Future:  300 ## $a 1 print $b lithograph, black and white $c image 33 x 41 cm, on sheet 46 x 57 cm
 # Doc: Current: 300 ## $a 1 print : $b lithograph, black and white ; $c image 33 x 41 cm., on sheet 46 x 57 cm.
 {
+    # render: 300 ## $a 1 print $b lithograph, black and white $c image 33 x 41 cm, on sheet 46 x 57 cm
     my $field = make_field(
         '300', '#', '#',
         a => '1 print',
@@ -230,6 +235,7 @@ ok( defined $rules_300, '300 rules loaded' );
 # Doc: Current: 300 ## $a 271 pages : $b ill. ; $c 21 cm + $e 1 atlas (37 pages, 19 leaves : color maps ; 37 cm)
 # Note: $h is wrapped in parentheses, but $i/$j grouping is not implemented (gap)
 {
+    # render: 300 ## $a 271 pages $b ill. $c 21 cm $e 1 atlas $h 37 pages, 19 leaves $i color maps $j 37 cm
     my $field = make_field(
         '300', '#', '#',
         a => '271 pages',
@@ -286,6 +292,7 @@ ok( defined $rules_300, '300 rules loaded' );
 
 # --- Edge case: $a alone ---
 {
+    # render: 300 ## $a 95 linear ft.
     my $field = make_field( '300', '#', '#', a => '95 linear ft.', );
 
     my @result =
@@ -307,6 +314,7 @@ ok( defined $rules_300, '300 rules loaded' );
 
 # --- Edge case: $a + $b only (no $c) ---
 {
+    # render: 300 ## $a volumes $b illustrations (some color)
     my $field = make_field(
         '300', '#', '#',
         a => 'volumes',
@@ -342,6 +350,7 @@ ok( defined $rules_300, '300 rules loaded' );
 
 # --- Edge case: $a + $e (accompanying material only, no $b/$c) ---
 {
+    # render: 300 ## $a 1 computer disk $e reference manual
     my $field = make_field(
         '300', '#', '#',
         a => '1 computer disk',
@@ -385,6 +394,7 @@ ok( defined $rules_300, '300 rules loaded' );
 
 # --- Edge case: $h alone (data from $3-poems example) ---
 {
+    # render: 300 ## $h 37 pages
     my $field = make_field( '300', '#', '#', h => '37 pages', );
 
     my @result =
@@ -407,6 +417,7 @@ ok( defined $rules_300, '300 rules loaded' );
 
 # --- Edge case: $a + $h (no $e in between -- rare but possible) ---
 {
+    # render: 300 ## $a 5 boxes $h 24 linear ft.
     my $field = make_field(
         '300', '#', '#',
         a => '5 boxes',
@@ -445,6 +456,7 @@ ok( defined $rules_300, '300 rules loaded' );
 # This would be: $a 1 score (30 p.) $a 16 parts
 # First $a gets " + " because next sf is $a
 {
+    # render: 300 ## $a 1 score (30 p.) $a 16 parts
     my $field = make_field(
         '300', '#', '#',
         a => '1 score (30 p.)',

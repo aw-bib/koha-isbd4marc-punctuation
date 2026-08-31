@@ -278,6 +278,7 @@ ok( defined $rules_505, '505 rules loaded' );
 
 # --- Standard: $t alone ---
 {
+    # render: 505 00 $t Single title
     my $field = make_field( '505', '0', '0', t => 'Single title', );
 
     my @result =
@@ -299,6 +300,7 @@ ok( defined $rules_505, '505 rules loaded' );
 
 # --- Edge case: $g alone ---
 {
+    # render: 505 00 $g 16:35
     my $field = make_field( '505', '0', '0', g => '16:35', );
 
     my @result =
@@ -321,6 +323,7 @@ ok( defined $rules_505, '505 rules loaded' );
 # --- Edge case: $a alone (basic format, second indicator #) ---
 # $a has no ISBD punctuation rules
 {
+    # render: 505 0# $a Future land use plan -- Recommended capital improvements -- Existing land use -- Existing zoning
     my $field = make_field( '505', '0', '#',
         a =>
 'Future land use plan -- Recommended capital improvements -- Existing land use -- Existing zoning',
@@ -353,6 +356,7 @@ ok( defined $rules_505, '505 rules loaded' );
 
 # --- Edge case: $t + $r (single title with responsibility) ---
 {
+    # render: 505 20 $t Quark models $r J. Rosner
     my $field = make_field(
         '505', '2', '0',
         t => 'Quark models',
@@ -386,6 +390,7 @@ ok( defined $rules_505, '505 rules loaded' );
 
 # --- Edge case: $g + $t (misc info followed by title, no preceding punct on $g) ---
 {
+    # render: 505 10 $g 16:35 $t Waves
     my $field = make_field(
         '505', '1', '0',
         g => '16:35',
@@ -557,6 +562,7 @@ ok( defined $rules_505, '505 rules loaded' );
 
 # --- Edge case: $t + $g (title with misc info, no punct between them) ---
 {
+    # render: 505 00 $t Quatrain II $g 16:35
     my $field = make_field(
         '505', '0', '0',
         t => 'Quatrain II',

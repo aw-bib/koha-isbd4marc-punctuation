@@ -21,6 +21,7 @@ ok( defined $rules_246, '246 rules loaded' );
 # Doc: Future: 246 1# $i Panel title $a Welcome to big Wyoming
 # Doc: Current: 246 1# $i Panel title: $a Welcome to big Wyoming
 {
+    # render: 246 1# $i Panel title $a Welcome to big Wyoming
     my $field = make_field( '246', '1', ' ',
         i => 'Panel title',
         a => 'Welcome to big Wyoming',
@@ -46,6 +47,7 @@ ok( defined $rules_247, '247 rules loaded' );
 # Doc: Future: 247 10 $a Progress report... $g varies slightly $f 1st-10th
 # Doc: Current: 247 10 $a Progress report... $g (varies slightly) $f 1st-10th
 {
+    # render: 247 10 $a Progress report under the joint program to improve accounting in the Federal Government $g varies slightly $f 1st-10th
     my $field = make_field( '247', '1', '0',
         a => 'Progress report under the joint program to improve accounting in the Federal Government',
         g => 'varies slightly',

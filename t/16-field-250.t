@@ -17,6 +17,7 @@ ok( defined $rules_250, '250 rules loaded' );
 # Doc: Future:  250 ## $a Canadian ed. $r Éd. canadienne
 # Doc: Current: 250 ## $a Canadian ed. = Éd. canadienne.
 {
+    # render: 250 ## $a Canadian ed. $r Éd. canadienne
     my $field = make_field(
         '250', ' ', ' ',
         a => 'Canadian ed.',
@@ -58,6 +59,7 @@ ok( defined $rules_250, '250 rules loaded' );
 # Doc: Future:  250 ## $a 3rd draft $c edited by Paul Watson
 # Doc: Current: 250 ## $a 3rd draft / $b edited by Paul Watson.
 {
+    # render: 250 ## $a 3rd draft $c edited by Paul Watson
     my $field = make_field(
         '250', ' ', ' ',
         a => '3rd draft',
@@ -96,6 +98,7 @@ ok( defined $rules_250, '250 rules loaded' );
 # Doc: Future:  250 ## $a 4th ed. $c revised by J.G. Le Mesurier and E. McIntosh
 # Doc: Current: 250 ## $a 4th ed. / $b revised by J.G. Le Mesurier and E. McIntosh.
 {
+    # render: 250 ## $a 4th ed. $c revised by J.G. Le Mesurier and E. McIntosh
     my $field = make_field(
         '250', ' ', ' ',
         a => '4th ed.',
@@ -134,6 +137,7 @@ ok( defined $rules_250, '250 rules loaded' );
 # Doc: Future:  250 ## $a Rev. ed. $c with revisions, an introduction, and a chapter on writing by E.B. White
 # Doc: Current: 250 ## $a Rev. ed. / $b with revisions, an introduction, and a chapter on writing by E.B. White.
 {
+    # render: 250 ## $a Rev. ed. $c with revisions, an introduction, and a chapter on writing by E.B. White
     my $field = make_field(
         '250', ' ', ' ',
         a => 'Rev. ed.',
@@ -171,6 +175,7 @@ ok( defined $rules_250, '250 rules loaded' );
 
 # --- Edge case: $a alone ---
 {
+    # render: 250 ## $a 2nd ed.
     my $field = make_field( '250', ' ', ' ', a => '2nd ed.', );
 
     my @result =
@@ -193,6 +198,7 @@ ok( defined $rules_250, '250 rules loaded' );
 # --- Edge case: $a + $c + $d (responsibility + subsequent responsibility) ---
 # Not directly from doc examples, but tests the $c->$d chain
 {
+    # render: 250 ## $a 2nd ed. $c revised by John Smith $d with a foreword by Jane Doe
     my $field = make_field(
         '250', ' ', ' ',
         a => '2nd ed.',
