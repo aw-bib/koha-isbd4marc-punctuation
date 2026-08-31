@@ -5,7 +5,8 @@
 # Excludes $g alone (example 15) and $e/$f/$g group (example 14) — needs review.
 #
 # NOTE on pchrs behavior:
-# - $a/$a separator " ; " is PREPENDED to the second $a via cb_pre
+# - $a/$a separator " ; " via COMPOUND key aa (postfix: appended to first $a;
+#   prefix: prepended to second $a). $b/$a via compound ba.
 # - $b/$b separator " : " is appended via pchrs (b => ' : ')
 # - All pchrs values are comma-space ', ' NOT space-comma-space ' , '
 
@@ -27,6 +28,7 @@ ok( defined $rules_260, '260 rules loaded' );
 # Doc: Future: 260 ## $a Washington, D.C. $b U.S. Dept... $b For sale by... $c 1981
 # Doc: Current: 260 ## $a Washington, D.C. : $b U.S. Dept... : $b For sale by... , $c 1981
 {
+    # render: 260 ## $a Washington, D.C. $b U.S. Dept. of Agriculture, Forest Service $b For sale by the Supt. of Docs. U.S. G.P.O. $c 1981
     my $field = make_field( '260', ' ', ' ',
         a => 'Washington, D.C.',
         b => 'U.S. Dept. of Agriculture, Forest Service',
@@ -52,8 +54,10 @@ ok( defined $rules_260, '260 rules loaded' );
 # --- Example 11: Multiple $a with $b and $c ---
 # Doc: Future: 260 ## $a New York $a Berlin $b Springer Verlag $c 1977
 # Doc: Current: 260 ## $a New York ; $a Berlin : $b Springer Verlag , $c 1977
-# Note: " ; " is PREPENDED to second $a via cb_pre, not appended to first $a
+# Note: " ; " is appended to the FIRST $a via the COMPOUND pchrs key aa
+# (postfix), and moves to the second $a only in prefix mode.
 {
+    # render: 260 ## $a New York $a Berlin $b Springer Verlag $c 1977
     my $field = make_field( '260', ' ', ' ',
         a => 'New York',
         a => 'Berlin',
@@ -62,14 +66,14 @@ ok( defined $rules_260, '260 rules loaded' );
     );
 
     my @result = Koha::Filter::MARC::ISBD4MARCPunctuation::_decorate_field( $field, $rules_260, 'postfix' );
-    is( $result[1], 'New York',       '260 ex11: first $a unchanged (no separator after last sf)' );
-    is( $result[3], ' ; Berlin : ',   '260 ex11: second $a gets " ; " prepended, " : " for $b' );
+    is( $result[1], 'New York ; ',       '260 ex11: first $a gets " ; " (compound aa)' );
+    is( $result[3], 'Berlin : ',   '260 ex11: second $a gets " : " for $b' );
     is( $result[5], 'Springer Verlag, ', '260 ex11: $b gets ", " for $c' );
     is( $result[7], '1977',           '260 ex11: $c (last) unchanged' );
 
     my @result_pr = Koha::Filter::MARC::ISBD4MARCPunctuation::_decorate_field( $field, $rules_260, 'prefix' );
     is( $result_pr[1], 'New York',         '260 ex11 prefix: first $a unchanged' );
-    is( $result_pr[3], ' ; Berlin',        '260 ex11 prefix: second $a gets " ; " via cb_pre' );
+    is( $result_pr[3], ' ; Berlin',        '260 ex11 prefix: second $a gets " ; " prepended (pending aa)' );
     is( $result_pr[5], ' : Springer Verlag', '260 ex11 prefix: $b gets " : " prepended' );
     is( $result_pr[7], ', 1977',            '260 ex11 prefix: $c gets ", " prepended' );
 
@@ -79,8 +83,10 @@ ok( defined $rules_260, '260 rules loaded' );
 # --- Example 12: Interleaved $a/$b ---
 # Doc: Future: 260 ## $a Paris $b Gauthier-Villars $a Chicago $b University of Chicago Press $c 1955
 # Doc: Current: 260 ## $a Paris : $b Gauthier-Villars ; $a Chicago : $b University of Chicago Press , $c 1955
-# Note: " ; " is PREPENDED to second $a via cb_pre
+# Note: " ; " is appended to $b when followed by $a (compound ba) in postfix,
+# and moves to the second $a (prepended) in prefix mode.
 {
+    # render: 260 ## $a Paris $b Gauthier-Villars $a Chicago $b University of Chicago Press $c 1955
     my $field = make_field( '260', ' ', ' ',
         a => 'Paris',
         b => 'Gauthier-Villars',
@@ -91,15 +97,15 @@ ok( defined $rules_260, '260 rules loaded' );
 
     my @result = Koha::Filter::MARC::ISBD4MARCPunctuation::_decorate_field( $field, $rules_260, 'postfix' );
     is( $result[1], 'Paris : ',                       '260 ex12: first $a gets " : " for first $b' );
-    is( $result[3], 'Gauthier-Villars',               '260 ex12: first $b unchanged (next sf is $a, no pchrs for a)' );
-    is( $result[5], ' ; Chicago : ',                  '260 ex12: second $a gets " ; " prepended, " : " for second $b' );
+    is( $result[3], 'Gauthier-Villars ; ',               '260 ex12: $b gets " ; " when followed by $a (compound ba)' );
+    is( $result[5], 'Chicago : ',                  '260 ex12: second $a gets " : " for second $b' );
     is( $result[7], 'University of Chicago Press, ',  '260 ex12: second $b gets ", " for $c' );
     is( $result[9], '1955',                           '260 ex12: $c (last) unchanged' );
 
     my @result_pr = Koha::Filter::MARC::ISBD4MARCPunctuation::_decorate_field( $field, $rules_260, 'prefix' );
     is( $result_pr[1], 'Paris',                         '260 ex12 prefix: first $a unchanged' );
     is( $result_pr[3], ' : Gauthier-Villars',           '260 ex12 prefix: first $b gets " : " prepended' );
-    is( $result_pr[5], ' ; Chicago',                    '260 ex12 prefix: second $a gets " ; " via cb_pre' );
+    is( $result_pr[5], ' ; Chicago',                    '260 ex12 prefix: second $a gets " ; " via pending (ba)' );
     is( $result_pr[7], ' : University of Chicago Press', '260 ex12 prefix: second $b gets " : " prepended' );
     is( $result_pr[9], ', 1955',                         '260 ex12 prefix: $c gets ", " prepended' );
 
@@ -110,6 +116,7 @@ ok( defined $rules_260, '260 rules loaded' );
 # Doc: Future: 260 ## $a Washington, D.C. $q 1649 K St.... $b Wider Opportunities... $c 1979
 # Doc: Current: 260 ## $a Washington, D.C. ($q 1649 K St....) : $b Wider Opportunities... , $c 1979
 {
+    # render: 260 ## $a Washington, D.C. $q 1649 K St., N.W., Washington 20006 $b Wider Opportunities for Women $c 1979
     my $field = make_field( '260', ' ', ' ',
         a => 'Washington, D.C.',
         q => '1649 K St., N.W., Washington 20006',
@@ -136,6 +143,7 @@ ok( defined $rules_260, '260 rules loaded' );
 # Doc: Future: 260 3# $3 June 1993- $a London $b Elle
 # Doc: Current: 260 3# $3 June 1993-: $a London : $b Elle
 {
+    # render: 260 3# $3 June 1993- $a London $b Elle
     my $field = make_field( '260', '3', '#',
         '3' => 'June 1993-',
         a   => 'London',
@@ -162,6 +170,7 @@ ok( defined $rules_264, '264 rules loaded' );
 
 # --- Example 17: Basic $a/$b/$c ---
 {
+    # render: 264 #1 $a Washington, D.C. $b U.S. Dept. of Agriculture, Forest Service $c 1981
     my $field = make_field( '264', '#', '1',
         a => 'Washington, D.C.',
         b => 'U.S. Dept. of Agriculture, Forest Service',
@@ -182,8 +191,10 @@ ok( defined $rules_264, '264 rules loaded' );
 }
 
 # --- Example 18: Multiple $a ---
-# Note: " ; " is PREPENDED to second $a via cb_pre
+# " ; " is appended to the FIRST $a via the COMPOUND key aa (postfix),
+# moving to the second $a only in prefix mode.
 {
+    # render: 264 #1 $a New York $a Berlin $b Springer Verlag $c 1977
     my $field = make_field( '264', '#', '1',
         a => 'New York',
         a => 'Berlin',
@@ -192,14 +203,14 @@ ok( defined $rules_264, '264 rules loaded' );
     );
 
     my @result = Koha::Filter::MARC::ISBD4MARCPunctuation::_decorate_field( $field, $rules_264, 'postfix' );
-    is( $result[1], 'New York',           '264 ex18: first $a unchanged (no separator after last sf)' );
-    is( $result[3], ' ; Berlin : ',       '264 ex18: second $a gets " ; " prepended, " : " for $b' );
+    is( $result[1], 'New York ; ',       '264 ex18: first $a gets " ; " (compound aa)' );
+    is( $result[3], 'Berlin : ',       '264 ex18: second $a gets " : " for $b' );
     is( $result[5], 'Springer Verlag, ',  '264 ex18: $b gets ", " for $c' );
     is( $result[7], '1977',              '264 ex18: $c (last) unchanged' );
 
     my @result_pr = Koha::Filter::MARC::ISBD4MARCPunctuation::_decorate_field( $field, $rules_264, 'prefix' );
     is( $result_pr[1], 'New York',         '264 ex18 prefix: first $a unchanged' );
-    is( $result_pr[3], ' ; Berlin',        '264 ex18 prefix: second $a gets " ; " via cb_pre' );
+    is( $result_pr[3], ' ; Berlin',        '264 ex18 prefix: second $a gets " ; " prepended (pending aa)' );
     is( $result_pr[5], ' : Springer Verlag', '264 ex18 prefix: $b gets " : " prepended' );
     is( $result_pr[7], ', 1977',            '264 ex18 prefix: $c gets ", " prepended' );
 
@@ -208,6 +219,7 @@ ok( defined $rules_264, '264 rules loaded' );
 
 # --- Example 19: Interleaved $a/$b ---
 {
+    # render: 264 #1 $a Paris $b Gauthier-Villars $a Chicago $b University of Chicago Press $c 1955
     my $field = make_field( '264', '#', '1',
         a => 'Paris',
         b => 'Gauthier-Villars',
@@ -218,15 +230,15 @@ ok( defined $rules_264, '264 rules loaded' );
 
     my @result = Koha::Filter::MARC::ISBD4MARCPunctuation::_decorate_field( $field, $rules_264, 'postfix' );
     is( $result[1], 'Paris : ',                       '264 ex19: first $a gets " : " for first $b' );
-    is( $result[3], 'Gauthier-Villars',               '264 ex19: first $b unchanged (no pchrs for $a)' );
-    is( $result[5], ' ; Chicago : ',                  '264 ex19: second $a gets " ; " prepended, " : " for second $b' );
+    is( $result[3], 'Gauthier-Villars ; ',               '264 ex19: $b gets " ; " when followed by $a (compound ba)' );
+    is( $result[5], 'Chicago : ',                  '264 ex19: second $a gets " : " for second $b' );
     is( $result[7], 'University of Chicago Press, ',  '264 ex19: second $b gets ", " for $c' );
     is( $result[9], '1955',                           '264 ex19: $c (last) unchanged' );
 
     my @result_pr = Koha::Filter::MARC::ISBD4MARCPunctuation::_decorate_field( $field, $rules_264, 'prefix' );
     is( $result_pr[1], 'Paris',                         '264 ex19 prefix: first $a unchanged' );
     is( $result_pr[3], ' : Gauthier-Villars',           '264 ex19 prefix: first $b gets " : " prepended' );
-    is( $result_pr[5], ' ; Chicago',                    '264 ex19 prefix: second $a gets " ; " via cb_pre' );
+    is( $result_pr[5], ' ; Chicago',                    '264 ex19 prefix: second $a gets " ; " via pending (ba)' );
     is( $result_pr[7], ' : University of Chicago Press', '264 ex19 prefix: second $b gets " : " prepended' );
     is( $result_pr[9], ', 1955',                         '264 ex19 prefix: $c gets ", " prepended' );
 
@@ -235,6 +247,7 @@ ok( defined $rules_264, '264 rules loaded' );
 
 # --- Example 20: $q for address ---
 {
+    # render: 264 #1 $a Washington, D.C. $q 1649 K St., N.W., Washington 20006 $b Wider Opportunities for Women $c 1979
     my $field = make_field( '264', '#', '1',
         a => 'Washington, D.C.',
         q => '1649 K St., N.W., Washington 20006',
@@ -259,6 +272,7 @@ ok( defined $rules_264, '264 rules loaded' );
 
 # --- Example 21: $3 (materials specified) ---
 {
+    # render: 264 31 $3 June 1993- $a London $b Elle
     my $field = make_field( '264', '3', '1',
         '3' => 'June 1993-',
         a   => 'London',

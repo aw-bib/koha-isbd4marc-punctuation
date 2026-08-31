@@ -211,12 +211,18 @@ use constant RULES => {
     # 260 – Publication, Distribution, etc. (Imprint)
     # ISBD punct: $a ; $a : $b , $c ( $e : $f , $g ) (q)
     # Note: $e/$f/$g form a grouped parenthetical: ($e : $f , $g)
+    # Repeated $a (and $b followed by $a) are separated with " ; " via the
+    # COMPOUND pchrs keys aa/ba (fires when a subfield is followed by $a).
+    # A bare single `a` would also fire on $3$a, producing a spurious ' ;'
+    # before the post ' : '. Compound keys avoid that (see also 264).
     260 => {
         pchrs => {
-            b => ' : ',
-            c => ', ',
-            r => ' = ',
-            t => ' = ',
+            aa => ' ; ',
+            ba => ' ; ',
+            b  => ' : ',
+            c  => ', ',
+            r  => ' = ',
+            t  => ' = ',
         },
         post   => { 3 => ': ' },
         wrap   => { q => [ '(', ')' ] },
@@ -225,26 +231,21 @@ use constant RULES => {
 
     # 264 – Production, Publication, Distribution, Manufacture, and Copyright
     # Similar to 260 but without $e/$f/$g grouping
+    # Repeated $a (and $b followed by $a) are separated with " ; " via the
+    # COMPOUND pchrs keys aa/ba (fires when a subfield is followed by $a).
+    # A bare single `a` would also fire on $3$a (e.g. $3 August 1990 $a Berlin),
+    # producing a spurious ' ;' before the post ' : '. Compound keys avoid that.
     264 => {
         pchrs => {
-            b => ' : ',
-            c => ', ',
-            r => ' = ',
-            t => ' = ',
+            aa => ' ; ',
+            ba => ' ; ',
+            b  => ' : ',
+            c  => ', ',
+            r  => ' = ',
+            t  => ' = ',
         },
-        post   => { 3 => ': ' },
-        wrap   => { q => [ '(', ')' ] },
-        cb_pre => sub {
-            my ( $sf, $value, $i, $subfields, $last_sf_ref ) = @_;
-            my $last_sf = $$last_sf_ref;
-            if ( $sf eq 'a' and $last_sf eq 'a' ) {
-                $value = " ; $value";
-            }
-            if ( $sf eq 'a' and $last_sf eq 'b' ) {
-                $value = " ; $value";
-            }
-            return $value;
-        },
+        post => { 3 => ': ' },
+        wrap => { q => [ '(', ')' ] },
     },
 
     # 300 – Physical Description
@@ -294,34 +295,27 @@ use constant RULES => {
         },
     },
 
- # 505 – Formatted Contents Note
- # ISBD punct: $t -- $t / $r  (between titles), $g wrapped in (...)
- # $t gets preceding -- when another $t or $r follows
- # $r gets preceding /
- # $i (display text) gets trailing ': ' via cb_pre
- # $n (part designation): $n gets ' -- ' when $t follows (via pchrs t => ' -- ')
- # $t/$g get ' -- ' when $n follows (via cb_post, NOT pchrs —
- #   because pchrs would also fire on $i when $n follows, which is wrong)
+    # 505 – Formatted Contents Note
+    # ISBD punct: $t -- $t / $r  (between titles), $g wrapped in (...)
+    # $t gets preceding -- when another $t or $r follows
+    # $r gets preceding /
+    # $i (display text) gets trailing ': ' via cb_pre
+    # $n (part designation): $n gets ' -- ' when $t follows
+    #   (single pchrs key `t`, fires whenever a subfield is followed by $t)
+    # $t/$g get ' -- ' when $n follows via COMPOUND keys tn/gn — this is the
+    #   precise fix: a plain single key `n` would also fire on $i when $n
+    #   follows, which would be wrong. Compound keys only fire on $t/$g+n.
     505 => {
         pchrs => {
-            r => ' / ',
-            t => ' -- ',
+            r  => ' / ',
+            t  => ' -- ',
+            tn => ' -- ',
+            gn => ' -- ',
         },
         wrap   => { g => [ '(', ')' ] },
         cb_pre => sub {
             my ( $sf, $value ) = @_;
             return $sf eq 'i' ? "$value: " : $value;
-        },
-        cb_post => sub {
-            my ( $sf, $value, $i, $subfields, $last_sf_ref ) = @_;
-            my $next_sf =
-                $subfields->[ $i + 1 ]
-              ? $subfields->[ $i + 1 ]->[0]
-              : '';
-            if ( $next_sf eq 'n' && ( $sf eq 't' || $sf eq 'g' ) ) {
-                return "$value -- ";
-            }
-            return $value;
         },
     },
 
@@ -604,27 +598,19 @@ sub _decorate_field {
 
 =head2 _decorate_260_pre
 
-Pre-callback for field 260. Handles the complex grouping logic
-for C<$e> (producer), C<$f> (producer place), and C<$g>
-(production date) which form a parenthetical group together.
+Pre-callback for field 260. Handles the parenthetical grouping of C
+(producer), C (producer place) and C (production date)/C
+which form the C<($e : $f , $g)> group together.
 
-Also handles multiple C<$a> and C<$a> after C<$b> for 260.
+The  C< ; > separators between repeated C and after C
+are provided declaratively by the COMPOUND C<pchrs aa/ba keys> in step 4.
+This callback handles only the group's parentheses.
 
 =cut
 
 sub _decorate_260_pre {
     my ( $sf, $value, $i, $subfields, $last_sf_ref ) = @_;
     my $last_sf = $$last_sf_ref;
-
-    # Multiple $a: separate with " ; "
-    if ( $sf eq 'a' and $last_sf eq 'a' ) {
-        $value = " ; $value";
-    }
-
-    # $a after $b: separate with " ; "
-    if ( $sf eq 'a' and $last_sf eq 'b' ) {
-        $value = " ; $value";
-    }
 
    # $e/$f/$g grouping: open parenthetical
    #
