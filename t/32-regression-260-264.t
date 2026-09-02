@@ -14,14 +14,18 @@ use strict;
 use warnings;
 use lib 't/lib';
 use Koha::RecordProcessor::Base;
-use t::lib::TestHelper qw(make_field);
+use t::lib::TestHelper qw(make_field combined_string check_combined);
 
 use Test::More;
 use Koha::Filter::MARC::ISBD4MARCPunctuation;
 
+# The rule set this test targets.
+my $SET = 'LoC/PCC';
+note( "Rule set under test: $SET" );
+
 # --- Field 260 ---
 
-my $rules_260 = Koha::Filter::MARC::ISBD4MARCPunctuation::RULES->{260};
+my $rules_260 = Koha::Filter::MARC::ISBD4MARCPunctuation::rules_for($SET)->{260};
 ok( defined $rules_260, '260 rules loaded' );
 
 # --- Example 10: Multiple $b with $c ---
@@ -48,7 +52,7 @@ ok( defined $rules_260, '260 rules loaded' );
     is( $result_pr[5], ' : For sale by the Supt. of Docs. U.S. G.P.O.', '260 ex10 prefix: second $b gets " : " prepended' );
     is( $result_pr[7], ', 1981',                                        '260 ex10 prefix: $c gets ", " prepended' );
 
-    is( join('', @result[1,3,5,7]), join('', @result_pr[1,3,5,7]), '260 ex10: combined string identical' );
+    check_combined( \@result, \@result_pr, '260 ex10: combined string identical' );
 }
 
 # --- Example 11: Multiple $a with $b and $c ---
@@ -77,7 +81,7 @@ ok( defined $rules_260, '260 rules loaded' );
     is( $result_pr[5], ' : Springer Verlag', '260 ex11 prefix: $b gets " : " prepended' );
     is( $result_pr[7], ', 1977',            '260 ex11 prefix: $c gets ", " prepended' );
 
-    is( join('', @result[1,3,5,7]), join('', @result_pr[1,3,5,7]), '260 ex11: combined string identical' );
+    check_combined( \@result, \@result_pr, '260 ex11: combined string identical' );
 }
 
 # --- Example 12: Interleaved $a/$b ---
@@ -109,7 +113,7 @@ ok( defined $rules_260, '260 rules loaded' );
     is( $result_pr[7], ' : University of Chicago Press', '260 ex12 prefix: second $b gets " : " prepended' );
     is( $result_pr[9], ', 1955',                         '260 ex12 prefix: $c gets ", " prepended' );
 
-    is( join('', @result[1,3,5,7,9]), join('', @result_pr[1,3,5,7,9]), '260 ex12: combined string identical' );
+    check_combined( \@result, \@result_pr, '260 ex12: combined string identical' );
 }
 
 # --- Example 13: $q for address (between $a and $b) ---
@@ -136,7 +140,7 @@ ok( defined $rules_260, '260 rules loaded' );
     is( $result_pr[5], ' : Wider Opportunities for Women',               '260 ex13 prefix: $b gets " : " prepended' );
     is( $result_pr[7], ', 1979',                                          '260 ex13 prefix: $c gets ", " prepended' );
 
-    is( join('', @result[1,3,5,7]), join('', @result_pr[1,3,5,7]), '260 ex13: combined string identical' );
+    check_combined( \@result, \@result_pr, '260 ex13: combined string identical' );
 }
 
 # --- Example 16: $3 (materials specified) ---
@@ -160,12 +164,12 @@ ok( defined $rules_260, '260 rules loaded' );
     is( $result_pr[3], 'London',        '260 ex16 prefix: $a unchanged' );
     is( $result_pr[5], ' : Elle',       '260 ex16 prefix: $b gets " : " prepended' );
 
-    is( join('', @result[1,3,5]), join('', @result_pr[1,3,5]), '260 ex16: combined string identical' );
+    check_combined( \@result, \@result_pr, '260 ex16: combined string identical' );
 }
 
 # --- Field 264 ---
 
-my $rules_264 = Koha::Filter::MARC::ISBD4MARCPunctuation::RULES->{264};
+my $rules_264 = Koha::Filter::MARC::ISBD4MARCPunctuation::rules_for($SET)->{264};
 ok( defined $rules_264, '264 rules loaded' );
 
 # --- Example 17: Basic $a/$b/$c ---
@@ -187,7 +191,7 @@ ok( defined $rules_264, '264 rules loaded' );
     is( $result_pr[3], ' : U.S. Dept. of Agriculture, Forest Service', '264 ex17 prefix: $b gets " : " prepended' );
     is( $result_pr[5], ', 1981',                                       '264 ex17 prefix: $c gets ", " prepended' );
 
-    is( join('', @result[1,3,5]), join('', @result_pr[1,3,5]), '264 ex17: combined string identical' );
+    check_combined( \@result, \@result_pr, '264 ex17: combined string identical' );
 }
 
 # --- Example 18: Multiple $a ---
@@ -214,7 +218,7 @@ ok( defined $rules_264, '264 rules loaded' );
     is( $result_pr[5], ' : Springer Verlag', '264 ex18 prefix: $b gets " : " prepended' );
     is( $result_pr[7], ', 1977',            '264 ex18 prefix: $c gets ", " prepended' );
 
-    is( join('', @result[1,3,5,7]), join('', @result_pr[1,3,5,7]), '264 ex18: combined string identical' );
+    check_combined( \@result, \@result_pr, '264 ex18: combined string identical' );
 }
 
 # --- Example 19: Interleaved $a/$b ---
@@ -242,7 +246,7 @@ ok( defined $rules_264, '264 rules loaded' );
     is( $result_pr[7], ' : University of Chicago Press', '264 ex19 prefix: second $b gets " : " prepended' );
     is( $result_pr[9], ', 1955',                         '264 ex19 prefix: $c gets ", " prepended' );
 
-    is( join('', @result[1,3,5,7,9]), join('', @result_pr[1,3,5,7,9]), '264 ex19: combined string identical' );
+    check_combined( \@result, \@result_pr, '264 ex19: combined string identical' );
 }
 
 # --- Example 20: $q for address ---
@@ -267,7 +271,7 @@ ok( defined $rules_264, '264 rules loaded' );
     is( $result_pr[5], ' : Wider Opportunities for Women',               '264 ex20 prefix: $b gets " : " prepended' );
     is( $result_pr[7], ', 1979',                                          '264 ex20 prefix: $c gets ", " prepended' );
 
-    is( join('', @result[1,3,5,7]), join('', @result_pr[1,3,5,7]), '264 ex20: combined string identical' );
+    check_combined( \@result, \@result_pr, '264 ex20: combined string identical' );
 }
 
 # --- Example 21: $3 (materials specified) ---
@@ -289,7 +293,7 @@ ok( defined $rules_264, '264 rules loaded' );
     is( $result_pr[3], 'London',        '264 ex21 prefix: $a unchanged' );
     is( $result_pr[5], ' : Elle',       '264 ex21 prefix: $b gets " : " prepended' );
 
-    is( join('', @result[1,3,5]), join('', @result_pr[1,3,5]), '264 ex21: combined string identical' );
+    check_combined( \@result, \@result_pr, '264 ex21: combined string identical' );
 }
 
 done_testing();

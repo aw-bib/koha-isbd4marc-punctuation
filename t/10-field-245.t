@@ -12,12 +12,16 @@ use strict;
 use warnings;
 use lib 't/lib';
 use Koha::RecordProcessor::Base;
-use t::lib::TestHelper qw(make_field);
+use t::lib::TestHelper qw(make_field combined_string check_combined);
 
 use Test::More;
 use Koha::Filter::MARC::ISBD4MARCPunctuation;
 
-my $rules = Koha::Filter::MARC::ISBD4MARCPunctuation::RULES->{245};
+# The rule set this test targets.
+my $SET = 'LoC/PCC';
+note( "Rule set under test: $SET" );
+
+my $rules = Koha::Filter::MARC::ISBD4MARCPunctuation::rules_for($SET)->{245};
 ok( defined $rules, '245 rules loaded' );
 
 # --- Test 1: $a alone (no punctuation needed) ---
@@ -36,11 +40,7 @@ ok( defined $rules, '245 rules loaded' );
         $rules, 'prefix' );
     is( $result_pr[1], 'The great book', '245 prefix: $a alone unchanged' );
 
-    is(
-        join( '', $result[1] ),
-        join( '', $result_pr[1] ),
-        '245: combined string identical'
-    );
+    check_combined( \@result, \@result_pr, '245: combined string identical' );
 }
 
 # --- Test 2: $a followed by $b ---
@@ -64,11 +64,7 @@ ok( defined $rules, '245 rules loaded' );
     is( $result_pr[1], 'The great book', '245 prefix: $a unchanged' );
     is( $result_pr[3], ' : a subtitle', '245 prefix: $b gets " : " prepended' );
 
-    is(
-        join( '', @result[ 1, 3 ] ),
-        join( '', @result_pr[ 1, 3 ] ),
-        '245: combined string identical'
-    );
+    check_combined( \@result, \@result_pr, '245: combined string identical' );
 }
 
 # --- Test 3: $a followed by $b followed by $c ---
@@ -99,11 +95,7 @@ ok( defined $rules, '245 rules loaded' );
         '245 prefix: $c gets " / " prepended'
     );
 
-    is(
-        join( '', @result[ 1, 3, 5 ] ),
-        join( '', @result_pr[ 1, 3, 5 ] ),
-        '245: combined string identical'
-    );
+    check_combined( \@result, \@result_pr, '245: combined string identical' );
 }
 
 # --- Test 4: $n followed by $p ---
@@ -130,11 +122,7 @@ ok( defined $rules, '245 rules loaded' );
     is( $result_pr[1], 'Part one',      '245 prefix: $n unchanged' );
     is( $result_pr[3], ', Chapter two', '245 prefix: $p gets ", " prepended' );
 
-    is(
-        join( '', @result[ 1, 3 ] ),
-        join( '', @result_pr[ 1, 3 ] ),
-        '245: combined string identical'
-    );
+    check_combined( \@result, \@result_pr, '245: combined string identical' );
 }
 
 # --- Test 5: $h gets wrapped in brackets ---
@@ -173,11 +161,7 @@ ok( defined $rules, '245 rules loaded' );
         '245 prefix: $c gets " / " prepended'
     );
 
-    is(
-        join( '', @result[ 1, 3, 5 ] ),
-        join( '', @result_pr[ 1, 3, 5 ] ),
-        '245: combined string identical'
-    );
+    check_combined( \@result, \@result_pr, '245: combined string identical' );
 }
 
 done_testing();

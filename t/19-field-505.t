@@ -10,12 +10,16 @@ use strict;
 use warnings;
 use lib 't/lib';
 use Koha::RecordProcessor::Base;
-use t::lib::TestHelper qw(make_field);
+use t::lib::TestHelper qw(make_field combined_string check_combined);
 
 use Test::More;
 use Koha::Filter::MARC::ISBD4MARCPunctuation;
 
-my $rules_505 = Koha::Filter::MARC::ISBD4MARCPunctuation::RULES->{505};
+# The rule set this test targets.
+my $SET = 'LoC/PCC';
+note( "Rule set under test: $SET" );
+
+my $rules_505 = Koha::Filter::MARC::ISBD4MARCPunctuation::rules_for($SET)->{505};
 ok( defined $rules_505, '505 rules loaded' );
 
 # --- Example 1: Multiple $t (basic contents) ---
@@ -81,11 +85,7 @@ ok( defined $rules_505, '505 rules loaded' );
         '505 ex1 prefix: fourth $t gets " -- " prepended'
     );
 
-    is(
-        join( '', @result[ 1, 3, 5, 7 ] ),
-        join( '', @result_pr[ 1, 3, 5, 7 ] ),
-        '505 ex1: combined string identical'
-    );
+    check_combined( \@result, \@result_pr, '505 ex1: combined string identical' );
 }
 
 # --- Example 2: Multiple $t (area titles, same pattern) ---
@@ -147,11 +147,7 @@ ok( defined $rules_505, '505 rules loaded' );
         '505 ex2 prefix: fourth $t gets " -- "'
     );
 
-    is(
-        join( '', @result[ 1, 3, 5, 7 ] ),
-        join( '', @result_pr[ 1, 3, 5, 7 ] ),
-        '505 ex2: combined string identical'
-    );
+    check_combined( \@result, \@result_pr, '505 ex2: combined string identical' );
 }
 
 # --- Example 3: $t + $g + $t + $g (enhanced, with timings) ---
@@ -205,11 +201,7 @@ ok( defined $rules_505, '505 rules loaded' );
     is( $result_pr[11], '(10:49)',
         '505 ex3 prefix: third $g wrapped in () (last)' );
 
-    is(
-        join( '', @result[ 1, 3, 5, 7, 9, 11 ] ),
-        join( '', @result_pr[ 1, 3, 5, 7, 9, 11 ] ),
-        '505 ex3: combined string identical'
-    );
+    check_combined( \@result, \@result_pr, '505 ex3: combined string identical' );
 }
 
 # --- Example 4: $t + $t + $t + $r (titles with statement of responsibility) ---
@@ -269,11 +261,7 @@ ok( defined $rules_505, '505 rules loaded' );
         '505 ex4 prefix: $r gets " / " prepended'
     );
 
-    is(
-        join( '', @result[ 1, 3, 5, 7 ] ),
-        join( '', @result_pr[ 1, 3, 5, 7 ] ),
-        '505 ex4: combined string identical'
-    );
+    check_combined( \@result, \@result_pr, '505 ex4: combined string identical' );
 }
 
 # --- Standard: $t alone ---
@@ -291,11 +279,7 @@ ok( defined $rules_505, '505 rules loaded' );
         $rules_505, 'prefix' );
     is( $result_pr[1], 'Single title', '505 edge $t alone prefix: unchanged' );
 
-    is(
-        join( '', $result[1] ),
-        join( '', $result_pr[1] ),
-        '505 edge $t alone: combined string identical'
-    );
+    check_combined( \@result, \@result_pr, '505 edge $t alone: combined string identical' );
 }
 
 # --- Edge case: $g alone ---
@@ -313,11 +297,7 @@ ok( defined $rules_505, '505 rules loaded' );
         $rules_505, 'prefix' );
     is( $result_pr[1], '(16:35)', '505 edge $g alone prefix: wrapped in ()' );
 
-    is(
-        join( '', $result[1] ),
-        join( '', $result_pr[1] ),
-        '505 edge $g alone: combined string identical'
-    );
+    check_combined( \@result, \@result_pr, '505 edge $g alone: combined string identical' );
 }
 
 # --- Edge case: $a alone (basic format, second indicator #) ---
@@ -347,11 +327,7 @@ ok( defined $rules_505, '505 rules loaded' );
         '505 edge $a alone prefix: unchanged'
     );
 
-    is(
-        join( '', $result[1] ),
-        join( '', $result_pr[1] ),
-        '505 edge $a alone: combined string identical'
-    );
+    check_combined( \@result, \@result_pr, '505 edge $a alone: combined string identical' );
 }
 
 # --- Edge case: $t + $r (single title with responsibility) ---
@@ -381,11 +357,7 @@ ok( defined $rules_505, '505 rules loaded' );
     is( $result_pr[3], ' / J. Rosner',
         '505 edge $t+$r prefix: $r gets " / " prepended' );
 
-    is(
-        join( '', @result[ 1, 3 ] ),
-        join( '', @result_pr[ 1, 3 ] ),
-        '505 edge $t+$r: combined string identical'
-    );
+    check_combined( \@result, \@result_pr, '505 edge $t+$r: combined string identical' );
 }
 
 # --- Edge case: $g + $t (misc info followed by title, no preceding punct on $g) ---
@@ -414,11 +386,7 @@ ok( defined $rules_505, '505 rules loaded' );
     is( $result_pr[3], ' -- Waves',
         '505 edge $g+$t prefix: $t gets " -- " prepended' );
 
-    is(
-        join( '', @result[ 1, 3 ] ),
-        join( '', @result_pr[ 1, 3 ] ),
-        '505 edge $g+$t: combined string identical'
-    );
+    check_combined( \@result, \@result_pr, '505 edge $g+$t: combined string identical' );
 }
 
 # --- Doc Example 5: $n + $t (part designation with titles) ---
@@ -493,11 +461,7 @@ ok( defined $rules_505, '505 rules loaded' );
     is( $result_pr[19], ' -- Region S\u00fcdburgland',
         '505 ex5 prefix: last $t gets " -- " prepended (pending from $n)' );
 
-    is(
-        join( '', @result[ 1, 3, 5, 7, 9, 11, 13, 15, 17, 19 ] ),
-        join( '', @result_pr[ 1, 3, 5, 7, 9, 11, 13, 15, 17, 19 ] ),
-        '505 ex5: combined string identical'
-    );
+    check_combined( \@result, \@result_pr, '505 ex5: combined string identical' );
 }
 
 # --- Doc Example 6: $i + $n + $t (display text with part designation and title) ---
@@ -553,11 +517,7 @@ ok( defined $rules_505, '505 rules loaded' );
     is( $result_pr[13], ' -- Bishop makes kings',
         '505 ex6 prefix: last $t gets " -- " prepended (pending from $n)' );
 
-    is(
-        join( '', @result[ 1, 3, 5, 7, 9, 11, 13 ] ),
-        join( '', @result_pr[ 1, 3, 5, 7, 9, 11, 13 ] ),
-        '505 ex6: combined string identical'
-    );
+    check_combined( \@result, \@result_pr, '505 ex6: combined string identical' );
 }
 
 # --- Edge case: $t + $g (title with misc info, no punct between them) ---
@@ -584,11 +544,7 @@ ok( defined $rules_505, '505 rules loaded' );
     is( $result_pr[3], '(16:35)',
         '505 edge $t+$g prefix: $g wrapped in () only' );
 
-    is(
-        join( '', @result[ 1, 3 ] ),
-        join( '', @result_pr[ 1, 3 ] ),
-        '505 edge $t+$g: combined string identical'
-    );
+    check_combined( \@result, \@result_pr, '505 edge $t+$g: combined string identical' );
 }
 
 done_testing();

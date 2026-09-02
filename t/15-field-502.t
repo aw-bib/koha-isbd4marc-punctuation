@@ -5,12 +5,16 @@ use strict;
 use warnings;
 use lib 't/lib';
 use Koha::RecordProcessor::Base;
-use t::lib::TestHelper qw(make_field);
+use t::lib::TestHelper qw(make_field combined_string check_combined);
 
 use Test::More;
 use Koha::Filter::MARC::ISBD4MARCPunctuation;
 
-my $rules_502 = Koha::Filter::MARC::ISBD4MARCPunctuation::RULES->{502};
+# The rule set this test targets.
+my $SET = 'LoC/PCC';
+note( "Rule set under test: $SET" );
+
+my $rules_502 = Koha::Filter::MARC::ISBD4MARCPunctuation::rules_for($SET)->{502};
 ok( defined $rules_502, '502 rules loaded' );
 
 # --- Example 1: $b + $c + $d ---
@@ -50,11 +54,7 @@ ok( defined $rules_502, '502 rules loaded' );
     is( $result_pr[5], ', 1969',
         '502 example 1 prefix: $d gets ", " prepended' );
 
-    is(
-        join( '', @result[ 1, 3, 5 ] ),
-        join( '', @result_pr[ 1, 3, 5 ] ),
-        '502 example 1: combined string identical'
-    );
+    check_combined( \@result, \@result_pr, '502 example 1: combined string identical' );
 }
 
 # --- Example 2: $b + $c + $d (Ph. D.) ---
@@ -94,11 +94,7 @@ ok( defined $rules_502, '502 rules loaded' );
     is( $result_pr[5], ', 2008',
         '502 example 2 prefix: $d gets ", " prepended' );
 
-    is(
-        join( '', @result[ 1, 3, 5 ] ),
-        join( '', @result_pr[ 1, 3, 5 ] ),
-        '502 example 2: combined string identical'
-    );
+    check_combined( \@result, \@result_pr, '502 example 2: combined string identical' );
 }
 
 # --- Example 3: $b + $c + $d (already in subfields with punct) ---
@@ -138,11 +134,7 @@ ok( defined $rules_502, '502 rules loaded' );
     is( $result_pr[5], ', 1997',
         '502 example 3 prefix: $d gets ", " prepended' );
 
-    is(
-        join( '', @result[ 1, 3, 5 ] ),
-        join( '', @result_pr[ 1, 3, 5 ] ),
-        '502 example 3: combined string identical'
-    );
+    check_combined( \@result, \@result_pr, '502 example 3: combined string identical' );
 }
 
 # --- Edge case: $b only, no $c or $d ---
@@ -160,11 +152,7 @@ ok( defined $rules_502, '502 rules loaded' );
         $rules_502, 'prefix' );
     is( $result_pr[1], '(M.A.)', '502 prefix: $b alone wrapped in ()' );
 
-    is(
-        join( '', $result[1] ),
-        join( '', $result_pr[1] ),
-        '502: combined string identical (just $b)'
-    );
+    check_combined( \@result, \@result_pr, '502: combined string identical (just $b)' );
 }
 
 # --- Edge case: $c only (unusual but valid) ---
@@ -182,11 +170,7 @@ ok( defined $rules_502, '502 rules loaded' );
         $rules_502, 'prefix' );
     is( $result_pr[1], 'Some University', '502 prefix: $c alone unchanged' );
 
-    is(
-        join( '', $result[1] ),
-        join( '', $result_pr[1] ),
-        '502: combined string identical (just $c)'
-    );
+    check_combined( \@result, \@result_pr, '502: combined string identical (just $c)' );
 }
 
 done_testing();

@@ -13,6 +13,8 @@ our @EXPORT_OK = qw(
   field_contains
   parse_render_marker
   render_field_string
+  combined_string
+  check_combined
 );
 
 sub make_field {
@@ -77,6 +79,34 @@ sub render_field_string {
         $out .= " \$$subfields[$i] $val";
     }
     return $out;
+}
+
+# Concatenate the VALUES of a decorated-field result list
+# (@new_subfields comes from _decorate_field as (sf, value, sf, value, ...))
+# into a single combined string. This is the one source of truth for the
+# "combined string" used by the tests AND scripts/render_examples.pl, so
+# prefix vs postfix (and rule-set) output can be compared uniformly.
+sub combined_string {
+    my @sfs = @_;
+    # Accept either a flat list (sf, value, sf, value, ...) or a single
+    # arrayref to the same (as returned by wrappers that return an arrayref).
+    @sfs = @{ $sfs[0] } if @sfs == 1 && ref( $sfs[0] ) eq 'ARRAY';
+    my $c = '';
+    for ( my $i = 1 ; $i < @sfs ; $i += 2 ) {
+        $c .= $sfs[$i];
+    }
+    return $c;
+}
+
+# Assert that the postfix and prefix decorated results produce the SAME
+# combined string. Wraps combined_string() with a Test::More 'is'.
+sub check_combined {
+    my ( $postfix, $prefix, $desc ) = @_;
+    Test::More::is(
+        combined_string(@$prefix),
+        combined_string(@$postfix),
+        $desc,
+    );
 }
 
 1;

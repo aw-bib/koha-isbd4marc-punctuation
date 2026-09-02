@@ -5,12 +5,16 @@ use strict;
 use warnings;
 use lib 't/lib';
 use Koha::RecordProcessor::Base;
-use t::lib::TestHelper qw(make_field);
+use t::lib::TestHelper qw(make_field combined_string check_combined);
 
 use Test::More;
 use Koha::Filter::MARC::ISBD4MARCPunctuation;
 
-my $rules_520 = Koha::Filter::MARC::ISBD4MARCPunctuation::RULES->{520};
+# The rule set this test targets.
+my $SET = 'LoC/PCC';
+note( "Rule set under test: $SET" );
+
+my $rules_520 = Koha::Filter::MARC::ISBD4MARCPunctuation::rules_for($SET)->{520};
 ok( defined $rules_520, '520 rules loaded' );
 
 # --- Example 1: $a + $z (preceding dash) ---
@@ -52,11 +56,7 @@ ok( defined $rules_520, '520 rules loaded' );
         '520 example 1 prefix: $z gets " -- " prepended'
     );
 
-    is(
-        join( '', @result[ 1, 3 ] ),
-        join( '', @result_pr[ 1, 3 ] ),
-        '520 example 1: combined string identical'
-    );
+    check_combined( \@result, \@result_pr, '520 example 1: combined string identical' );
 }
 
 # --- Example 2: $a + $z (preceding dash, multi-word source) ---
@@ -99,11 +99,7 @@ ok( defined $rules_520, '520 rules loaded' );
         '520 example 2 prefix: $z gets " -- " prepended'
     );
 
-    is(
-        join( '', @result[ 1, 3 ] ),
-        join( '', @result_pr[ 1, 3 ] ),
-        '520 example 2: combined string identical'
-    );
+    check_combined( \@result, \@result_pr, '520 example 2: combined string identical' );
 }
 
 # --- Edge case: $a only, no $z ---
@@ -130,11 +126,7 @@ ok( defined $rules_520, '520 rules loaded' );
         '520 prefix: $a alone unchanged'
     );
 
-    is(
-        join( '', $result[1] ),
-        join( '', $result_pr[1] ),
-        '520: combined string identical (no $z)'
-    );
+    check_combined( \@result, \@result_pr, '520: combined string identical (no $z)' );
 }
 
 # --- Edge case: $z only (unusual but valid) ---
@@ -153,11 +145,7 @@ ok( defined $rules_520, '520 rules loaded' );
         $rules_520, 'prefix' );
     is( $result_pr[1], 'Source only', '520 prefix: $z alone unchanged' );
 
-    is(
-        join( '', $result[1] ),
-        join( '', $result_pr[1] ),
-        '520: combined string identical (just $z)'
-    );
+    check_combined( \@result, \@result_pr, '520: combined string identical (just $z)' );
 }
 
 done_testing();

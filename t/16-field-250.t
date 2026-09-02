@@ -5,12 +5,16 @@ use strict;
 use warnings;
 use lib 't/lib';
 use Koha::RecordProcessor::Base;
-use t::lib::TestHelper qw(make_field);
+use t::lib::TestHelper qw(make_field combined_string check_combined);
 
 use Test::More;
 use Koha::Filter::MARC::ISBD4MARCPunctuation;
 
-my $rules_250 = Koha::Filter::MARC::ISBD4MARCPunctuation::RULES->{250};
+# The rule set this test targets.
+my $SET = 'LoC/PCC';
+note( "Rule set under test: $SET" );
+
+my $rules_250 = Koha::Filter::MARC::ISBD4MARCPunctuation::rules_for($SET)->{250};
 ok( defined $rules_250, '250 rules loaded' );
 
 # --- Example 1: $a + $r (parallel edition) ---
@@ -48,11 +52,7 @@ ok( defined $rules_250, '250 rules loaded' );
         '250 example 1 prefix: $r gets " = " prepended'
     );
 
-    is(
-        join( '', @result[ 1, 3 ] ),
-        join( '', @result_pr[ 1, 3 ] ),
-        '250 example 1: combined string identical'
-    );
+    check_combined( \@result, \@result_pr, '250 example 1: combined string identical' );
 }
 
 # --- Example 2: $a + $c (statement of responsibility) ---
@@ -87,11 +87,7 @@ ok( defined $rules_250, '250 rules loaded' );
         '250 example 2 prefix: $c gets " / " prepended'
     );
 
-    is(
-        join( '', @result[ 1, 3 ] ),
-        join( '', @result_pr[ 1, 3 ] ),
-        '250 example 2: combined string identical'
-    );
+    check_combined( \@result, \@result_pr, '250 example 2: combined string identical' );
 }
 
 # --- Example 3: $a + $c (edition with reviser) ---
@@ -126,11 +122,7 @@ ok( defined $rules_250, '250 rules loaded' );
         '250 example 3 prefix: $c gets " / " prepended'
     );
 
-    is(
-        join( '', @result[ 1, 3 ] ),
-        join( '', @result_pr[ 1, 3 ] ),
-        '250 example 3: combined string identical'
-    );
+    check_combined( \@result, \@result_pr, '250 example 3: combined string identical' );
 }
 
 # --- Example 4: $a + $c (edition with revisions note) ---
@@ -166,11 +158,7 @@ ok( defined $rules_250, '250 rules loaded' );
         '250 example 4 prefix: $c gets " / " prepended'
     );
 
-    is(
-        join( '', @result[ 1, 3 ] ),
-        join( '', @result_pr[ 1, 3 ] ),
-        '250 example 4: combined string identical'
-    );
+    check_combined( \@result, \@result_pr, '250 example 4: combined string identical' );
 }
 
 # --- Edge case: $a alone ---
@@ -188,11 +176,7 @@ ok( defined $rules_250, '250 rules loaded' );
         $rules_250, 'prefix' );
     is( $result_pr[1], '2nd ed.', '250 prefix: $a alone unchanged' );
 
-    is(
-        join( '', $result[1] ),
-        join( '', $result_pr[1] ),
-        '250: combined string identical (just $a)'
-    );
+    check_combined( \@result, \@result_pr, '250: combined string identical (just $a)' );
 }
 
 # --- Edge case: $a + $c + $d (responsibility + subsequent responsibility) ---
@@ -232,11 +216,7 @@ ok( defined $rules_250, '250 rules loaded' );
         '250 prefix: $d gets " ; " prepended'
     );
 
-    is(
-        join( '', @result[ 1, 3, 5 ] ),
-        join( '', @result_pr[ 1, 3, 5 ] ),
-        '250: combined string identical ($a+$c+$d)'
-    );
+    check_combined( \@result, \@result_pr, '250: combined string identical ($a+$c+$d)' );
 }
 
 done_testing();

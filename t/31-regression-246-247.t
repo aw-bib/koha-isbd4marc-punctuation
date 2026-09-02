@@ -7,14 +7,18 @@ use strict;
 use warnings;
 use lib 't/lib';
 use Koha::RecordProcessor::Base;
-use t::lib::TestHelper qw(make_field);
+use t::lib::TestHelper qw(make_field combined_string check_combined);
 
 use Test::More;
 use Koha::Filter::MARC::ISBD4MARCPunctuation;
 
+# The rule set this test targets.
+my $SET = 'LoC/PCC';
+note( "Rule set under test: $SET" );
+
 # --- Field 246 ---
 
-my $rules_246 = Koha::Filter::MARC::ISBD4MARCPunctuation::RULES->{246};
+my $rules_246 = Koha::Filter::MARC::ISBD4MARCPunctuation::rules_for($SET)->{246};
 ok( defined $rules_246, '246 rules loaded' );
 
 # --- Example 8: $i + $a ---
@@ -35,12 +39,12 @@ ok( defined $rules_246, '246 rules loaded' );
     is( $result_pr[1], 'Panel title: ',          '246 example 8 prefix: $i still gets ": " via cb_pre' );
     is( $result_pr[3], 'Welcome to big Wyoming', '246 example 8 prefix: $a unchanged' );
 
-    is( join('', @result[1,3]), join('', @result_pr[1,3]), '246 example 8: combined string identical' );
+    check_combined( \@result, \@result_pr, '246 example 8: combined string identical' );
 }
 
 # --- Field 247 ---
 
-my $rules_247 = Koha::Filter::MARC::ISBD4MARCPunctuation::RULES->{247};
+my $rules_247 = Koha::Filter::MARC::ISBD4MARCPunctuation::rules_for($SET)->{247};
 ok( defined $rules_247, '247 rules loaded' );
 
 # --- Example 9: $a + $g + $f ---
@@ -72,7 +76,7 @@ ok( defined $rules_247, '247 rules loaded' );
     is( $result_pr[3], '(varies slightly)',  '247 example 9 prefix: $g wrapped in () only' );
     is( $result_pr[5], ', 1st-10th',         '247 example 9 prefix: $f gets ", " prepended' );
 
-    is( join('', @result[1,3,5]), join('', @result_pr[1,3,5]), '247 example 9: combined string identical' );
+    check_combined( \@result, \@result_pr, '247 example 9: combined string identical' );
 }
 
 done_testing();

@@ -5,12 +5,16 @@ use strict;
 use warnings;
 use lib 't/lib';
 use Koha::RecordProcessor::Base;
-use t::lib::TestHelper qw(make_field);
+use t::lib::TestHelper qw(make_field combined_string check_combined);
 
 use Test::More;
 use Koha::Filter::MARC::ISBD4MARCPunctuation;
 
-my $rules_020 = Koha::Filter::MARC::ISBD4MARCPunctuation::RULES->{'020'};
+# The rule set this test targets.
+my $SET = 'LoC/PCC';
+note( "Rule set under test: $SET" );
+
+my $rules_020 = Koha::Filter::MARC::ISBD4MARCPunctuation::rules_for($SET)->{'020'};
 ok( defined $rules_020, '020 rules loaded' );
 
 # --- Example 1: $a + $q (single qualifying info) ---
@@ -44,11 +48,7 @@ ok( defined $rules_020, '020 rules loaded' );
         '020 example 1 prefix: $q wrapped in ()'
     );
 
-    is(
-        join( '', @result[ 1, 3 ] ),
-        join( '', @result_pr[ 1, 3 ] ),
-        '020 example 1: combined string identical'
-    );
+    check_combined( \@result, \@result_pr, '020 example 1: combined string identical' );
 }
 
 # --- Example 2: $a + $q (single qualifying info, trade) ---
@@ -74,11 +74,7 @@ ok( defined $rules_020, '020 rules loaded' );
     is( $result_pr[1], '9780060799748', '020 example 2 prefix: $a unchanged' );
     is( $result_pr[3], '(trade)', '020 example 2 prefix: $q wrapped in ()' );
 
-    is(
-        join( '', @result[ 1, 3 ] ),
-        join( '', @result_pr[ 1, 3 ] ),
-        '020 example 2: combined string identical'
-    );
+    check_combined( \@result, \@result_pr, '020 example 2: combined string identical' );
 }
 
 # --- Example 3: $a + $q + $c (qualifying info + terms of availability) ---
@@ -109,11 +105,7 @@ ok( defined $rules_020, '020 rules loaded' );
     is( $result_pr[5], ' : $0.45',
         '020 example 3 prefix: $c gets " : " prepended' );
 
-    is(
-        join( '', @result[ 1, 3, 5 ] ),
-        join( '', @result_pr[ 1, 3, 5 ] ),
-        '020 example 3: combined string identical'
-    );
+    check_combined( \@result, \@result_pr, '020 example 3: combined string identical' );
 }
 
 # --- Example 4: $a + $q + $q + $c (two qualifying infos + terms) ---
@@ -151,11 +143,7 @@ ok( defined $rules_020, '020 rules loaded' );
     is( $result_pr[7], ' : $5.00',
         '020 example 4 prefix: $c gets " : " prepended' );
 
-    is(
-        join( '', @result[ 1, 3, 5, 7 ] ),
-        join( '', @result_pr[ 1, 3, 5, 7 ] ),
-        '020 example 4: combined string identical'
-    );
+    check_combined( \@result, \@result_pr, '020 example 4: combined string identical' );
 }
 
 # --- Edge case: $a alone ---
@@ -173,11 +161,7 @@ ok( defined $rules_020, '020 rules loaded' );
         $rules_020, 'prefix' );
     is( $result_pr[1], '9780060723804', '020 prefix: $a alone unchanged' );
 
-    is(
-        join( '', $result[1] ),
-        join( '', $result_pr[1] ),
-        '020: combined string identical (just $a)'
-    );
+    check_combined( \@result, \@result_pr, '020: combined string identical (just $a)' );
 }
 
 done_testing();

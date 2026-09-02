@@ -1,7 +1,8 @@
 #!/usr/bin/perl
 #
-# Test that the RULES constant has the expected structure
+# Test that the LoC/PCC rule set has the expected structure
 # and that each entry has valid keys.
+# This file is specific to the LoC/PCC rule set (see $SET below).
 
 use strict;
 use warnings;
@@ -11,16 +12,20 @@ use Koha::RecordProcessor::Base;
 use Test::More;
 use Koha::Filter::MARC::ISBD4MARCPunctuation;
 
-# Access the RULES constant via the package sub
-my $rules = Koha::Filter::MARC::ISBD4MARCPunctuation::RULES;
+# The rule set this test targets.
+my $SET = 'LoC/PCC';
+note( "Rule set under test: $SET" );
 
-# 1. Rules is defined
-ok( defined $rules, 'RULES constant is defined' );
+# Load the rules for the set under test, by name.
+my $rules = Koha::Filter::MARC::ISBD4MARCPunctuation::rules_for($SET);
+
+# 1. Rules are defined
+ok( defined $rules, "rules_for('$SET') is defined" );
 
 # 2. Expected tags are present
 my @expected_tags = qw(020 100 110 111 245 246 247 250 260 264 300 490 502 505 520 600 610 611 700 710 711 800 810 811);
 my @got_tags = sort keys %$rules;
-is_deeply( \@got_tags, \@expected_tags, 'RULES has exactly the expected field tags' );
+is_deeply( \@got_tags, \@expected_tags, "$SET has exactly the expected field tags" );
 
 # 3. Each rule has valid keys
 my @valid_keys = qw(pchrs post wrap cb_pre cb_post use_rules);

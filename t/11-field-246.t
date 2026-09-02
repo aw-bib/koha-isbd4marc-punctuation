@@ -11,12 +11,16 @@ use strict;
 use warnings;
 use lib 't/lib';
 use Koha::RecordProcessor::Base;
-use t::lib::TestHelper qw(make_field);
+use t::lib::TestHelper qw(make_field combined_string check_combined);
 
 use Test::More;
 use Koha::Filter::MARC::ISBD4MARCPunctuation;
 
-my $rules = Koha::Filter::MARC::ISBD4MARCPunctuation::RULES->{246};
+# The rule set this test targets.
+my $SET = 'LoC/PCC';
+note( "Rule set under test: $SET" );
+
+my $rules = Koha::Filter::MARC::ISBD4MARCPunctuation::rules_for($SET)->{246};
 ok( defined $rules, '246 rules loaded' );
 
 # --- Test 1: $a alone ---
@@ -34,11 +38,7 @@ ok( defined $rules, '246 rules loaded' );
         $rules, 'prefix' );
     is( $result_pr[1], 'Alternate title', '246 prefix: $a alone unchanged' );
 
-    is(
-        join( '', $result[1] ),
-        join( '', $result_pr[1] ),
-        '246: combined string identical'
-    );
+    check_combined( \@result, \@result_pr, '246: combined string identical' );
 }
 
 # --- Test 2: $i followed by $a ---
@@ -71,11 +71,7 @@ ok( defined $rules, '246 rules loaded' );
         '246 prefix: $a unchanged (no pchrs for a)'
     );
 
-    is(
-        join( '', @result[ 1, 3 ] ),
-        join( '', @result_pr[ 1, 3 ] ),
-        '246: combined string identical'
-    );
+    check_combined( \@result, \@result_pr, '246: combined string identical' );
 }
 
 # --- Test 3: $a followed by $b ---
@@ -100,11 +96,7 @@ ok( defined $rules, '246 rules loaded' );
     is( $result_pr[1], 'Alternate title', '246 prefix: $a unchanged' );
     is( $result_pr[3], ' : a subtitle', '246 prefix: $b gets " : " prepended' );
 
-    is(
-        join( '', @result[ 1, 3 ] ),
-        join( '', @result_pr[ 1, 3 ] ),
-        '246: combined string identical'
-    );
+    check_combined( \@result, \@result_pr, '246: combined string identical' );
 }
 
 # --- Test 4: $a followed by $f ---
@@ -128,11 +120,7 @@ ok( defined $rules, '246 rules loaded' );
     is( $result_pr[1], 'Alternate title', '246 prefix: $a unchanged' );
     is( $result_pr[3], ', 2005', '246 prefix: $f gets ", " prepended' );
 
-    is(
-        join( '', @result[ 1, 3 ] ),
-        join( '', @result_pr[ 1, 3 ] ),
-        '246: combined string identical'
-    );
+    check_combined( \@result, \@result_pr, '246: combined string identical' );
 }
 
 # --- Test 5: $g wrapped in parentheses ---
@@ -156,11 +144,7 @@ ok( defined $rules, '246 rules loaded' );
     is( $result_pr[1], 'Alternate title', '246 prefix: $a unchanged' );
     is( $result_pr[3], '(some info)', '246 prefix: $g wrapped in parentheses' );
 
-    is(
-        join( '', @result[ 1, 3 ] ),
-        join( '', @result_pr[ 1, 3 ] ),
-        '246: combined string identical'
-    );
+    check_combined( \@result, \@result_pr, '246: combined string identical' );
 }
 
 # --- Test 6: $h wrapped in brackets ---
@@ -184,11 +168,7 @@ ok( defined $rules, '246 rules loaded' );
     is( $result_pr[1], 'Alternate title', '246 prefix: $a unchanged' );
     is( $result_pr[3], '[electronic]', '246 prefix: $h wrapped in brackets' );
 
-    is(
-        join( '', @result[ 1, 3 ] ),
-        join( '', @result_pr[ 1, 3 ] ),
-        '246: combined string identical'
-    );
+    check_combined( \@result, \@result_pr, '246: combined string identical' );
 }
 
 done_testing();
