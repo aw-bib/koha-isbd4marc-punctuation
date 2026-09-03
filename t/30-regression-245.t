@@ -7,12 +7,16 @@ use strict;
 use warnings;
 use lib 't/lib';
 use Koha::RecordProcessor::Base;
-use t::lib::TestHelper qw(make_field);
+use t::lib::TestHelper qw(make_field combined_string check_combined);
 
 use Test::More;
 use Koha::Filter::MARC::ISBD4MARCPunctuation;
 
-my $rules = Koha::Filter::MARC::ISBD4MARCPunctuation::RULES->{245};
+# The rule set this test targets.
+my $SET = 'LoC/PCC';
+note( "Rule set under test: $SET" );
+
+my $rules = Koha::Filter::MARC::ISBD4MARCPunctuation::rules_for($SET)->{245};
 ok( defined $rules, '245 rules loaded' );
 
 # --- Example 1: $a + $c (simple responsibility) ---
@@ -33,7 +37,7 @@ ok( defined $rules, '245 rules loaded' );
     is( $result_pr[1], 'The plays of Oscar Wilde', '245 ex1 prefix: $a unchanged' );
     is( $result_pr[3], ' / Alan Bird',              '245 ex1 prefix: $c gets " / " prepended' );
 
-    is( join('', @result[1,3]), join('', @result_pr[1,3]), '245 ex1: combined string identical' );
+    check_combined( \@result, \@result_pr, '245 ex1: combined string identical' );
 }
 
 # --- Example 2: $a + $b + $r (parallel title) ---
@@ -57,7 +61,7 @@ ok( defined $rules, '245 rules loaded' );
     is( $result_pr[3], ' : journal of the International Society for Rock Mechanics',     '245 ex2 prefix: $b gets " : " prepended' );
     is( $result_pr[5], ' = Felsmechanik',                                                '245 ex2 prefix: $r gets " = " prepended' );
 
-    is( join('', @result[1,3,5]), join('', @result_pr[1,3,5]), '245 ex2: combined string identical' );
+    check_combined( \@result, \@result_pr, '245 ex2: combined string identical' );
 }
 
 # --- Example 3: $a + $c + $r + $c (parallel statements of responsibility) ---
@@ -84,7 +88,7 @@ ok( defined $rules, '245 rules loaded' );
     is( $result_pr[5], ' = Livestock and poultry',                    '245 ex3 prefix: $r gets " = " prepended' );
     is( $result_pr[7], ' / Quebec Bureau of Statistics',              '245 ex3 prefix: second $c gets " / " prepended' );
 
-    is( join('', @result[1,3,5,7]), join('', @result_pr[1,3,5,7]), '245 ex3: combined string identical' );
+    check_combined( \@result, \@result_pr, '245 ex3: combined string identical' );
 }
 
 # --- Example 4: $c + $d + $d (subsequent statements of responsibility) ---
@@ -111,7 +115,7 @@ ok( defined $rules, '245 rules loaded' );
     is( $result_pr[5], ' ; with a foreword by David Pritchard', '245 ex4 prefix: first $d gets " ; " prepended' );
     is( $result_pr[7], ' ; illustrated by Karel Feuerstein',    '245 ex4 prefix: second $d gets " ; " prepended' );
 
-    is( join('', @result[1,3,5,7]), join('', @result_pr[1,3,5,7]), '245 ex4: combined string identical' );
+    check_combined( \@result, \@result_pr, '245 ex4: combined string identical' );
 }
 
 done_testing();

@@ -6,11 +6,16 @@ use lib '.';
 use lib 't/lib';
 use Koha::RecordProcessor::Base;
 use Koha::Filter::MARC::ISBD4MARCPunctuation;
+use t::lib::TestHelper qw(combined_string);
+
+# The rule set this test targets.
+my $SET = 'LoC/PCC';
+note( "Rule set under test: $SET" );
 
 sub _decorate {
     my ( $rules_key, $attach_mode, @sfs ) = @_;
     $attach_mode //= 'postfix';
-    my $rules = Koha::Filter::MARC::ISBD4MARCPunctuation::RULES->{$rules_key};
+    my $rules = Koha::Filter::MARC::ISBD4MARCPunctuation::rules_for($SET)->{$rules_key};
     my $field = MARC::Field->new( '100', ' ', ' ', @sfs );
     return [
         Koha::Filter::MARC::ISBD4MARCPunctuation::_decorate_field(
@@ -23,10 +28,11 @@ sub check_combined {
     my ( $rules_key, $desc, @sfs ) = @_;
     my $postfix = _decorate( $rules_key, 'postfix', @sfs );
     my $prefix  = _decorate( $rules_key, 'prefix',  @sfs );
-    my $post_c  = join '', grep { ++$::i % 2 == 0 } @$postfix;
-    local $::i = 0;
-    my $pre_c = join '', grep { ++$::i % 2 == 0 } @$prefix;
-    is( $pre_c, $post_c, "Combined string identical: $desc" );
+    is(
+        combined_string(@$postfix),
+        combined_string(@$prefix),
+        "Combined string identical: $desc"
+    );
 }
 
 # ===== 100 =====

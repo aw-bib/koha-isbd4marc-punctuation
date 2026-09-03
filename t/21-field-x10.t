@@ -17,11 +17,16 @@ use lib '.';
 use lib 't/lib';
 use Koha::RecordProcessor::Base;
 use Koha::Filter::MARC::ISBD4MARCPunctuation;
+use t::lib::TestHelper qw(combined_string);
+
+# The rule set this test targets.
+my $SET = 'LoC/PCC';
+note( "Rule set under test: $SET" );
 
 sub _decorate {
     my ( $rules_key, $attach_mode, @sfs ) = @_;
     $attach_mode //= 'postfix';
-    my $rules = Koha::Filter::MARC::ISBD4MARCPunctuation::RULES->{$rules_key};
+    my $rules = Koha::Filter::MARC::ISBD4MARCPunctuation::rules_for($SET)->{$rules_key};
     my $field = MARC::Field->new( $rules_key, ' ', ' ', @sfs );
     return [
         Koha::Filter::MARC::ISBD4MARCPunctuation::_decorate_field(
@@ -32,9 +37,7 @@ sub _decorate {
 
 sub combined {
     my ($res) = @_;
-    my $c = '';
-    for ( my $i = 1 ; $i < @$res ; $i += 2 ) { $c .= $res->[$i]; }
-    return $c;
+    return combined_string($res);    # single source of truth in TestHelper
 }
 
 sub check_combined {

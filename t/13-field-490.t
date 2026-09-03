@@ -11,12 +11,16 @@ use strict;
 use warnings;
 use lib 't/lib';
 use Koha::RecordProcessor::Base;
-use t::lib::TestHelper qw(make_field);
+use t::lib::TestHelper qw(make_field combined_string check_combined);
 
 use Test::More;
 use Koha::Filter::MARC::ISBD4MARCPunctuation;
 
-my $rules = Koha::Filter::MARC::ISBD4MARCPunctuation::RULES->{490};
+# The rule set this test targets.
+my $SET = 'LoC/PCC';
+note( "Rule set under test: $SET" );
+
+my $rules = Koha::Filter::MARC::ISBD4MARCPunctuation::rules_for($SET)->{490};
 ok( defined $rules, '490 rules loaded' );
 
 # --- Test 1: $a alone ---
@@ -31,7 +35,7 @@ ok( defined $rules, '490 rules loaded' );
     my @result_pr = Koha::Filter::MARC::ISBD4MARCPunctuation::_decorate_field( $field, $rules, 'prefix' );
     is( $result_pr[1], 'Bulletin', '490 prefix: $a alone unchanged' );
 
-    is( join('', @result[1]), join('', @result_pr[1]), '490: combined string identical' );
+    check_combined( \@result, \@result_pr, '490: combined string identical' );
 }
 
 # --- Test 2: $a followed by $c (Example 1 from doc) ---
@@ -52,7 +56,7 @@ ok( defined $rules, '490 rules loaded' );
     is( $result_pr[1], 'Bulletin',                                           '490 ex1 prefix: $a unchanged' );
     is( $result_pr[3], ' / U.S. Department of Labor, Bureau of Labor Statistics', '490 ex1 prefix: $c gets " / " prepended' );
 
-    is( join('', @result[1,3]), join('', @result_pr[1,3]), '490 ex1: combined string identical' );
+    check_combined( \@result, \@result_pr, '490 ex1: combined string identical' );
 }
 
 # --- Test 3: $3 with $a and $v (Example 2 from doc) ---
@@ -76,7 +80,7 @@ ok( defined $rules, '490 rules loaded' );
     is( $result_pr[3], 'MPCHT art and anthropological monographs',    '490 ex2 prefix: $a unchanged' );
     is( $result_pr[5], ' ; no. 35',                                   '490 ex2 prefix: $v gets " ; " prepended' );
 
-    is( join('', @result[1,3,5]), join('', @result_pr[1,3,5]), '490 ex2: combined string identical' );
+    check_combined( \@result, \@result_pr, '490 ex2: combined string identical' );
 }
 
 # --- Test 4: $a followed by $b followed by $v (Example 3 from doc) ---
@@ -100,7 +104,7 @@ ok( defined $rules, '490 rules loaded' );
     is( $result_pr[3], ' : social problems and social change in Detroit',   '490 ex3 prefix: $b gets " : " prepended' );
     is( $result_pr[5], ' ; no. 19',                                         '490 ex3 prefix: $v gets " ; " prepended' );
 
-    is( join('', @result[1,3,5]), join('', @result_pr[1,3,5]), '490 ex3: combined string identical' );
+    check_combined( \@result, \@result_pr, '490 ex3: combined string identical' );
 }
 
 # --- Test 5: $3 with $a and $c (Example 4 from doc) ---
@@ -124,7 +128,7 @@ ok( defined $rules, '490 rules loaded' );
     is( $result_pr[3], 'Research report',                    '490 ex4 prefix: $a unchanged' );
     is( $result_pr[5], ' / National Education Association Research', '490 ex4 prefix: $c gets " / " prepended' );
 
-    is( join('', @result[1,3,5]), join('', @result_pr[1,3,5]), '490 ex4: combined string identical' );
+    check_combined( \@result, \@result_pr, '490 ex4: combined string identical' );
 }
 
 # --- Test 6: $a with $v and $x (Example 6 from doc) ---
@@ -148,7 +152,7 @@ ok( defined $rules, '490 rules loaded' );
     is( $result_pr[3], ' = Recensement des manufactures',   '490 ex6 prefix: $r gets " = " prepended' );
     is( $result_pr[5], ', 0315-5587',                       '490 ex6 prefix: $x gets ", " prepended' );
 
-    is( join('', @result[1,3,5]), join('', @result_pr[1,3,5]), '490 ex6: combined string identical' );
+    check_combined( \@result, \@result_pr, '490 ex6: combined string identical' );
 }
 
 # --- Test 7: $a + $n + $p + $v + $r (Example 7 from doc, abbreviated) ---
@@ -178,7 +182,7 @@ ok( defined $rules, '490 rules loaded' );
     is( $result_pr[7], ' ; no. 3',             '490 ex7 prefix: $v gets " ; " prepended' );
     is( $result_pr[9], ' = Travaux et documents de l\'I.C.I.', '490 ex7 prefix: $r gets " = " prepended' );
 
-    is( join('', @result[1,3,5,7,9]), join('', @result_pr[1,3,5,7,9]), '490 ex7: combined string identical' );
+    check_combined( \@result, \@result_pr, '490 ex7: combined string identical' );
 }
 
 # --- Test 8: $a + $v + $y (Example 8 from doc) ---
@@ -202,7 +206,7 @@ ok( defined $rules, '490 rules loaded' );
     is( $result_pr[3], ' ; 6. Bd.',                                '490 ex8 prefix: $v gets " ; " prepended' );
     is( $result_pr[5], ' = der ganzen Reihe 13 Bd.',               '490 ex8 prefix: $y gets " = " prepended' );
 
-    is( join('', @result[1,3,5]), join('', @result_pr[1,3,5]), '490 ex8: combined string identical' );
+    check_combined( \@result, \@result_pr, '490 ex8: combined string identical' );
 }
 
 # --- Test 9: $a + $x + $v + $n + $p + $x + $v (Example 9 from doc, abbreviated) ---
@@ -237,7 +241,7 @@ ok( defined $rules, '490 rules loaded' );
     is( $result_pr[11], ', 0076-1478',                 '490 ex9 prefix: second $x gets ", " prepended' );
     is( $result_pr[13], ' ; 48',                       '490 ex9 prefix: second $v gets " ; " prepended' );
 
-    is( join('', @result[1,3,5,7,9,11,13]), join('', @result_pr[1,3,5,7,9,11,13]), '490 ex9: combined string identical' );
+    check_combined( \@result, \@result_pr, '490 ex9: combined string identical' );
 }
 
 # --- Test 10: $l wrapped in parentheses ---
@@ -256,7 +260,7 @@ ok( defined $rules, '490 rules loaded' );
     is( $result_pr[1], 'Bulletin',     '490 prefix: $a unchanged' );
     is( $result_pr[3], '(HE 20.1234)', '490 prefix: $l wrapped in parentheses' );
 
-    is( join('', @result[1,3]), join('', @result_pr[1,3]), '490: combined string identical' );
+    check_combined( \@result, \@result_pr, '490: combined string identical' );
 }
 
 # --- Test 11: $d (subsequent statement of responsibility) ---
@@ -278,7 +282,7 @@ ok( defined $rules, '490 rules loaded' );
     is( $result_pr[3], ' / Institute for Research', '490 prefix: $c gets " / " prepended' );
     is( $result_pr[5], ' ; compiled by John Smith', '490 prefix: $d gets " ; " prepended' );
 
-    is( join('', @result[1,3,5]), join('', @result_pr[1,3,5]), '490: combined string identical' );
+    check_combined( \@result, \@result_pr, '490: combined string identical' );
 }
 
 done_testing();

@@ -9,12 +9,16 @@ use strict;
 use warnings;
 use lib 't/lib';
 use Koha::RecordProcessor::Base;
-use t::lib::TestHelper qw(make_field);
+use t::lib::TestHelper qw(make_field combined_string check_combined);
 
 use Test::More;
 use Koha::Filter::MARC::ISBD4MARCPunctuation;
 
-my $rules = Koha::Filter::MARC::ISBD4MARCPunctuation::RULES->{260};
+# The rule set this test targets.
+my $SET = 'LoC/PCC';
+note( "Rule set under test: $SET" );
+
+my $rules = Koha::Filter::MARC::ISBD4MARCPunctuation::rules_for($SET)->{260};
 ok( defined $rules, '260 rules loaded' );
 
 # --- Test 1: $a alone ---
@@ -31,11 +35,7 @@ ok( defined $rules, '260 rules loaded' );
         $rules, 'prefix' );
     is( $result_pr[1], 'New York', '260 prefix: $a alone unchanged' );
 
-    is(
-        join( '', $result[1] ),
-        join( '', $result_pr[1] ),
-        '260: combined string identical'
-    );
+    check_combined( \@result, \@result_pr, '260: combined string identical' );
 }
 
 # --- Test 2: $a followed by $b followed by $c ---
@@ -62,11 +62,7 @@ ok( defined $rules, '260 rules loaded' );
     is( $result_pr[3], ' : Penguin', '260 prefix: $b gets " : " prepended' );
     is( $result_pr[5], ', 2005',     '260 prefix: $c gets ", " prepended' );
 
-    is(
-        join( '', @result[ 1, 3, 5 ] ),
-        join( '', @result_pr[ 1, 3, 5 ] ),
-        '260: combined string identical'
-    );
+    check_combined( \@result, \@result_pr, '260: combined string identical' );
 }
 
 # --- Test 3: Multiple $a (e.g. New York ; London) ---
@@ -94,11 +90,7 @@ ok( defined $rules, '260 rules loaded' );
     is( $result_pr[3], ' ; London',
         '260 prefix: second $a gets " ; " prepended (pending from aa)' );
 
-    is(
-        join( '', @result[ 1, 3 ] ),
-        join( '', @result_pr[ 1, 3 ] ),
-        '260: combined string identical'
-    );
+    check_combined( \@result, \@result_pr, '260: combined string identical' );
 }
 
 # --- Test 4: $q wrapped in parentheses ---
@@ -127,11 +119,7 @@ ok( defined $rules, '260 rules loaded' );
         '260 prefix: $q wrapped in parentheses'
     );
 
-    is(
-        join( '', @result[ 1, 3 ] ),
-        join( '', @result_pr[ 1, 3 ] ),
-        '260: combined string identical'
-    );
+    check_combined( \@result, \@result_pr, '260: combined string identical' );
 }
 
 # --- Test 5: $e/$f/$g grouping ---
@@ -175,11 +163,7 @@ ok( defined $rules, '260 rules loaded' );
         '260 prefix: $f gets " : " prefix when $e precedes' );
     is( $result_pr[7], ', 2005)', '260 prefix: $g closes paren' );
 
-    is(
-        join( '', @result[ 1, 3, 5, 7 ] ),
-        join( '', @result_pr[ 1, 3, 5, 7 ] ),
-        '260: combined string identical'
-    );
+    check_combined( \@result, \@result_pr, '260: combined string identical' );
 }
 
 # --- Test 6: $3 always gets ": " appended ---
@@ -204,11 +188,7 @@ ok( defined $rules, '260 rules loaded' );
     is( $result_pr[1], '1990: ',   '260 prefix: $3 still gets ": " via post' );
     is( $result_pr[3], 'New York', '260 prefix: $a unchanged' );
 
-    is(
-        join( '', @result[ 1, 3 ] ),
-        join( '', @result_pr[ 1, 3 ] ),
-        '260: combined string identical'
-    );
+    check_combined( \@result, \@result_pr, '260: combined string identical' );
 }
 
 done_testing();

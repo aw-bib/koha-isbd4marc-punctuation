@@ -59,16 +59,6 @@ For the implemented fields punctuation handling follows:
 
 - https://www.loc.gov/aba/pcc/documents/isbdmarc2016.pdf
 
-
-### Technical Note
-
-As puctuation is quite involved, so for all fields there is a quite
-comprehensive test coverage in `t/`. Those tests are mainly extracted
-from `Current` and `Future` lines of the reference document, so it
-should be easy to verify those. The unittest are meant to ensure that
-future changes to the code does not break the rules already derived
-and are meant for programmers and machines.
-
 ### Librarians Note
 
 For documentation and especially to make it easier for _librarians_ to
@@ -97,20 +87,59 @@ _Postfix_ punctuation (automatic):
 ```
   245 14 $a The plays of Oscar Wilde /  $c Alan Bird
 ```
-_Prefix_ punctuation (automatic):
+_Combined string_ (concatenation of the postfix values):
 ```
-  245 14 $a The plays of Oscar Wilde $c  / Alan Bird
+  The plays of Oscar Wilde /  Alan Bird
 ```
 ---
 
 So it states first the MARC without puncutation, then the MARC as it
 gets decorated by the plugin by _appending_ punctuation to a subfield
-(denoted as _postfix_) and the same if the punctuation would be added
-as a _prefix_ ot the subsequent field. Especially, the first form
-should allow experts in the field to judge what can be done
-automatically and where human expertise is required to get complex
-entries right.
+(denoted as _postfix_), and finally the concatenated display string.
+(The `prefix` mode — adding punctuation to the start of the subsequent
+subfield — produces the same combined string, so it is not shown
+separately.) Especially, the first form should allow experts in the
+field to judge what can be done automatically and where human
+expertise is required to get complex entries right.
 
 If needs be it is easy enough for any administrator to pass the
 `md`-file through `pandoc` to generate other formats even more
 digestible than Markdown.
+
+### Technical Notes
+
+#### Automatic tests
+
+As puctuation is quite involved, so for all fields there is a quite
+comprehensive test coverage in `t/`. Those tests are mainly extracted
+from `Current` and `Future` lines of the reference document, so it
+should be easy to verify those. The unittest are meant to ensure that
+future changes to the code does not break the rules already derived
+and are meant for programmers and machines.
+
+#### Rule sets
+
+The punctuation rules are organised as **rule sets**, one per
+catalogue tradition. Currently there is one set, **`LoC/PCC`** (the
+default, following the reference document above). A `None` set (no
+automatic punctuation) is also supported.
+
+- Each set lives in its own package under
+  `Koha/Filter/MARC/ISBD4MARCPunctuation/RuleSet/` and is just data
+  (`pchrs` / `post` / `wrap` / `cb_pre` / `cb_post` / `use_rules` per
+  tag).
+- The engine loads the active set via `rules_for()`; `ruleset()`
+  gets/sets the active set and defaults to `LoC/PCC`.
+- Shared structural callbacks (e.g. the `$n/$d/$c` meeting-group and
+  `$e/$f/$g` imprint grouping) stay in the engine and are referenced
+  from the rule data by name, so rule-set files stay readable data.
+
+**To add a new field** to the current (`LoC/PCC`) set: add its rule
+block to `RuleSet/LoCPCC.pm` (data only; reuse the shared grouping
+callbacks where relevant), then add a test in the matching
+`t/1X-field-*.t` following the `$SET` convention and a `# render:`
+marker, and regenerate the example report.
+
+**To add a whole new rule set**: create `RuleSet/<Name>.pm` exposing
+`rules()` and register it in `rules_for()` (see `RuleSets.md` at the
+project root for the design).

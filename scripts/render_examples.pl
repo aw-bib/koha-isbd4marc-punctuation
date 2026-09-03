@@ -29,7 +29,10 @@ use lib 'lib', 't/lib';
 use File::Basename qw(basename);
 use Koha::RecordProcessor::Base;
 use Koha::Filter::MARC::ISBD4MARCPunctuation;
-use t::lib::TestHelper qw( parse_render_marker render_field_string );
+use t::lib::TestHelper qw( parse_render_marker render_field_string combined_string );
+
+# The rule set the report is rendered for.
+my $SET = 'LoC/PCC';
 
 my $outfile   = shift // 'examples/koha-isbd4marc-puncuation-output.md';
 my @testfiles = @ARGV;
@@ -67,11 +70,14 @@ for my $file (@testfiles) {
 my @md;
 push @md, '# ISBD punctuation plugin — rendered examples';
 push @md, '';
+push @md, "Rule set: $SET";
+push @md, '';
 push @md,
     'These examples are generated from the plugin\'s own test suite. '
   . 'For each field, the raw (un-punctuated) input is shown together '
-  . 'with the automatic punctuation added in `postfix` and `prefix` '
-  . 'mode. Both modes should produce the same final string.';
+  . 'with the automatic punctuation added in `postfix` mode, plus the '
+  . 'combined (concatenated) output. `prefix` mode produces the same '
+  . 'combined string, so only the combined line is shown here.';
 push @md, '';
 
 for my $section (@sections) {
@@ -85,7 +91,8 @@ for my $section (@sections) {
         $exno++;
 
         my ( $ftag, $ind1, $ind2, @subfields ) = parse_render_marker($marker);
-        my $rules = Koha::Filter::MARC::ISBD4MARCPunctuation::RULES->{$ftag};
+        my $rules =
+          Koha::Filter::MARC::ISBD4MARCPunctuation::rules_for($SET)->{$ftag};
         if ( !$rules ) {
             warn "No rules for tag $ftag (from $file); skipping\n";
             next;
@@ -96,13 +103,10 @@ for my $section (@sections) {
         my @out_postfix =
           Koha::Filter::MARC::ISBD4MARCPunctuation::_decorate_field( $field,
             $rules, 'postfix' );
-        my @out_prefix =
-          Koha::Filter::MARC::ISBD4MARCPunctuation::_decorate_field( $field,
-            $rules, 'prefix' );
 
         my $no_punct = render_field_string( $ftag, $ind1, $ind2, @subfields );
         my $postfix  = render_field_string( $ftag, $ind1, $ind2, @out_postfix );
-        my $prefix   = render_field_string( $ftag, $ind1, $ind2, @out_prefix );
+        my $combined = combined_string(@out_postfix);
 
         push @md, "### $tag example $exno";
         push @md, '';
@@ -114,9 +118,9 @@ for my $section (@sections) {
         push @md, "```";
         push @md, "  $postfix";
         push @md, "```";
-        push @md, "_Prefix_ punctuation (automatic):";
+        push @md, "_Combined string_ (concatenation of the postfix values):";
         push @md, "```";
-        push @md, "  $prefix";
+        push @md, "  $combined";
         push @md, "```";
         push @md, '';
     }

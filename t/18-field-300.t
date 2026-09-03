@@ -10,12 +10,16 @@ use strict;
 use warnings;
 use lib 't/lib';
 use Koha::RecordProcessor::Base;
-use t::lib::TestHelper qw(make_field);
+use t::lib::TestHelper qw(make_field combined_string check_combined);
 
 use Test::More;
 use Koha::Filter::MARC::ISBD4MARCPunctuation;
 
-my $rules_300 = Koha::Filter::MARC::ISBD4MARCPunctuation::RULES->{300};
+# The rule set this test targets.
+my $SET = 'LoC/PCC';
+note( "Rule set under test: $SET" );
+
+my $rules_300 = Koha::Filter::MARC::ISBD4MARCPunctuation::rules_for($SET)->{300};
 ok( defined $rules_300, '300 rules loaded' );
 
 # --- Example 1: $a + $c (simple book) ---
@@ -42,11 +46,7 @@ ok( defined $rules_300, '300 rules loaded' );
     is( $result_pr[1], '149 pages', '300 ex1 prefix: $a unchanged' );
     is( $result_pr[3], ' ; 23 cm',  '300 ex1 prefix: $c gets " ; " prepended' );
 
-    is(
-        join( '', @result[ 1, 3 ] ),
-        join( '', @result_pr[ 1, 3 ] ),
-        '300 ex1: combined string identical'
-    );
+    check_combined( \@result, \@result_pr, '300 ex1: combined string identical' );
 }
 
 # --- Example 2: $a + $c (score) ---
@@ -76,11 +76,7 @@ ok( defined $rules_300, '300 rules loaded' );
     is( $result_pr[1], '1 score (16 pages)', '300 ex2 prefix: $a unchanged' );
     is( $result_pr[3], ' ; 29 cm', '300 ex2 prefix: $c gets " ; " prepended' );
 
-    is(
-        join( '', @result[ 1, 3 ] ),
-        join( '', @result_pr[ 1, 3 ] ),
-        '300 ex2: combined string identical'
-    );
+    check_combined( \@result, \@result_pr, '300 ex2: combined string identical' );
 }
 
 # --- Example 3: $a + $b + $c (audio disc) ---
@@ -125,11 +121,7 @@ ok( defined $rules_300, '300 rules loaded' );
     );
     is( $result_pr[5], ' ; 12 in.', '300 ex3 prefix: $c gets " ; " prepended' );
 
-    is(
-        join( '', @result[ 1, 3, 5 ] ),
-        join( '', @result_pr[ 1, 3, 5 ] ),
-        '300 ex3: combined string identical'
-    );
+    check_combined( \@result, \@result_pr, '300 ex3: combined string identical' );
 }
 
 # --- Example 4: $a + $c + $a + $c (scores with parts) ---
@@ -173,11 +165,7 @@ ok( defined $rules_300, '300 rules loaded' );
     is( $result_pr[7], ' ; 32 cm',
         '300 ex4 prefix: second $c gets " ; " prepended' );
 
-    is(
-        join( '', @result[ 1, 3, 5, 7 ] ),
-        join( '', @result_pr[ 1, 3, 5, 7 ] ),
-        '300 ex4: combined string identical'
-    );
+    check_combined( \@result, \@result_pr, '300 ex4: combined string identical' );
 }
 
 # --- Example 5: $a + $b + $c (print) ---
@@ -223,11 +211,7 @@ ok( defined $rules_300, '300 rules loaded' );
         '300 ex5 prefix: $c gets " ; " prepended'
     );
 
-    is(
-        join( '', @result[ 1, 3, 5 ] ),
-        join( '', @result_pr[ 1, 3, 5 ] ),
-        '300 ex5: combined string identical'
-    );
+    check_combined( \@result, \@result_pr, '300 ex5: combined string identical' );
 }
 
 # --- Example 6: $a + $b + $c + $e + $h (with accompanying material) ---
@@ -283,11 +267,7 @@ ok( defined $rules_300, '300 rules loaded' );
     is( $result_pr[11], 'color maps', '300 ex6 prefix: $i unchanged (gap)' );
     is( $result_pr[13], '37 cm',      '300 ex6 prefix: $j unchanged' );
 
-    is(
-        join( '', @result[ 1, 3, 5, 7, 9, 11, 13 ] ),
-        join( '', @result_pr[ 1, 3, 5, 7, 9, 11, 13 ] ),
-        '300 ex6: combined string identical'
-    );
+    check_combined( \@result, \@result_pr, '300 ex6: combined string identical' );
 }
 
 # --- Edge case: $a alone ---
@@ -305,11 +285,7 @@ ok( defined $rules_300, '300 rules loaded' );
         $rules_300, 'prefix' );
     is( $result_pr[1], '95 linear ft.', '300 edge $a alone prefix: unchanged' );
 
-    is(
-        join( '', $result[1] ),
-        join( '', $result_pr[1] ),
-        '300 edge $a alone: combined string identical'
-    );
+    check_combined( \@result, \@result_pr, '300 edge $a alone: combined string identical' );
 }
 
 # --- Edge case: $a + $b only (no $c) ---
@@ -341,11 +317,7 @@ ok( defined $rules_300, '300 rules loaded' );
         '300 edge $a+$b prefix: $b gets " : " prepended'
     );
 
-    is(
-        join( '', @result[ 1, 3 ] ),
-        join( '', @result_pr[ 1, 3 ] ),
-        '300 edge $a+$b: combined string identical'
-    );
+    check_combined( \@result, \@result_pr, '300 edge $a+$b: combined string identical' );
 }
 
 # --- Edge case: $a + $e (accompanying material only, no $b/$c) ---
@@ -385,11 +357,7 @@ ok( defined $rules_300, '300 rules loaded' );
         '300 edge $a+$e prefix: $e gets " + " prepended'
     );
 
-    is(
-        join( '', @result[ 1, 3 ] ),
-        join( '', @result_pr[ 1, 3 ] ),
-        '300 edge $a+$e: combined string identical'
-    );
+    check_combined( \@result, \@result_pr, '300 edge $a+$e: combined string identical' );
 }
 
 # --- Edge case: $h alone (data from $3-poems example) ---
@@ -408,11 +376,7 @@ ok( defined $rules_300, '300 rules loaded' );
     is( $result_pr[1], '(37 pages)',
         '300 edge $h alone prefix: wrapped in ()' );
 
-    is(
-        join( '', $result[1] ),
-        join( '', $result_pr[1] ),
-        '300 edge $h alone: combined string identical'
-    );
+    check_combined( \@result, \@result_pr, '300 edge $h alone: combined string identical' );
 }
 
 # --- Edge case: $a + $h (no $e in between -- rare but possible) ---
@@ -445,11 +409,7 @@ ok( defined $rules_300, '300 rules loaded' );
         '300 edge $a+$h prefix: $h wrapped in ()'
     );
 
-    is(
-        join( '', @result[ 1, 3 ] ),
-        join( '', @result_pr[ 1, 3 ] ),
-        '300 edge $a+$h: combined string identical'
-    );
+    check_combined( \@result, \@result_pr, '300 edge $a+$h: combined string identical' );
 }
 
 # --- Edge case: $a directly followed by another $a (scores with parts, adjacent) ---
@@ -485,11 +445,7 @@ ok( defined $rules_300, '300 rules loaded' );
     is( $result_pr[3], ' + 16 parts',
         '300 edge $a+$a prefix: second $a gets " + " prepended' );
 
-    is(
-        join( '', @result[ 1, 3 ] ),
-        join( '', @result_pr[ 1, 3 ] ),
-        '300 edge $a+$a: combined string identical'
-    );
+    check_combined( \@result, \@result_pr, '300 edge $a+$a: combined string identical' );
 }
 
 done_testing();
