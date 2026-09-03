@@ -382,6 +382,65 @@ sub _decorate_x10_pre {
     return $value;
 }
 
+=head2 _decorate_qualifier_group_pre
+
+I<Shared> pre-callback + helper for a REPEATABLE I<qualifying> subfield that
+is wrapped in a single pair of parentheses, with multiple occurrences
+separated by a per-field separator. This is the pattern used by:
+
+    020 $q  (separator " ; ")
+    210 $b  (separator ", ")
+    222 $b  (separator ". ")
+
+Example (020, $code q, $sep " ; "):
+
+    $a 0914378260 $q pbk. $q v. 1  ->  (pbk. ; v. 1)
+
+Because the separator differs per field, the rule set passes it in; the data
+files therefore reference this helper via small closures that supply
+C<$code> and C<$sep>. A naive C E<lt> wrap => { b => ['(',')'] } E<gt> would
+instead produce C<(a)(b)>, not C<(a, b)>, so this grouping is structural
+and lives in C<cb_pre> (the parens/separator are attached to the run as a
+unit), matching the 020/210/222 reference reading.
+
+Non-group subfields pass through unchanged; a single occurrence is wrapped
+entirely (C<(...)>); the first/middle/last of a run open the paren, add only
+the separator, or add the separator and close the paren, respectively.
+
+Called with the standard C<cb_pre> signature followed by C<$code> (the group
+subfield's code) and C<$sep> (the run-internal separator).
+
+=cut
+
+sub _decorate_qualifier_group_pre {
+    my ( $sf, $value, $i, $subfields, $last_sf_ref, $code, $sep ) = @_;
+
+    return $value unless $sf eq $code;
+
+    my $last_sf = $$last_sf_ref;
+    my $next    = $subfields->[ $i + 1 ];
+    my $next_sf = $next ? $next->[0] : '';
+
+    if ( $last_sf ne $code && $next_sf eq $code ) {
+
+        # First occurrence in a multi-occurrence run: open paren
+        return "($value";
+    }
+    elsif ( $last_sf eq $code && $next_sf eq $code ) {
+
+        # Middle occurrence: separator only
+        return "$sep$value";
+    }
+    elsif ( $last_sf eq $code && $next_sf ne $code ) {
+
+        # Last occurrence in the run: separator + close paren
+        return "$sep$value)";
+    }
+
+    # Single occurrence: wrap entirely
+    return "($value)";
+}
+
 =head2 log
 
 Logging hook. By default prints to STDERR via C<warn>. In Koha

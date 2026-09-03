@@ -46,37 +46,187 @@ sub rules {
 
         # 020 – International Standard Book Number
         # ISBD punct: $a ($q ; $q) : $c
-        # Full implementation with $q parenthetical grouping via cb_pre
+        # The repeatable $q parenthetical grouping (with ' ; ' separators)
+        # is the shared _decorate_qualifier_group_pre pattern (also used by
+        # 210 $b and 222 $b, which differ only in the separator).
         '020' => {
             pchrs => {
                 c => ' : ',
             },
             cb_pre => sub {
-                my ( $sf, $value, $i, $subfields, $last_sf_ref ) = @_;
-                return $value unless $sf eq 'q';
+                return
+                  Koha::Filter::MARC::ISBD4MARCPunctuation::_decorate_qualifier_group_pre(
+                    @_, 'q', ' ; '
+                  );
+            },
+        },
 
-                my $last_sf = $$last_sf_ref;
-                my $next    = $subfields->[ $i + 1 ];
-                my $next_sf = $next ? $next->[0] : '';
+        # 210 – Abbreviated Title
+        # ISBD punct: $a ($b , $b)
+        # $a unchanged; repeatable $b (qualifying info) wrapped in one paren
+        # pair, multiple $b separated by ', ' (spec §4.2). Same shared
+        # repeatable-group pattern as 020 $q, with a different separator.
+        # Example: $a Fam. her. $b Montr. $b 1859 -> (Montr., 1859)
+        '210' => {
+            cb_pre => sub {
+                return
+                  Koha::Filter::MARC::ISBD4MARCPunctuation::_decorate_qualifier_group_pre(
+                    @_, 'b', ', '
+                  );
+            },
+        },
 
-                if ( $last_sf ne 'q' && $next_sf eq 'q' ) {
+        # 222 – Key Title
+        # ISBD punct: $a ($b . $b)
+        # $a unchanged; repeatable $b (qualifying info) wrapped in one paren
+        # pair, multiple $b separated by '. ' (spec §4.3). Same shared
+        # repeatable-group pattern as 020 $q, with a different separator.
+        # Example: $a Family herald $b Montreal $b 1859 -> (Montreal. 1859)
+        '222' => {
+            cb_pre => sub {
+                return
+                  Koha::Filter::MARC::ISBD4MARCPunctuation::_decorate_qualifier_group_pre(
+                    @_, 'b', '. '
+                  );
+            },
+        },
 
-                    # First $q in a multi-$q group: open paren
-                    return "($value";
-                }
-                elsif ( $last_sf eq 'q' && $next_sf eq 'q' ) {
+        # 240 – Uniform Title
+        # ISBD punct (spec §5.5 Uniform Titles):
+        #   $a: N/A (plain)  $b: (qualifying info, repeatable) -> one paren
+        #       pair '(...)', multiple $b separated by ' : '
+        #   $f '. '  $g '. '  $h '. '  $j ', '  $k '. '  $l '. '
+        #   $m ', '  $n '. '  $o '; '  $p ', '  $r ', '
+        #   $s '. '  (DECISION: '. ' chosen; aligns with K10plus and
+        #              is subject to review/change)
+        #
+        #   $b is a repeatable QUALIFYING-INFORMATION group, structurally
+        #   the SAME pattern as 020 $q / 210 $b / 222 $b, so the shared
+        #   _decorate_qualifier_group_pre callback is reused (separator
+        #   ' : ' for multiple qualifiers, per §5.5 / the 130 §5.5 example
+        #   "$a Dialogue $b Montreal, Quebec $b 1962" -> "(Montreal,
+        #   Quebec : 1962)").
+        #
+        #   $p: ', ' chosen over '. ' (contextual — like 245 $p). The §5.5
+        #       C.5 240 example would want '. ' before the part name, but
+        #       the context is not MARC-decodable, so we pick ', '
+        #       consistently and document as a known gap.
+        #
+        #   $d (240: date of treaty signing; §5.5 is '( ) or , '):
+        #       NOT handled — contextual, rare. Documented gap.
+        '240' => {
+            pchrs => {
+                f => '. ',
+                g => '. ',
+                h => '. ',
+                j => ', ',
+                k => '. ',
+                l => '. ',
+                m => ', ',
+                n => '. ',
+                o => '; ',
+                p => ', ',
+                r => ', ',
+                s => '. ',
+            },
+            cb_pre => sub {
+                return
+                  Koha::Filter::MARC::ISBD4MARCPunctuation::_decorate_qualifier_group_pre(
+                    @_, 'b', ' : '
+                  );
+            },
+        },
 
-                    # Middle $q: separator only
-                    return " ; $value";
-                }
-                elsif ( $last_sf eq 'q' && $next_sf ne 'q' ) {
+        # 130 – Main Entry – Uniform Title
+        # Uniform title, same §5.5 structure and punctuation as 240.
+        # 130 has NO $d per the §5.5 table ("$d ... (240, 243, 610, 611,
+        # 710, 711, 730, 810, 811, 830 only)" — 130 not listed), and $d is
+        # an unimplemented documented gap in 240 anyway, so aliasing is
+        # exact for the implemented subfields.
+        '130' => {
+            use_rules => '240',
+        },
 
-                    # Last $q in group: separator + close paren
-                    return " ; $value)";
-                }
+        # 243 – Collective Uniform Title
+        # Same §5.5 uniform-title structure and punctuation as 240
+        # (Appendix B lists 240 AND 243 for $b/$j/$n). $a is the
+        # collective uniform title; no subfield differences affect
+        # punctuation, so this aliases 240 exactly.
+        '243' => {
+            use_rules => '240',
+        },
 
-                # Single $q: wrap entirely
-                return "($value)";
+        # 730 – Added Entry – Uniform Title
+        # Same §5.5 uniform-title block as 240. 730 ADDS $i (relationship
+        # information, 730 only) and $x (ISSN, 730/830... only) — both are
+        # **N/A / no punctuation** per §5.5, i.e. they need NO pchrs key and
+        # just pass through, which the 240 block already provides. So a
+        # direct alias is exact for the implemented subfields.
+        '730' => {
+            use_rules => '240',
+        },
+
+        # 830 – Series Added Entry – Uniform Title
+        # Same §5.5 uniform-title block as 240, PLUS $v (volume /
+        # sequential designation) which per §5.5 gets ' ; ' (830 only,
+        # alongside 800/810/811). $x (ISSN) is N/A (no punct). Mirrors the
+        # 800/810/811 series pattern: same base block + a `v` key.
+        '830' => {
+            pchrs => {
+                f => '. ',
+                g => '. ',
+                h => '. ',
+                j => ', ',
+                k => '. ',
+                l => '. ',
+                m => ', ',
+                n => '. ',
+                o => '; ',
+                p => ', ',
+                r => ', ',
+                s => '. ',
+                v => ' ;',
+            },
+            cb_pre => sub {
+                return
+                  Koha::Filter::MARC::ISBD4MARCPunctuation::_decorate_qualifier_group_pre(
+                    @_, 'b', ' : '
+                  );
+            },
+        },
+
+        # 630 – Subject Added Entry – Uniform Title
+        # Same §5.5 uniform-title block as 240/243/730/830, PLUS the ONE
+        # subject-only subfield: $e (relator term, 630 only) -> ', ' per
+        # §5.5. $v (volume) is NOT in 630 (830 only); $x/$y/$z subject
+        # subdivisions have no punct here (uniform-title block defines none
+        # of them). K10plus confirms the family grouping (its ISBDX30 is
+        # shared by 130/630/730/830 with 630 = base minus $v).
+        #
+        # Implemented as its own standalone block (like 830) rather than an
+        # alias, because use_rules is a FULL alias (no merge) and 630 needs
+        # the extra `e` key on top of the 240 base.
+        '630' => {
+            pchrs => {
+                e => ', ',   # 630-only: relator term (spec §5.5)
+                f => '. ',
+                g => '. ',
+                h => '. ',
+                j => ', ',
+                k => '. ',
+                l => '. ',
+                m => ', ',
+                n => '. ',
+                o => '; ',
+                p => ', ',
+                r => ', ',
+                s => '. ',
+            },
+            cb_pre => sub {
+                return
+                  Koha::Filter::MARC::ISBD4MARCPunctuation::_decorate_qualifier_group_pre(
+                    @_, 'b', ' : '
+                  );
             },
         },
 
@@ -103,6 +253,33 @@ sub rules {
                 # o: puncuation is context dependend and the context is
                 #    not encoded in MARC.
                 #
+            },
+            wrap => { h => [ '[', ']' ] },
+        },
+
+        # 242 – Translation of Title by Cataloging Agency
+        # ISBD punct (spec §4.4): $a : $b / $c . $n , $p , $q [h]
+        # The spec notes 242 "closely corresponds" to 245; it has NO
+        # parallel-data subfields ($r/$t).
+        #
+        #   $b ' : '  $c ' / '  $e '. '  $n '. '  $q ', '
+        #   $h: wrap [ ]
+        #
+        #   $p: ', ' chosen over '. ' (contextual — like 245 $p).
+        #
+        # GAPS (context not MARC-decodable, same class as 245 $o):
+        #   $a ' ; '  only for SUBSEQUENT titles by the same author
+        #   $o ', '   (alternative titles) vs ' ; ' (non-collective same
+        #             author) vs trailing ', ' — contextual
+        #   $y        language code — N/A, no punctuation
+        '242' => {
+            pchrs => {
+                b => ' : ',
+                c => ' / ',
+                e => '. ',
+                n => '. ',
+                p => ', ',
+                q => ', ',
             },
             wrap => { h => [ '[', ']' ] },
         },
