@@ -29,10 +29,9 @@ my $rules_222 = Koha::Filter::MARC::ISBD4MARCPunctuation::rules_for($SET)->{'222
 ok( defined $rules_222, '222 rules loaded' );
 
 # --- 210 Example 1: $a + single $b ---
-# Doc: Future:  210 0# $a Plant prot. bull. $b Faridabad
 # Doc: Current: 210 0# $a Plant prot. bull. $b (Faridabad)
 {
-    # render: 210 0# $a Plant prot. bull. $b Faridabad
+    # render: [doc §4.2] 210 0# $a Plant prot. bull. $b Faridabad
     my $field = make_field(
         '210', '0', '#',
         a => 'Plant prot. bull.',
@@ -60,10 +59,9 @@ ok( defined $rules_222, '222 rules loaded' );
 }
 
 # --- 210 Example 2: $a + single $b (abbreviation) ---
-# Doc: Future:  210 0# $a Annu. rep. - Dep. Public Welfare $b Chic.
 # Doc: Current: 210 0# $a Annu. rep. - Dep. Public Welfare $b (Chic.)
 {
-    # render: 210 0# $a Annu. rep. - Dep. Public Welfare $b Chic.
+    # render: [doc §4.2] 210 0# $a Annu. rep. - Dep. Public Welfare $b Chic.
     my $field = make_field(
         '210', '0', '#',
         a => 'Annu. rep. - Dep. Public Welfare',
@@ -89,10 +87,9 @@ ok( defined $rules_222, '222 rules loaded' );
 }
 
 # --- 210 Example 3: $a + two $b (multiple qualifiers, ', ' separator) ---
-# Doc: Future:  210 0# $a Fam. her. $b Montr. $b 1859
 # Doc: Current: 210 0# $a Fam. her. $b (Montr., 1859)
 {
-    # render: 210 0# $a Fam. her. $b Montr. $b 1859
+    # render: [doc §4.2] 210 0# $a Fam. her. $b Montr. $b 1859
     my $field = make_field(
         '210', '0', '#',
         a => 'Fam. her.',
@@ -142,10 +139,9 @@ ok( defined $rules_222, '222 rules loaded' );
 }
 
 # --- 222 Example 1: $a + single $b ---
-# Doc: Future:  222 #0 $a Viva $b New York
 # Doc: Current: 222 #0 $a Viva $b (New York)
 {
-    # render: 222 #0 $a Viva $b New York
+    # render: [doc §4.3] 222 #0 $a Viva $b New York
     my $field = make_field(
         '222', '#', '0',
         a => 'Viva',
@@ -169,10 +165,9 @@ ok( defined $rules_222, '222 rules loaded' );
 }
 
 # --- 222 Example 2: $a + single $b (accented) ---
-# Doc: Future:  222 #4 $a Der Öffentliche Dienst $b Köln
 # Doc: Current: 222 #4 $a Der Öffentliche Dienst $b (Köln)
 {
-    # render: 222 #4 $a Der Öffentliche Dienst $b Köln
+    # render: [doc §4.3] 222 #4 $a Der Öffentliche Dienst $b Köln
     my $field = make_field(
         '222', '#', '4',
         a => 'Der Öffentliche Dienst',
@@ -198,10 +193,9 @@ ok( defined $rules_222, '222 rules loaded' );
 }
 
 # --- 222 Example 3: $a + two $b (multiple qualifiers, '. ' separator) ---
-# Doc: Future:  222 #0 $a Family herald $b Montreal $b 1859
 # Doc: Current: 222 #0 $a Family herald $b (Montreal. 1859)
 {
-    # render: 222 #0 $a Family herald $b Montreal $b 1859
+    # render: [doc §4.3] 222 #0 $a Family herald $b Montreal $b 1859
     my $field = make_field(
         '222', '#', '0',
         a => 'Family herald',

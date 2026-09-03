@@ -23,10 +23,9 @@ my $rules_300 = Koha::Filter::MARC::ISBD4MARCPunctuation::rules_for($SET)->{300}
 ok( defined $rules_300, '300 rules loaded' );
 
 # --- Example 1: $a + $c (simple book) ---
-# Doc: Future:  300 ## $a 149 pages $c 23 cm
 # Doc: Current: 300 ## $a 149 pages ; $c 23 cm.
 {
-    # render: 300 ## $a 149 pages $c 23 cm
+    # render: [doc §4.14] 300 ## $a 149 pages $c 23 cm
     my $field = make_field(
         '300', '#', '#',
         a => '149 pages',
@@ -50,10 +49,9 @@ ok( defined $rules_300, '300 rules loaded' );
 }
 
 # --- Example 2: $a + $c (score) ---
-# Doc: Future:  300 ## $a 1 score (16 pages) $c 29 cm
 # Doc: Current: 300 ## $a 1 score (16 pages) ; $c 29 cm.
 {
-    # render: 300 ## $a 1 score (16 pages) $c 29 cm
+    # render: [doc §4.14] 300 ## $a 1 score (16 pages) $c 29 cm
     my $field = make_field(
         '300', '#', '#',
         a => '1 score (16 pages)',
@@ -80,10 +78,9 @@ ok( defined $rules_300, '300 rules loaded' );
 }
 
 # --- Example 3: $a + $b + $c (audio disc) ---
-# Doc: Future:  300 ## $a 1 audio disc (20 min.) $b analog, 33 1/3 rpm, stereo $c 12 in.
 # Doc: Current: 300 ## $a 1 audio disc (20 min.) : $b analog, 33 1/3 rpm, stereo ; $c 12 in.
 {
-    # render: 300 ## $a 1 audio disc (20 min.) $b analog, 33 1/3 rpm, stereo $c 12 in.
+    # render: [doc §4.14] 300 ## $a 1 audio disc (20 min.) $b analog, 33 1/3 rpm, stereo $c 12 in.
     my $field = make_field(
         '300', '#', '#',
         a => '1 audio disc (20 min.)',
@@ -125,10 +122,9 @@ ok( defined $rules_300, '300 rules loaded' );
 }
 
 # --- Example 4: $a + $c + $a + $c (scores with parts) ---
-# Doc: Future:  300 ## $a 1 score (30 pages) $c 20 cm $a 16 parts $c 32 cm
 # Doc: Current: 300 ## $a 1 score (30 pages) ; $c 20 cm. + $a 16 parts ; $c 32 cm.
 {
-    # render: 300 ## $a 1 score (30 pages) $c 20 cm $a 16 parts $c 32 cm
+    # render: [doc §4.14] 300 ## $a 1 score (30 pages) $c 20 cm $a 16 parts $c 32 cm
     my $field = make_field(
         '300', '#', '#',
         a => '1 score (30 pages)',
@@ -169,10 +165,9 @@ ok( defined $rules_300, '300 rules loaded' );
 }
 
 # --- Example 5: $a + $b + $c (print) ---
-# Doc: Future:  300 ## $a 1 print $b lithograph, black and white $c image 33 x 41 cm, on sheet 46 x 57 cm
 # Doc: Current: 300 ## $a 1 print : $b lithograph, black and white ; $c image 33 x 41 cm., on sheet 46 x 57 cm.
 {
-    # render: 300 ## $a 1 print $b lithograph, black and white $c image 33 x 41 cm, on sheet 46 x 57 cm
+    # render: [doc §4.14] 300 ## $a 1 print $b lithograph, black and white $c image 33 x 41 cm, on sheet 46 x 57 cm
     my $field = make_field(
         '300', '#', '#',
         a => '1 print',
@@ -215,12 +210,11 @@ ok( defined $rules_300, '300 rules loaded' );
 }
 
 # --- Example 6: $a + $b + $c + $e + $h/$i/$j (accompanying material) ---
-# Doc: Future:  300 ## $a 271 pages $b ill. $c 21 cm $e 1 atlas $h 37 pages, 19 leaves $i color maps $j 37 cm
 # Doc: Current: 300 ## $a 271 pages : $b ill. ; $c 21 cm + $e 1 atlas (37 pages, 19 leaves : color maps ; 37 cm)
 # $h/$i/$j are grouped in ONE paren pair anchored on $h (see
 # _decorate_300_pre); separators via compound pchrs hi/ij.
 {
-    # render: 300 ## $a 271 pages $b ill. $c 21 cm $e 1 atlas $h 37 pages, 19 leaves $i color maps $j 37 cm
+    # render: [doc §4.14] 300 ## $a 271 pages $b ill. $c 21 cm $e 1 atlas $h 37 pages, 19 leaves $i color maps $j 37 cm
     my $field = make_field(
         '300', '#', '#',
         a => '271 pages',

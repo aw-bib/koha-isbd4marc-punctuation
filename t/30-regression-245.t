@@ -20,10 +20,9 @@ my $rules = Koha::Filter::MARC::ISBD4MARCPunctuation::rules_for($SET)->{245};
 ok( defined $rules, '245 rules loaded' );
 
 # --- Example 1: $a + $c (simple responsibility) ---
-# Doc: Future: 245 14 $a The plays of Oscar Wilde $c Alan Bird
 # Doc: Current: 245 14 $a The plays of Oscar Wilde / $c Alan Bird.
 {
-    # render: 245 14 $a The plays of Oscar Wilde $c Alan Bird
+    # render: [doc §4.6] 245 14 $a The plays of Oscar Wilde $c Alan Bird
     my $field = make_field( '245', '1', '4',
         a => 'The plays of Oscar Wilde',
         c => 'Alan Bird',
@@ -41,10 +40,9 @@ ok( defined $rules, '245 rules loaded' );
 }
 
 # --- Example 2: $a + $b + $r (parallel title) ---
-# Doc: Future: 245 10 $a Rock mechanics $b journal... $r Felsmechanik
 # Doc: Current: 245 10 $a Rock mechanics : $b journal... = $r Felsmechanik.
 {
-    # render: 245 10 $a Rock mechanics $b journal of the International Society for Rock Mechanics $r Felsmechanik
+    # render: [doc §4.6] 245 10 $a Rock mechanics $b journal of the International Society for Rock Mechanics $r Felsmechanik
     my $field = make_field( '245', '1', '0',
         a => 'Rock mechanics',
         b => 'journal of the International Society for Rock Mechanics',
@@ -65,10 +63,9 @@ ok( defined $rules, '245 rules loaded' );
 }
 
 # --- Example 3: $a + $c + $r + $c (parallel statements of responsibility) ---
-# Doc: Future: 245 00 $a Retail et volaille $c Bureau... $r Livestock... $c Quebec...
 # Doc: Current: 245 00 $a Retail et volaille / $c Bureau... = $r Livestock... / $c Quebec...
 {
-    # render: 245 00 $a Retail et volaille $c Bureau des statistiques de Québec $r Livestock and poultry $c Quebec Bureau of Statistics
+    # render: [doc §4.6] 245 00 $a Retail et volaille $c Bureau des statistiques de Québec $r Livestock and poultry $c Quebec Bureau of Statistics
     my $field = make_field( '245', '0', '0',
         a => 'Retail et volaille',
         c => 'Bureau des statistiques de Québec',
@@ -92,10 +89,9 @@ ok( defined $rules, '245 rules loaded' );
 }
 
 # --- Example 4: $c + $d + $d (subsequent statements of responsibility) ---
-# Doc: Future: 245 10 $a How to play chess $c Kevin Wicker $d with a foreword... $d illustrated...
 # Doc: Current: 245 10 $a How to play chess / $c Kevin Wicker ; $d with a foreword... ; $d illustrated...
 {
-    # render: 245 10 $a How to play chess $c Kevin Wicker $d with a foreword by David Pritchard $d illustrated by Karel Feuerstein
+    # render: [doc §4.6] 245 10 $a How to play chess $c Kevin Wicker $d with a foreword by David Pritchard $d illustrated by Karel Feuerstein
     my $field = make_field( '245', '1', '0',
         a => 'How to play chess',
         c => 'Kevin Wicker',

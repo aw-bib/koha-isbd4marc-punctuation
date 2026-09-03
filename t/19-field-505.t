@@ -23,12 +23,11 @@ my $rules_505 = Koha::Filter::MARC::ISBD4MARCPunctuation::rules_for($SET)->{505}
 ok( defined $rules_505, '505 rules loaded' );
 
 # --- Example 1: Multiple $t (basic contents) ---
-# Doc: Future:  505 00 $t Future land use plan $t Recommended capital improvements $t Existing land use $t Existing zoning
 # Doc: Current: 505 0# $a Future land use plan -- Recommended capital improvements -- Existing land use -- Existing zoning.
 # Note: doc shows $a in current, but subfields are reconstructed as $t in future.
 # We test the $t-based future form reconstruction.
 {
-    # render: 505 00 $t Future land use plan $t Recommended capital improvements $t Existing land use $t Existing zoning
+    # render: [doc §4.25] 505 00 $t Future land use plan $t Recommended capital improvements $t Existing land use $t Existing zoning
     my $field = make_field(
         '505', '0', '0',
         t => 'Future land use plan',
@@ -151,10 +150,9 @@ ok( defined $rules_505, '505 rules loaded' );
 }
 
 # --- Example 3: $t + $g + $t + $g (enhanced, with timings) ---
-# Doc: Future:  505 00 $t Quatrain II $g 16:35 $t Water ways $g 1:57 $t Waves $g 10:49
 # Doc: Current: 505 00 $t Quatrain II (16:35) -- $t Water ways (1:57) -- $t Waves (10:49).
 {
-    # render: 505 00 $t Quatrain II $g 16:35 $t Water ways $g 1:57 $t Waves $g 10:49
+    # render: [doc §4.25] 505 00 $t Quatrain II $g 16:35 $t Water ways $g 1:57 $t Waves $g 10:49
     my $field = make_field(
         '505', '0', '0',
         t => 'Quatrain II',
@@ -205,10 +203,9 @@ ok( defined $rules_505, '505 rules loaded' );
 }
 
 # --- Example 4: $t + $t + $t + $r (titles with statement of responsibility) ---
-# Doc: Future:  505 20 $t Baptisms, 1816-1872 $t Church members, 1816-1831 $t History of the Second Presbyterian Church of West Durham $r by L.H. Fellows
 # Doc: Current: 505 20 $t Baptisms, 1816-1872 -- $t Church members, 1816-1831 -- $t History of the Second Presbyterian Church of West Durham / $r by L.H. Fellows.
 {
-    # render: 505 20 $t Baptisms, 1816-1872 $t Church members, 1816-1831 $t History of the Second Presbyterian Church of West Durham $r by L.H. Fellows
+    # render: [doc §4.25] 505 20 $t Baptisms, 1816-1872 $t Church members, 1816-1831 $t History of the Second Presbyterian Church of West Durham $r by L.H. Fellows
     my $field = make_field(
         '505', '2', '0',
         t => 'Baptisms, 1816-1872',
@@ -390,7 +387,6 @@ ok( defined $rules_505, '505 rules loaded' );
 }
 
 # --- Doc Example 5: $n + $t (part designation with titles) ---
-# Doc: Future:  505 10 $n Nr. 1 $t Region Neusiedlersee $n Nr. 2 $t Region Rosalia/Lithagebirge ...
 # Doc: Current: 505 10 $g Nr. 1. $t Region Neusiedlersee -- $g Nr. 2. $t Region Rosalia/Lithagebirge ...
 # Note: In the Future form, $n replaces $g for part designations.
 # $n gets -- when $t follows (via pchrs t => ' -- ').
@@ -398,7 +394,7 @@ ok( defined $rules_505, '505 rules loaded' );
 #   that avoids firing on $i).
 # Combined string: "Nr. 1 -- Region Neusiedlersee -- Nr. 2 -- ..."
 {
-    # render: 505 10 $n Nr. 1 $t Region Neusiedlersee $n Nr. 2 $t Region Rosalia/Lithagebirge $n Nr. 3 $t Region Mettelburgenland $n Nr. 4 $t Region s\u00fcdliches Burgenland $n Nr. 5 $t Region S\u00fcdburgland
+    # render: [doc §4.25] 505 10 $n Nr. 1 $t Region Neusiedlersee $n Nr. 2 $t Region Rosalia/Lithagebirge $n Nr. 3 $t Region Mettelburgenland $n Nr. 4 $t Region s\u00fcdliches Burgenland $n Nr. 5 $t Region S\u00fcdburgland
     my $field = make_field(
         '505', '1', '0',
         n => 'Nr. 1',
@@ -465,11 +461,10 @@ ok( defined $rules_505, '505 rules loaded' );
 }
 
 # --- Doc Example 6: $i + $n + $t (display text with part designation and title) ---
-# Doc: Future:  505 00 $i Contents of disc 1 $n Episode 1 $t The last of the free $n Episode 2 $t Hammers of the Scots $n Episode 3 $t Bishop makes kings
 # Doc: Current: 505 0# $a Contents of disc 1: Episode 1. The last of the free -- Episode 2. Hammers of the Scots -- Episode 3. Bishop makes kings.
 # $i gets ": " via cb_pre. $n gets " -- " when $t follows (pchrs t). $t gets " -- " when $n follows (COMPOUND key tn).
 {
-    # render: 505 00 $i Contents of disc 1 $n Episode 1 $t The last of the free $n Episode 2 $t Hammers of the Scots $n Episode 3 $t Bishop makes kings
+    # render: [doc §4.25] 505 00 $i Contents of disc 1 $n Episode 1 $t The last of the free $n Episode 2 $t Hammers of the Scots $n Episode 3 $t Bishop makes kings
     my $field = make_field(
         '505', '0', '0',
         i => 'Contents of disc 1',

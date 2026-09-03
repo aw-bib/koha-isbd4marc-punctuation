@@ -43,10 +43,9 @@ my $rules_242 = Koha::Filter::MARC::ISBD4MARCPunctuation::rules_for($SET)->{'242
 ok( defined $rules_242, '242 rules loaded' );
 
 # --- 130 example 1 (§5.5): $a + single $b + $p ---
-# Doc: Future:  130 0# $a Statistical bulletin $b Bamako, Mali $p Supplement
 # Doc: Current: 130 0# $a Statistical bulletin (Bamako, Mali). $p Supplement.
 {
-    # render: 130 0# $a Statistical bulletin $b Bamako, Mali $p Supplement
+    # render: [doc §5.5] 130 0# $a Statistical bulletin $b Bamako, Mali $p Supplement
     my $field = make_field(
         '130', '0', '#',
         a => 'Statistical bulletin',
@@ -79,10 +78,9 @@ ok( defined $rules_242, '242 rules loaded' );
 }
 
 # --- 130 example 2 (§5.5): $a + single $b ---
-# Doc: Future:  130 0# $a San Francisco journal $b 1980
 # Doc: Current: 130 0# $a San Francisco journal (1980)
 {
-    # render: 130 0# $a San Francisco journal $b 1980
+    # render: [doc §5.5] 130 0# $a San Francisco journal $b 1980
     my $field = make_field(
         '130', '0', '#',
         a => 'San Francisco journal',
@@ -108,10 +106,9 @@ ok( defined $rules_242, '242 rules loaded' );
 }
 
 # --- 130 example 3 (§5.5): $a + TWO $b (multiple qualifiers, ' : ') + $l ---
-# Doc: Future:  130 0# $a Dialogue $b Montreal, Quebec $b 1962 $l English
 # Doc: Current: 130 0# $a Dialogue (Montreal, Quebec : 1962). $l English.
 {
-    # render: 130 0# $a Dialogue $b Montreal, Quebec $b 1962 $l English
+    # render: [doc §5.5] 130 0# $a Dialogue $b Montreal, Quebec $b 1962 $l English
     my $field = make_field(
         '130', '0', '#',
         a => 'Dialogue',
@@ -176,12 +173,11 @@ ok( defined $rules_242, '242 rules loaded' );
 
 # --- 240 example 1 (§5.5 / Appendix C.5 worked example):
 #      $a $m $j $r $p $o (music uniform title) ---
-# Doc: Future:  240 10 $a Sonatas $m piano $j no. 8, op. 13 $r C minor
 #                        $p Adagio cantabile $o arranged
 # Doc: Current: 240 10 $a Sonatas, $m piano, $n no. 8, op. 13, $r C minor.
 #                        $p Adagio cantabile; $o arranged.
 {
-    # render: 240 10 $a Sonatas $m piano $j no. 8, op. 13 $r C minor $p Adagio cantabile $o arranged
+    # render: [doc C.5] 240 10 $a Sonatas $m piano $j no. 8, op. 13 $r C minor $p Adagio cantabile $o arranged
     my $field = make_field(
         '240', '1', '0',
         a => 'Sonatas',
@@ -281,12 +277,11 @@ ok( defined $rules_242, '242 rules loaded' );
 }
 
 # --- 242 example 1 (§4.4): $a $n $p $q $y ---
-# Doc: Future:  242 00 $a Annals of chemistry $n Series C
 #                        $p Organic chemistry and biochemistry $y eng
 # Doc: Current: 242 00 $a Annals of chemistry. $n Series C, $p Organic
 #                        chemistry and biochemistry. $y eng
 {
-    # render: 242 00 $a Annals of chemistry $n Series C $p Organic chemistry and biochemistry $y eng
+    # render: [doc §4.4] 242 00 $a Annals of chemistry $n Series C $p Organic chemistry and biochemistry $y eng
     my $field = make_field(
         '242', '0', '0',
         a => 'Annals of chemistry',

@@ -18,10 +18,9 @@ my $rules_502 = Koha::Filter::MARC::ISBD4MARCPunctuation::rules_for($SET)->{502}
 ok( defined $rules_502, '502 rules loaded' );
 
 # --- Example 1: $b + $c + $d ---
-# Doc: Future:  502 ## $b M.A. $c University College, London $d 1969
 # Doc: Current: 502 ## $a Thesis (M.A.)--University College, London, 1969.
 {
-    # render: 502 ## $b M.A. $c University College, London $d 1969
+    # render: [doc §4.23] 502 ## $b M.A. $c University College, London $d 1969
     my $field = make_field(
         '502', ' ', ' ',
         b => 'M.A.',
@@ -58,10 +57,9 @@ ok( defined $rules_502, '502 rules loaded' );
 }
 
 # --- Example 2: $b + $c + $d (Ph. D.) ---
-# Doc: Future:  502 ## $b Ph. D. $c Ohio State University $d 2008
 # Doc: Current: 502 ## $a Thesis (Ph. D.)--Ohio State University, 2008.
 {
-    # render: 502 ## $b Ph. D. $c Ohio State University $d 2008
+    # render: [doc §4.23] 502 ## $b Ph. D. $c Ohio State University $d 2008
     my $field = make_field(
         '502', ' ', ' ',
         b => 'Ph. D.',
@@ -98,10 +96,9 @@ ok( defined $rules_502, '502 rules loaded' );
 }
 
 # --- Example 3: $b + $c + $d (already in subfields with punct) ---
-# Doc: Future:  502 ## $b Ph. D. $c University of Louisville $d 1997
 # Doc: Current: 502 ## $b (Ph. D.)-- $c University of Louisville, $d 1997.
 {
-    # render: 502 ## $b Ph. D. $c University of Louisville $d 1997
+    # render: [doc §4.23] 502 ## $b Ph. D. $c University of Louisville $d 1997
     my $field = make_field(
         '502', ' ', ' ',
         b => 'Ph. D.',

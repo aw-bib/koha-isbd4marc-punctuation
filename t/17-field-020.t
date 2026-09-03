@@ -18,10 +18,9 @@ my $rules_020 = Koha::Filter::MARC::ISBD4MARCPunctuation::rules_for($SET)->{'020
 ok( defined $rules_020, '020 rules loaded' );
 
 # --- Example 1: $a + $q (single qualifying info) ---
-# Doc: Future:  020 ## $a 9780060723804 $q acid-free paper
 # Doc: Current: 020 ## $a 9780060723804 $q (acid-free paper)
 {
-    # render: 020 ## $a 9780060723804 $q acid-free paper
+    # render: [doc §3.2] 020 ## $a 9780060723804 $q acid-free paper
     my $field = make_field(
         '020', ' ', ' ',
         a => '9780060723804',
@@ -52,10 +51,9 @@ ok( defined $rules_020, '020 rules loaded' );
 }
 
 # --- Example 2: $a + $q (single qualifying info, trade) ---
-# Doc: Future:  020 ## $a 9780060799748 $q trade
 # Doc: Current: 020 ## $a 9780060799748 $q (trade)
 {
-    # render: 020 ## $a 9780060799748 $q trade
+    # render: [doc §3.2] 020 ## $a 9780060799748 $q trade
     my $field = make_field(
         '020', ' ', ' ',
         a => '9780060799748',
@@ -78,10 +76,9 @@ ok( defined $rules_020, '020 rules loaded' );
 }
 
 # --- Example 3: $a + $q + $c (qualifying info + terms of availability) ---
-# Doc: Future:  020 ## $a 0717941728 $q folded $c $0.45
 # Doc: Current: 020 ## $a 0717941728 $q (folded) : $c $0.45
 {
-    # render: 020 ## $a 0717941728 $q folded $c \$0.45
+    # render: [doc §3.2] 020 ## $a 0717941728 $q folded $c \$0.45
     my $field = make_field(
         '020', ' ', ' ',
         a => '0717941728',
@@ -109,10 +106,9 @@ ok( defined $rules_020, '020 rules loaded' );
 }
 
 # --- Example 4: $a + $q + $q + $c (two qualifying infos + terms) ---
-# Doc: Future:  020 ## $a 0914378260 $q pbk. $q v. 1 $c $5.00
 # Doc: Current: 020 ## $a 0914378260 $q (pbk. ; $q v. 1) : $c $5.00
 {
-    # render: 020 ## $a 0914378260 $q pbk. $q v. 1 $c \$5.00
+    # render: [doc §3.2] 020 ## $a 0914378260 $q pbk. $q v. 1 $c \$5.00
     my $field = make_field(
         '020', ' ', ' ',
         a => '0914378260',

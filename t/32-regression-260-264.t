@@ -29,10 +29,9 @@ my $rules_260 = Koha::Filter::MARC::ISBD4MARCPunctuation::rules_for($SET)->{260}
 ok( defined $rules_260, '260 rules loaded' );
 
 # --- Example 10: Multiple $b with $c ---
-# Doc: Future: 260 ## $a Washington, D.C. $b U.S. Dept... $b For sale by... $c 1981
 # Doc: Current: 260 ## $a Washington, D.C. : $b U.S. Dept... : $b For sale by... , $c 1981
 {
-    # render: 260 ## $a Washington, D.C. $b U.S. Dept. of Agriculture, Forest Service $b For sale by the Supt. of Docs. U.S. G.P.O. $c 1981
+    # render: [doc §4.12] 260 ## $a Washington, D.C. $b U.S. Dept. of Agriculture, Forest Service $b For sale by the Supt. of Docs. U.S. G.P.O. $c 1981
     my $field = make_field( '260', ' ', ' ',
         a => 'Washington, D.C.',
         b => 'U.S. Dept. of Agriculture, Forest Service',
@@ -56,12 +55,11 @@ ok( defined $rules_260, '260 rules loaded' );
 }
 
 # --- Example 11: Multiple $a with $b and $c ---
-# Doc: Future: 260 ## $a New York $a Berlin $b Springer Verlag $c 1977
 # Doc: Current: 260 ## $a New York ; $a Berlin : $b Springer Verlag , $c 1977
 # Note: " ; " is appended to the FIRST $a via the COMPOUND pchrs key aa
 # (postfix), and moves to the second $a only in prefix mode.
 {
-    # render: 260 ## $a New York $a Berlin $b Springer Verlag $c 1977
+    # render: [doc §4.12] 260 ## $a New York $a Berlin $b Springer Verlag $c 1977
     my $field = make_field( '260', ' ', ' ',
         a => 'New York',
         a => 'Berlin',
@@ -85,12 +83,11 @@ ok( defined $rules_260, '260 rules loaded' );
 }
 
 # --- Example 12: Interleaved $a/$b ---
-# Doc: Future: 260 ## $a Paris $b Gauthier-Villars $a Chicago $b University of Chicago Press $c 1955
 # Doc: Current: 260 ## $a Paris : $b Gauthier-Villars ; $a Chicago : $b University of Chicago Press , $c 1955
 # Note: " ; " is appended to $b when followed by $a (compound ba) in postfix,
 # and moves to the second $a (prepended) in prefix mode.
 {
-    # render: 260 ## $a Paris $b Gauthier-Villars $a Chicago $b University of Chicago Press $c 1955
+    # render: [doc §4.12] 260 ## $a Paris $b Gauthier-Villars $a Chicago $b University of Chicago Press $c 1955
     my $field = make_field( '260', ' ', ' ',
         a => 'Paris',
         b => 'Gauthier-Villars',
@@ -117,10 +114,9 @@ ok( defined $rules_260, '260 rules loaded' );
 }
 
 # --- Example 13: $q for address (between $a and $b) ---
-# Doc: Future: 260 ## $a Washington, D.C. $q 1649 K St.... $b Wider Opportunities... $c 1979
 # Doc: Current: 260 ## $a Washington, D.C. ($q 1649 K St....) : $b Wider Opportunities... , $c 1979
 {
-    # render: 260 ## $a Washington, D.C. $q 1649 K St., N.W., Washington 20006 $b Wider Opportunities for Women $c 1979
+    # render: [doc §4.12] 260 ## $a Washington, D.C. $q 1649 K St., N.W., Washington 20006 $b Wider Opportunities for Women $c 1979
     my $field = make_field( '260', ' ', ' ',
         a => 'Washington, D.C.',
         q => '1649 K St., N.W., Washington 20006',
@@ -144,10 +140,9 @@ ok( defined $rules_260, '260 rules loaded' );
 }
 
 # --- Example 16: $3 (materials specified) ---
-# Doc: Future: 260 3# $3 June 1993- $a London $b Elle
 # Doc: Current: 260 3# $3 June 1993-: $a London : $b Elle
 {
-    # render: 260 3# $3 June 1993- $a London $b Elle
+    # render: [doc §4.12] 260 3# $3 June 1993- $a London $b Elle
     my $field = make_field( '260', '3', '#',
         '3' => 'June 1993-',
         a   => 'London',

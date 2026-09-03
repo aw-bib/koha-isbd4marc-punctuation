@@ -44,7 +44,7 @@ sub check_combined {
 }
 
 {
-    # render: 100 ## $a Morgan, Robert $d 1944-
+    # render: [doc Appendix - derived] 100 ## $a Morgan, Robert $d 1944-
     my $r = _decorate( '100', 'postfix', a => 'Morgan, Robert', d => '1944-' );
     is( $r->[1], 'Morgan, Robert, ', '100: $a before $d' );
     is( $r->[3], '1944-',            '100: $d last' );
@@ -52,7 +52,7 @@ sub check_combined {
 }
 
 {
-    # render: 100 ## $a Reynolds, Joshua $c Sir $d 1723-1792 $j Pupil of
+    # render: [doc §5.2 - derived] 100 ## $a Reynolds, Joshua $c Sir $d 1723-1792 $j Pupil of
     my $r = _decorate(
         '100', 'postfix',
         a => 'Reynolds, Joshua',
@@ -74,7 +74,7 @@ sub check_combined {
 }
 
 {
-# render: 100 ## $a Hecht, Ben $d 1893-1964 $e writing $e direction $e production
+# render: [doc §5.2 - derived] 100 ## $a Hecht, Ben $d 1893-1964 $e writing $e direction $e production
     my $r = _decorate(
         '100', 'postfix',
         a => 'Hecht, Ben',
@@ -99,7 +99,7 @@ sub check_combined {
 }
 
 {
-    # render: 100 ## $a Beethoven, Ludwig van $d 1770-1827 $c Spirit
+    # render: [doc §5.2 - derived] 100 ## $a Beethoven, Ludwig van $d 1770-1827 $c Spirit
     my $r = _decorate(
         '100', 'postfix',
         a => 'Beethoven, Ludwig van',
@@ -118,7 +118,8 @@ sub check_combined {
 }
 
 {
-    # render: 100 ## $a Beeton $c Mrs. $q Isabella Mary $d 1836-1865
+    # Doc: Current: 100 1# $a Beeton, $c Mrs. $q (Isabella Mary), $d 1836-1865.
+    # render: [doc §5.2] 100 ## $a Beeton $c Mrs. $q Isabella Mary $d 1836-1865
     my $r = _decorate(
         '100', 'postfix',
         a => 'Beeton',
@@ -140,7 +141,8 @@ sub check_combined {
 }
 
 {
-    # render: 100 ## $a H. D. $q Hilda Doolittle $d 1886-1961
+    # Doc: Current: 100 0# $a H. D. $q (Hilda Doolittle), $d 1886-1961.
+    # render: [doc §5.2] 100 ## $a H. D. $q Hilda Doolittle $d 1886-1961
     my $r = _decorate(
         '100', 'postfix',
         a => 'H. D.',
@@ -179,14 +181,16 @@ sub check_combined {
 
 # ===== 700 =====
 {
-    # render: 700 ## $a Salamín C., Marcel A.
+    # Doc: Current: 700 1# $a Salamín C., Marcel A.
+    # render: [doc §5.2] 700 ## $a Salamín C., Marcel A.
     my $r = _decorate( '700', 'postfix', a => 'Salamín C., Marcel A.' );
     is( $r->[1], 'Salamín C., Marcel A.', '700: $a alone' );
     check_combined( '700', '700: $a alone', a => 'Salamín C., Marcel A.' )
 }
 
 {
-# render: 700 ## $a Charles Edward $c Prince, grandson of James II, King of England $d 1720-1788
+    # Doc: Current: 700 0# $a Charles Edward, $c Prince, grandson of James II, King of England, $d 1720-1788.
+# render: [doc §5.2] 700 ## $a Charles Edward $c Prince, grandson of James II, King of England $d 1720-1788
     my $r = _decorate(
         '700', 'postfix',
         a => 'Charles Edward',
@@ -209,7 +213,7 @@ sub check_combined {
 }
 
 {
-    # render: 700 ## $a Shakespeare, William $d 1564-1616
+    # render: [doc §5.5 - derived] 700 ## $a Shakespeare, William $d 1564-1616
     my $r = _decorate(
         '700', 'postfix',
         a => 'Shakespeare, William',
@@ -292,7 +296,7 @@ sub check_combined {
 }
 
 {
-    # render: 600 ## $a Moses $c (Biblical leader) $x Biography
+    # render: [doc §5.2 - derived] 600 ## $a Moses $c (Biblical leader) $x Biography
     my $r = _decorate(
         '600', 'postfix',
         a => 'Moses',
@@ -311,7 +315,7 @@ sub check_combined {
 }
 
 {
-    # render: 600 ## $a Bible $k Selections $l English
+    # render: [doc §5.5 - derived] 600 ## $a Bible $k Selections $l English
     my $r = _decorate(
         '600', 'postfix',
         a => 'Bible',
@@ -331,7 +335,7 @@ sub check_combined {
 
 # ===== 800 =====
 {
-    # render: 800 ## $a Shakespeare, William $t Works $v v. 1
+    # render: [doc §5.5 - derived] 800 ## $a Shakespeare, William $t Works $v v. 1
     my $r = _decorate(
         '800', 'postfix',
         a => 'Shakespeare, William',
@@ -350,7 +354,7 @@ sub check_combined {
 }
 
 {
-    # render: 800 ## $a Shakespeare, William $d 1564-1616 $t Works $v v. 1
+    # render: [doc §5.5 - derived] 800 ## $a Shakespeare, William $d 1564-1616 $t Works $v v. 1
     my $r = _decorate(
         '800', 'postfix',
         a => 'Shakespeare, William',
@@ -372,7 +376,7 @@ sub check_combined {
 }
 
 {
-# render: 700 ## $a Tolkien, J. R. R. $q John Roland Reuel $d 1892-1973 $t Lord of the rings $n 2 $p Two towers
+# render: [doc §5.5 - derived] 700 ## $a Tolkien, J. R. R. $q John Roland Reuel $d 1892-1973 $t Lord of the rings $n 2 $p Two towers
 # Actual §5.5 example (Tolkien): $t Lord of the rings. $n 2, $p Two towers.
 # $n -> '. ' and $p -> ', ' per the LoC/PCC spec (aligned 2026-08-31).
 # NOTE: we keep the inverted name in $a (no $a/$h split).
@@ -412,7 +416,7 @@ sub check_combined {
 
 # ===== Title-portion subfields (700/800 with $t) =====
 {
-   # render: 700 ## $a Beethoven, Ludwig van $d 1770-1827 $t Sonatas $o arranged
+   # render: [doc C.5 - derived] 700 ## $a Beethoven, Ludwig van $d 1770-1827 $t Sonatas $o arranged
     my $r = _decorate(
         '700', 'postfix',
         a => 'Beethoven, Ludwig van',
@@ -456,7 +460,8 @@ sub check_combined {
 }
 
 {
-    # render: 700 ## $a Beethoven, Ludwig van $d 1770-1827 $t Sonatas $m piano
+    # Doc: Current: 700 1# $a Beethoven, Ludwig van, $d 1770-1827. $t Sonatas, $m piano. $k Selections.
+    # render: [doc §5.5 - derived] 700 ## $a Beethoven, Ludwig van $d 1770-1827 $t Sonatas $m piano
     my $r = _decorate(
         '700', 'postfix',
         a => 'Beethoven, Ludwig van',
@@ -478,7 +483,7 @@ sub check_combined {
 }
 
 {
-    # render: 700 ## $a Beethoven, Ludwig van $d 1770-1827 $t Sonatas $r E major
+    # render: [doc §5.5 - derived] 700 ## $a Beethoven, Ludwig van $d 1770-1827 $t Sonatas $r E major
     my $r = _decorate(
         '700', 'postfix',
         a => 'Beethoven, Ludwig van',
@@ -500,7 +505,7 @@ sub check_combined {
 }
 
 {
-    # render: 700 ## $a Shakespeare, William $d 1564-1616 $t Works $f 1978
+    # render: [doc §5.5 - derived] 700 ## $a Shakespeare, William $d 1564-1616 $t Works $f 1978
     my $r = _decorate(
         '700', 'postfix',
         a => 'Shakespeare, William',
@@ -522,7 +527,8 @@ sub check_combined {
 }
 
 {
-    # render: 700 ## $a Shakespeare, William $d 1564-1616 $t Works $l German
+    # Doc: Current: 700 12 $a Shakespeare, William, $d 1564-1616. $t Works. $k Selections. $l German.
+    # render: [doc §5.5 - derived] 700 ## $a Shakespeare, William $d 1564-1616 $t Works $l German
     my $r = _decorate(
         '700', 'postfix',
         a => 'Shakespeare, William',

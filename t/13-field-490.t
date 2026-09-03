@@ -40,9 +40,8 @@ ok( defined $rules, '490 rules loaded' );
 
 # --- Test 2: $a followed by $c (Example 1 from doc) ---
 # Doc: Current: 490 1# $a Bulletin / U.S. Department of Labor, Bureau of Labor Statistics
-# Doc: Future: 490 1# $a Bulletin $c U.S. Department of Labor, Bureau of Labor Statistics
 {
-    # render: 490 1# $a Bulletin $c U.S. Department of Labor, Bureau of Labor Statistics
+    # render: [doc §4.18] 490 1# $a Bulletin $c U.S. Department of Labor, Bureau of Labor Statistics
     my $field = make_field( '490', '1', ' ',
         a => 'Bulletin',
         c => 'U.S. Department of Labor, Bureau of Labor Statistics',
@@ -61,9 +60,8 @@ ok( defined $rules, '490 rules loaded' );
 
 # --- Test 3: $3 with $a and $v (Example 2 from doc) ---
 # Doc: Current: 490 1# $3 v. 9-<10>: $a MPCHT art and anthropological monographs ; $v no. 35
-# Doc: Future: 490 1# $3 v. 9-<10> $a MPCHT art and anthropological monographs $v no. 35
 {
-    # render: 490 1# $3 v. 9-<10> $a MPCHT art and anthropological monographs $v no. 35
+    # render: [doc §4.18] 490 1# $3 v. 9-<10> $a MPCHT art and anthropological monographs $v no. 35
     my $field = make_field( '490', '1', ' ',
         '3' => 'v. 9-<10>',
         a   => 'MPCHT art and anthropological monographs',
@@ -85,9 +83,8 @@ ok( defined $rules, '490 rules loaded' );
 
 # --- Test 4: $a followed by $b followed by $v (Example 3 from doc) ---
 # Doc: Current: 490 1# $a Detroit area study, 1971 : social problems and social change in Detroit ; $v no. 19
-# Doc: Future: 490 1# $a Detroit area study, 1971 $b social problems and social change in Detroit $v no. 19
 {
-    # render: 490 1# $a Detroit area study, 1971 $b social problems and social change in Detroit $v no. 19
+    # render: [doc §4.18] 490 1# $a Detroit area study, 1971 $b social problems and social change in Detroit $v no. 19
     my $field = make_field( '490', '1', ' ',
         a => 'Detroit area study, 1971',
         b => 'social problems and social change in Detroit',
@@ -109,9 +106,8 @@ ok( defined $rules, '490 rules loaded' );
 
 # --- Test 5: $3 with $a and $c (Example 4 from doc) ---
 # Doc: Current: 490 1# $3 1972/73-1975-76: $a Research report / National Education Association Research
-# Doc: Future: 490 1# $3 1972/73-1975-76 $a Research report $c National Education Association Research
 {
-    # render: 490 1# $3 1972/73-1975-76 $a Research report $c National Education Association Research
+    # render: [doc §4.18] 490 1# $3 1972/73-1975-76 $a Research report $c National Education Association Research
     my $field = make_field( '490', '1', ' ',
         '3' => '1972/73-1975-76',
         a   => 'Research report',
@@ -133,9 +129,8 @@ ok( defined $rules, '490 rules loaded' );
 
 # --- Test 6: $a with $v and $x (Example 6 from doc) ---
 # Doc: Current: 490 1# $a Annual census of manufactures = $a Recensement des manufactures, $x 0315-5587
-# Doc: Future: 490 1# $a Annual census of manufactures $r Recensement des manufactures $x 0315-5587
 {
-    # render: 490 1# $a Annual census of manufactures $r Recensement des manufactures $x 0315-5587
+    # render: [doc §4.18] 490 1# $a Annual census of manufactures $r Recensement des manufactures $x 0315-5587
     my $field = make_field( '490', '1', ' ',
         a => 'Annual census of manufactures',
         r => 'Recensement des manufactures',
@@ -157,9 +152,8 @@ ok( defined $rules, '490 rules loaded' );
 
 # --- Test 7: $a + $n + $p + $v + $r (Example 7 from doc, abbreviated) ---
 # Doc: Current: 490 1# $a Papers and documents... Series C, Bibliographies ; $v no. 3 = $a Travaux...
-# Doc: Future: 490 1# $a Papers and documents... $n Series C $p Bibliographies $v no. 3 $r Travaux...
 {
-    # render: 490 1# $a Papers and documents of the I.C.I. $n Series C $p Bibliographies $v no. 3 $r Travaux et documents de l'I.C.I.
+    # render: [doc §4.18 - derived] 490 1# $a Papers and documents of the I.C.I. $n Series C $p Bibliographies $v no. 3 $r Travaux et documents de l'I.C.I.
     my $field = make_field( '490', '1', ' ',
         a => 'Papers and documents of the I.C.I.',
         n => 'Series C',
@@ -187,9 +181,8 @@ ok( defined $rules, '490 rules loaded' );
 
 # --- Test 8: $a + $v + $y (Example 8 from doc) ---
 # Doc: Current: 490 1# $a Forschungen zur Geschichte Vorarlbergs ; $v 6. Bd. = der ganzen Reihe 13 Bd.
-# Doc: Future: 490 1# $a Forschungen zur Geschichte Vorarlbergs $v 6. Bd. $y der ganzen Reihe 13 Bd.
 {
-    # render: 490 1# $a Forschungen zur Geschichte Vorarlbergs $v 6. Bd. $y der ganzen Reihe 13 Bd.
+    # render: [doc §4.18] 490 1# $a Forschungen zur Geschichte Vorarlbergs $v 6. Bd. $y der ganzen Reihe 13 Bd.
     my $field = make_field( '490', '1', ' ',
         a => 'Forschungen zur Geschichte Vorarlbergs',
         v => '6. Bd.',
@@ -210,9 +203,9 @@ ok( defined $rules, '490 rules loaded' );
 }
 
 # --- Test 9: $a + $x + $v + $n + $p + $x + $v (Example 9 from doc, abbreviated) ---
-# Doc: Future: 490 1# $a Lund studies in geography $x 1400-1144 $v 101 $n Ser. B $p Human geography $x 0076-1478 $v 48
+# Doc: Current: 490 1# $a Lund studies in geography, $x 1400-1144 ; $v 101. $a Ser. B, Human geography, $x 0076-1478 ; $v 48
 {
-    # render: 490 1# $a Lund studies in geography $x 1400-1144 $v 101 $n Ser. B $p Human geography $x 0076-1478 $v 48
+    # render: [doc §4.18] 490 1# $a Lund studies in geography $x 1400-1144 $v 101 $n Ser. B $p Human geography $x 0076-1478 $v 48
     my $field = make_field( '490', '1', ' ',
         a => 'Lund studies in geography',
         x => '1400-1144',

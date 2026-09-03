@@ -52,7 +52,8 @@ sub check_combined {
 # ===== 111 (Main Entry - Meeting Name) =====
 # ex 1: $n + $d within one paren group
 {
-    # render: 111 2# $a Brussels Hemoglobin Symposium $n 1st $d 1983
+    # Doc: Current: 111 2# $a Brussels Hemoglobin Symposium $n (1st : $d 1983)
+    # render: [doc §5.4] 111 2# $a Brussels Hemoglobin Symposium $n 1st $d 1983
     my $r = _decorate(
         '111', 'postfix',
         a => 'Brussels Hemoglobin Symposium',
@@ -78,7 +79,8 @@ sub check_combined {
 
 # ex 2: $g qualifier + $d/$c group
 {
-# render: 111 2# $a Governor's Conference on Aging $g N.Y. $d 1982 $c Albany, N.Y.
+    # Doc: Current: 111 2# $a Governor's Conference on Aging (N.Y.) $d (1982 : $c Albany, N.Y.)
+# render: [doc §5.4] 111 2# $a Governor's Conference on Aging $g N.Y. $d 1982 $c Albany, N.Y.
     my $r = _decorate(
         '111', 'postfix',
         a => "Governor's Conference on Aging",
@@ -106,7 +108,8 @@ sub check_combined {
 
 # ex 4: $g + $n/$d/$c full group
 {
-# render: 111 2# $a Military History Symposium $g U.S. $n 9th $d 1980 $c United States Air Force Academy
+    # Doc: Current: 111 2# $a Military History Symposium (U.S.) $n (9th : $d 1980 : $c United States Air Force Academy)
+# render: [doc §5.4] 111 2# $a Military History Symposium $g U.S. $n 9th $d 1980 $c United States Air Force Academy
     my $r = _decorate(
         '111', 'postfix',
         a => 'Military History Symposium',
@@ -140,7 +143,8 @@ sub check_combined {
 
 # $e subordinate unit after a $n/$d/$c group (uses '. ' per meeting spec)
 {
-# render: 111 2# $a Olympic Games $n 21st $d 1976 $c Montréal, Québec $e Organizing Committee $e Arts and Culture Program $e Visual Arts Section
+    # Doc: Current: 111 2# $a Olympic Games $n (21st : $d 1976 : $c Montréal, Québec). $e Organizing Committee. $e Arts and Culture Program. $e Visual Arts Section.
+# render: [doc §5.4] 111 2# $a Olympic Games $n 21st $d 1976 $c Montréal, Québec $e Organizing Committee $e Arts and Culture Program $e Visual Arts Section
     my $r = _decorate(
         '111', 'postfix',
         a => 'Olympic Games',
@@ -236,7 +240,7 @@ sub check_combined {
 
 # multiple $c locations joined by ' ; ' (cc)
 {
-    # render: 111 2# $a Meeting $d 1983 $c Berlin $c Leipzig
+    # render: [doc §5.4 - derived] 111 2# $a Meeting $d 1983 $c Berlin $c Leipzig
     my $r = _decorate(
         '111', 'postfix',
         a => 'Meeting',
@@ -261,7 +265,7 @@ sub check_combined {
 # lone $n (just a meeting number) -> still grouped (meeting name portion).
 # The A1 discrimination only affects $n in the §5.5 title portion (after $t).
 {
-    # render: 111 2# $a Symposium $n 1st
+    # render: [doc §5.4 - derived] 111 2# $a Symposium $n 1st
     my $r = _decorate( '111', 'postfix', a => 'Symposium', n => '1st' );
     is( combined($r), 'Symposium (1st)', '111: lone $n wrapped (meeting)' );
     is( $r->[3],      ' (1st)',          '111: lone $n opens+closes group' );
@@ -286,7 +290,8 @@ sub check_combined {
 
 # ===== 711 (Added Entry - Meeting Name) - aliases 111 =====
 {
-    # render: 711 2# $a Theatertreffen Berlin $g Festival
+    # Doc: Current: 711 2# $a Theatertreffen Berlin (Festival)
+    # render: [doc §5.4] 711 2# $a Theatertreffen Berlin $g Festival
     my $r = _decorate(
         '711', 'postfix',
         a => 'Theatertreffen Berlin',
@@ -306,7 +311,7 @@ sub check_combined {
 }
 
 {
-# render: 711 2# $a Olympic Games $n 21st $d 1976 $c Montréal, Québec $e Organizing Committee
+# render: [doc §5.4 - derived] 711 2# $a Olympic Games $n 21st $d 1976 $c Montréal, Québec $e Organizing Committee
     my $r = _decorate(
         '711', 'postfix',
         a => 'Olympic Games',
@@ -399,7 +404,7 @@ sub check_combined {
 
 # $t uniform title/title of work -> '. '
 {
-    # render: 111 2# $a Symposium $t Proceedings
+    # render: [doc §5.5 - derived] 111 2# $a Symposium $t Proceedings
     my $r = _decorate( '111', 'postfix', a => 'Symposium', t => 'Proceedings' );
     is( combined($r), 'Symposium. Proceedings', '111 tp: $t gets ". "' );
     is( $r->[1],      'Symposium. ', '111 tp: $a gets ". " before $t' );
@@ -413,7 +418,7 @@ sub check_combined {
 
 # $k form subheading -> '. '
 {
-    # render: 111 2# $a Symposium $t Proceedings $k Selections
+    # render: [doc §5.5 - derived] 111 2# $a Symposium $t Proceedings $k Selections
     my $r = _decorate(
         '111', 'postfix',
         a => 'Symposium',
@@ -438,7 +443,7 @@ sub check_combined {
 
 # $l language -> '. '
 {
-    # render: 111 2# $a Symposium $t Proceedings $l English
+    # render: [doc §5.5 - derived] 111 2# $a Symposium $t Proceedings $l English
     my $r = _decorate(
         '111', 'postfix',
         a => 'Symposium',
@@ -463,7 +468,7 @@ sub check_combined {
 # on the FOLLOWING subfield, a title before $p gets the $p value (', ') and
 # $p before $k gets $k's value ('. ') — consistent with how x00 behaves.
 {
-    # render: 111 2# $a Symposium $t Proceedings $p Volume 1 $k Selections
+    # render: [doc §5.5 - derived] 111 2# $a Symposium $t Proceedings $p Volume 1 $k Selections
     my $r = _decorate(
         '111', 'postfix',
         a => 'Symposium',
@@ -489,7 +494,7 @@ sub check_combined {
 
 # $f date of a work -> '. '
 {
-    # render: 111 2# $a Symposium $t Proceedings $f 2005
+    # render: [doc §5.5 - derived] 111 2# $a Symposium $t Proceedings $f 2005
     my $r = _decorate(
         '111', 'postfix',
         a => 'Symposium',
@@ -507,7 +512,7 @@ sub check_combined {
 
 # $s version -> '. ' (pick)
 {
-    # render: 111 2# $a Symposium $t Proceedings $s 2nd ed.
+    # render: [doc §5.5 - derived] 111 2# $a Symposium $t Proceedings $s 2nd ed.
     my $r = _decorate(
         '111', 'postfix',
         a => 'Symposium',
@@ -529,7 +534,7 @@ sub check_combined {
 
 # $h medium -> '. '
 {
-    # render: 111 2# $a Symposium $t Proceedings $h microform
+    # render: [doc §5.5 - derived] 111 2# $a Symposium $t Proceedings $h microform
     my $r = _decorate(
         '111', 'postfix',
         a => 'Symposium',
@@ -551,7 +556,7 @@ sub check_combined {
 
 # Title-portion also applies to 811 (series). $v follows the title chain.
 {
-    # render: 811 2# $a Symposium $t Proceedings $l English $v no. 3
+    # render: [doc §5.5 - derived] 811 2# $a Symposium $t Proceedings $l English $v no. 3
     my $r = _decorate(
         '811', 'postfix',
         a => 'Symposium',

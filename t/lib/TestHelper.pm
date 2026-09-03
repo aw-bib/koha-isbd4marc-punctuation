@@ -46,6 +46,26 @@ sub parse_render_marker {
     # Strip the leading '# render:' prefix and surrounding whitespace
     $marker =~ s/^\s*#?\s*render:\s*//i;
 
+    # Optional provenance token: [doc ...] = drawn from the reference
+    # document; absent = constructed (made up to cover 'rules as written').
+    # Grammar: [doc] | [doc <section>] | [doc - derived] | [doc <section> - derived].
+    #   section  e.g. '§5.5' or 'C.1a' (where in the doc the example comes from)
+    #   '- derived' marks an example reconstructed/adapted from a doc example
+    #   (same values/meaning, but restructured for the $-inverted form the
+    #   plugin handles, or with subfields adjusted) rather than a verbatim
+    #   doc Current/Future pair.
+    # Returned as a hashref { kind => 'doc'|'', section => '', derived => 0|1 }.
+    my $prov = { kind => '', section => '', derived => 0 };
+    if ( $marker =~ s/^\[doc\b(.*?)\]\s*//i ) {
+        $prov->{kind} = 'doc';
+        my $inner = $1;
+        $prov->{derived} = 1 if $inner =~ /-\s*derived/i;
+        $inner =~ s/-\s*derived//i;
+        $inner =~ s/^\s*[-—–]\s*//;
+        $inner =~ s/^\s+|\s+$//g;
+        $prov->{section} = $inner if length $inner;
+    }
+
     my ( $tag, $ind1, $ind2, $rest ) = $marker =~ /^(\d{3})\s*(.)(.)\s*(.*)$/;
     die "Cannot parse render marker: '$marker'" unless defined $tag;
 
@@ -62,7 +82,7 @@ sub parse_render_marker {
         push @subfields, $code, $value;
     }
 
-    return ( $tag, $ind1, $ind2, @subfields );
+    return ( $prov, $tag, $ind1, $ind2, @subfields );
 }
 
 # Render a field as a MARC-ish string, e.g.

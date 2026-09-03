@@ -51,7 +51,8 @@ sub check_combined {
 # ===== 110 (Main Entry - Corporate Name) =====
 # ex 1: $a + $b
 {
-    # render: 110 ## $a Canada $b Department of Agriculture
+    # Doc: Current: 110 1# $a Canada. $b Department of Agriculture.
+    # render: [doc §5.3] 110 ## $a Canada $b Department of Agriculture
     my $r = _decorate(
         '110', 'postfix',
         a => 'Canada',
@@ -70,7 +71,8 @@ sub check_combined {
 
 # ex 2: $a + $g (wrapped + leading space) + $b
 {
-    # render: 110 ## $a Fairfax County $g Va. $b Division of Mapping
+    # Doc: Current: 110 1# $a Fairfax County (Va.). $b Division of Mapping.
+    # render: [doc §5.3] 110 ## $a Fairfax County $g Va. $b Division of Mapping
     my $r = _decorate(
         '110', 'postfix',
         a => 'Fairfax County',
@@ -96,7 +98,8 @@ sub check_combined {
 
 # ex 4-7: $a + single $g qualifiers
 {
-    # render: 110 ## $a National Gardening Association $g U.S.
+    # Doc: Current: 110 2# $a National Gardening Association (U.S.)
+    # render: [doc §5.3] 110 ## $a National Gardening Association $g U.S.
     my $r = _decorate(
         '110', 'postfix',
         a => 'National Gardening Association',
@@ -116,7 +119,8 @@ sub check_combined {
 }
 
 {
-    # render: 110 ## $a PRONAPADE $g Firm
+    # Doc: Current: 110 2# $a PRONAPADE (Firm)
+    # render: [doc §5.3] 110 ## $a PRONAPADE $g Firm
     my $r = _decorate( '110', 'postfix', a => 'PRONAPADE', g => 'Firm' );
     is( combined($r), 'PRONAPADE (Firm)', '110 ex5: combined' );
     is( $r->[3],      ' (Firm)',          '110 ex5: $g wrapped (lead space)' );
@@ -124,7 +128,8 @@ sub check_combined {
 }
 
 {
-    # render: 110 ## $a Scientific Society of San Antonio $g 1892-1894
+    # Doc: Current: 110 2# $a Scientific Society of San Antonio (1892-1894)
+    # render: [doc §5.3] 110 ## $a Scientific Society of San Antonio $g 1892-1894
     my $r = _decorate(
         '110', 'postfix',
         a => 'Scientific Society of San Antonio',
@@ -144,7 +149,8 @@ sub check_combined {
 }
 
 {
-    # render: 110 ## $a St. James Church $g Bronx, New York, N.Y.
+    # Doc: Current: 110 2# $a St. James Church (Bronx, New York, N.Y.)
+    # render: [doc §5.3] 110 ## $a St. James Church $g Bronx, New York, N.Y.
     my $r = _decorate(
         '110', 'postfix',
         a => 'St. James Church',
@@ -217,7 +223,8 @@ sub check_combined {
 # EX 8 / GROUPING: $n/$d/$c wrapped in one pair of parens, joined by ' : '
 # $d + $c
 {
-# render: 110 ## $a Democratic Party $g Tex. $b State Convention $d 1857 $c Waco, Tex.
+    # Doc: Current: 110 2# $a Democratic Party (Tex.). $b State Convention $d (1857 : $c Waco, Tex.)
+# render: [doc §5.3] 110 ## $a Democratic Party $g Tex. $b State Convention $d 1857 $c Waco, Tex.
     my $r = _decorate(
         '110', 'postfix',
         a => 'Democratic Party',
@@ -252,7 +259,7 @@ sub check_combined {
 
 # $n + $d + $c (full meeting group)
 {
-    # render: 110 ## $a Symposium $n 2nd $d 1983 $c Berlin
+    # render: [doc §5.3 - derived] 110 ## $a Symposium $n 2nd $d 1983 $c Berlin
     my $r = _decorate(
         '110', 'postfix',
         a => 'Symposium',
@@ -280,7 +287,7 @@ sub check_combined {
 
 # multiple $c (locations) joined by ' ; ' (cc)
 {
-    # render: 110 ## $a Meeting $d 1983 $c Berlin $c Leipzig
+    # render: [doc §5.3 - derived] 110 ## $a Meeting $d 1983 $c Berlin $c Leipzig
     my $r = _decorate(
         '110', 'postfix',
         a => 'Meeting',
@@ -307,7 +314,7 @@ sub check_combined {
 # (after $t), not a lone meeting number after the name. See
 # _decorate_x10_pre AMBIGUITY DECISION note.
 {
-    # render: 110 ## $a Symposium $n 1st
+    # render: [doc §5.3 - derived] 110 ## $a Symposium $n 1st
     my $r = _decorate( '110', 'postfix', a => 'Symposium', n => '1st' );
     is( combined($r), 'Symposium (1st)', '110: lone $n wrapped (meeting)' );
     is( $r->[1],      'Symposium',       '110: $a unchanged' );
@@ -333,7 +340,8 @@ sub check_combined {
 
 # ===== 710 (Added Entry - Corporate Name) - aliases 110 =====
 {
-    # render: 710 ## $a Canada $b Department of Agriculture
+    # Doc: Current: 710 1# $a Canada. $b Department of Agriculture.
+    # render: [doc §5.3] 710 ## $a Canada $b Department of Agriculture
     my $r = _decorate(
         '710', 'postfix',
         a => 'Canada',
@@ -453,7 +461,8 @@ sub check_combined {
 
 # $t + $n + $p + $l — the §5.5 Ecuador 710 example
 {
-# render: 710 ## $a Ecuador $t Plan Nacional de Desarrollo, 1980-1984 $n Parte 1 $p Grandes objetivos nacionales $l English
+    # Doc: Current: 710 1# $a Ecuador. $t Plan Nacional de Desarrollo, 1980-1984. $n Parte 1, $p Grandes objetivos nacionales. $l English.
+# render: [doc §5.5] 710 ## $a Ecuador $t Plan Nacional de Desarrollo, 1980-1984 $n Parte 1 $p Grandes objetivos nacionales $l English
     my $r = _decorate(
         '710', 'postfix',
         a => 'Ecuador',
@@ -492,7 +501,7 @@ sub check_combined {
 
 # $t uniform title -> '. '
 {
-    # render: 110 ## $a Canada $t Annual report
+    # render: [doc §5.5 - derived] 110 ## $a Canada $t Annual report
     my $r = _decorate( '110', 'postfix', a => 'Canada', t => 'Annual report' );
     is( combined($r), 'Canada. Annual report', '110 tp: $t gets ". "' );
     is( $r->[1],      'Canada. ', '110 tp: $a gets ". " before $t' );
@@ -505,7 +514,7 @@ sub check_combined {
 
 # $t + $k form subheading -> '. '
 {
-    # render: 110 ## $a Canada $t Annual report $k Selections
+    # render: [doc §5.5 - derived] 110 ## $a Canada $t Annual report $k Selections
     my $r = _decorate(
         '110', 'postfix',
         a => 'Canada',
@@ -527,7 +536,7 @@ sub check_combined {
 
 # $t + $l language -> '. '
 {
-    # render: 110 ## $a Canada $t Annual report $l English
+    # render: [doc §5.5 - derived] 110 ## $a Canada $t Annual report $l English
     my $r = _decorate(
         '110', 'postfix',
         a => 'Canada',
@@ -546,7 +555,7 @@ sub check_combined {
 
 # $t + $m medium of performance -> ', '
 {
-    # render: 110 ## $a Philharmonia $t Symphonies $m orchestra
+    # render: [doc §5.5 - derived] 110 ## $a Philharmonia $t Symphonies $m orchestra
     my $r = _decorate(
         '110', 'postfix',
         a => 'Philharmonia',
@@ -568,7 +577,7 @@ sub check_combined {
 
 # $t + $f date of work -> '. '
 {
-    # render: 110 ## $a Canada $t Annual report $f 2005
+    # render: [doc §5.5 - derived] 110 ## $a Canada $t Annual report $f 2005
     my $r = _decorate(
         '110', 'postfix',
         a => 'Canada',
@@ -586,7 +595,7 @@ sub check_combined {
 
 # $t + $r key for music -> ', '
 {
-    # render: 110 ## $a Philharmonia $t Sonatas $r E major
+    # render: [doc §5.5 - derived] 110 ## $a Philharmonia $t Sonatas $r E major
     my $r = _decorate(
         '110', 'postfix',
         a => 'Philharmonia',
@@ -605,7 +614,7 @@ sub check_combined {
 
 # Title-portion also on 810 (series); $v follows the title chain.
 {
-    # render: 810 ## $a Canada $t Annual report $l English $v no. 3
+    # render: [doc §5.5 - derived] 810 ## $a Canada $t Annual report $l English $v no. 3
     my $r = _decorate(
         '810', 'postfix',
         a => 'Canada',
