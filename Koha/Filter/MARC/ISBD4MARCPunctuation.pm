@@ -302,9 +302,9 @@ use constant RULES => {
     # $i (display text) gets trailing ': ' via cb_pre
     # $n (part designation): $n gets ' -- ' when $t follows
     #   (single pchrs key `t`, fires whenever a subfield is followed by $t)
-    # $t/$g get ' -- ' when $n follows via COMPOUND keys tn/gn — this is the
-    #   precise fix: a plain single key `n` would also fire on $i when $n
-    #   follows, which would be wrong. Compound keys only fire on $t/$g+n.
+    # $t/$g get ' -- ' when $n follows via COMPOUND keys tn/gn:
+    # a plain single key `n` would also fire on $i when $n
+    # follows, which would be wrong. Compound keys only fire on $t/$g+n.
     505 => {
         pchrs => {
             r  => ' / ',
@@ -333,10 +333,16 @@ use constant RULES => {
     # ISBD separating punctuation between subfields:
     #   $a alone: no change (inversion comma already in $a)
     #   $b:  '. '  $c:  ', '  $d:  ', '  $e:  ', '  $f:  '. '
-    #   $j:  ', '  $k:  '. '  $l:  '. '  $m:  ', '  $n:  ', '
-    #   $o:  '; '  $p:  '. '  $q:  '()'  $r:  ', '  $s:  '. '
+    #   $j:  ', '  $k:  '. '  $l:  '. '  $m:  ', '  $n:  '. '
+    #   $o:  '; '  $p:  ', '  $q:  '()'  $r:  ', '  $s:  '. '
     #   $t:  '. '  $v:  ' ;'  (only for 800)
     #   $i: '' (ends with ':' via cataloger input; we leave it)
+    #
+    # NOTE (2026-08-31): $n => '. ' and $p => ', ' are the LoC/PCC (spec
+    # §5.5) reading, aligned with x10/x11 (Option A) — e.g. Tolkien 700
+    # $t ... $n 2 $p Two towers -> ...rings. 2, Two towers. This differs
+    # from the colleague's German-union ISBDX00 (n=', ', p='. '). That
+    # union variant belongs in the future regional/switchable overlay.
     #
     # Note: $a/$h split (spec section 5.2) is NOT in use yet.
     # Real records have $a with inversion comma (e.g. "Morgan, Robert").
@@ -353,9 +359,9 @@ use constant RULES => {
             k => '. ',
             l => '. ',
             m => ', ',
-            n => ', ',
+            n => '. ',
             o => '; ',
-            p => '. ',
+            p => ', ',
             r => ', ',
             s => '. ',
             t => '. ',
@@ -386,9 +392,9 @@ use constant RULES => {
             k => '. ',
             l => '. ',
             m => ', ',
-            n => ', ',
+            n => '. ',
             o => '; ',
-            p => '. ',
+            p => ', ',
             r => ', ',
             s => '. ',
             t => '. ',
@@ -409,9 +415,9 @@ use constant RULES => {
             k => '. ',
             l => '. ',
             m => ', ',
-            n => ', ',
+            n => '. ',
             o => '; ',
-            p => '. ',
+            p => ', ',
             r => ', ',
             s => '. ',
             t => '. ',
@@ -423,22 +429,36 @@ use constant RULES => {
 # 110 – Main Entry – Corporate Name
 # Also covers 710 (Added Entry) via use_rules
 # Also 610 (Subject) and 810 (Series) with the usual subdivision differences.
-# Full ISBDX10 rules (spec §5.3):
-#   $a:  no change          $b:  '. '   $c:  ', '  $d:  ', '  $e:  ', '
-#   $p:  ', '   $r:  ', '   $s:  '. '   $t:  '. '
-#   $g:  '()'  (qualifying information) — wrap
-#   compound keys: cc => '; '  dc => ' : '  nd => ' : ' (inside n/d/c group)
-#   $n, $o, $u, $x, $y, $z: no punctuation
+# ISBD punctuation = NAME PORTION (spec §5.3) + TITLE PORTION (spec §5.5).
 #
-# $n/$d/$c (meeting number / date / location) are grouped in one pair of
+# Name portion (§5.3):
+#   $a: no change  $b: '. '  $c: ', '  $d: ', '  $e: ', '
+#   $g: '()' (qualifying info) — wrap
+#   compound keys: cc => '; '  dc => ' : '  nd => ' : ' (inside n/d/c group)
+#   $o, $u, $x, $y, $z: no punctuation
+#
+# Title portion (§5.5) — uniform-title subfields.
+#   $p: ', '  $r: ', '  $s: '. '  $t: '. '
+#   plus (added 2026-08-31): $k '. '  $l '. '  $m ', '  $o '; '  $f '. '
+#     $h '. '  $j ', '.
+#   $n: NOT a broad single key (ambiguous with the $n/$d/$c meeting group);
+#     handled via the COMPOUND key `tn` (fires when $n follows $t).
+#   NOTE: $p => ', ' follows the §5.5 examples (Ecuador 710) — the
+#   LoC/PCC (spec) reading. This DIFFERS from x00 where $p = '. '
+#   (German-union-catalogue convention).
+#
+# $n/$d/$c (meeting number / date / location) grouped in one pair of
 # parentheses by _decorate_x10_pre (matches enclose_in_parentheses('n','d','c')).
+# NOTE: $n has NO broad single key — in x10 $n is ambiguous (meeting-group
+# number vs §5.5 title-part number). Its title-portion punctuation is a
+# COMPOUND key `tn` (fires only when $n FOLLOWS $t), so the $n/$d/$c meeting
+# group is unaffected. A broad single `n => '. '` WOULD over-fire on $a $n in
+# the meeting group (e.g. "Symposium. (2nd : ...)") — that broke tests.
 #
 # KNOWN GAPS / DECISIONS:
 #   - $u (affiliation): NO punctuation, following spec §5.3 (N/A). NOTE for
 #     reviewers: 'u' => '. ' might be possible as well; we
 #     chose to follow the PDF (no punct). Revisit if real data shows a need.
-#   - $n: deliberately NOT individually wrapped  to avoid double-paren on
-#     the $n/$d/$c group (cb_pre already groups them).
 #   - MULTIPLE $g (e.g. $g 1981-1989 $g Reagan): each $g gets its own (),
 #     i.e. (a)(b), NOT the ideal (a : b). Left as a known imperfection.
     '110' => {
@@ -450,11 +470,21 @@ use constant RULES => {
             s => '. ',
             t => '. ',
 
+            # title-portion (§5.5)
+            k => '. ',
+            l => '. ',
+            m => ', ',
+            o => '; ',
+            f => '. ',
+            h => '. ',
+            j => ', ',
+
             # compound keys (preceded subfield + followed subfield), take
             # precedence over the single next_sf keys in _decorate_field
             cc => ' ; ',
             dc => ' : ',
             nd => ' : ',
+            tn => '. ',    # $t followed by $n (title part, §5.5 Ecuador ex)
         },
         wrap   => { g => [ ' (', ')' ] },
         cb_pre => \&_decorate_x10_pre,
@@ -470,6 +500,7 @@ use constant RULES => {
   # Same pchrs/wrap as 110 but:
   #   - $v (form subdivision) gets NO punctuation (deliberately excluded)
   #   - $x, $y, $z (general/chronological/geographic subdivisions) also excluded
+  # Title-portion (§5.5) keys retained (as for x00=600).
     '610' => {
         pchrs => {
             b  => '. ',
@@ -478,9 +509,17 @@ use constant RULES => {
             r  => ', ',
             s  => '. ',
             t  => '. ',
+            k  => '. ',
+            l  => '. ',
+            m  => ', ',
+            o  => '; ',
+            f  => '. ',
+            h  => '. ',
+            j  => ', ',
             cc => '; ',
             dc => ' : ',
             nd => ' : ',
+            tn => '. ',    # $t followed by $n (title part, §5.5)
         },
         wrap   => { g => [ ' (', ')' ] },
         cb_pre => \&_decorate_x10_pre,
@@ -497,31 +536,55 @@ use constant RULES => {
             s  => '. ',
             t  => '. ',
             v  => ' ;',
+            k  => '. ',
+            l  => '. ',
+            m  => ', ',
+            o  => '; ',
+            f  => '. ',
+            h  => '. ',
+            j  => ', ',
             cc => '; ',
             dc => ' : ',
             nd => ' : ',
+            tn => '. ',    # $t followed by $n (title part, §5.5)
         },
         wrap   => { g => [ ' (', ')' ] },
         cb_pre => \&_decorate_x10_pre,
     },
 
     # 111 – Main Entry – Meeting Name
-    # ISBD meeting-name punctuation (spec §5.4), mirroring the x10
-    # structure: $n/$d/$c grouped in one paren pair by _decorate_x10_pre;
-    # $g wrapped with leading space. Meeting-specific keys per §5.4:
+    # ISBD punctuation for meeting names = NAME PORTION (spec §5.4) + TITLE
+    # PORTION (spec §5.5).
+    #
+    # Name portion (§5.4), mirroring x10's structure:
+    #   $n/$d/$c grouped in one paren pair by _decorate_x10_pre;
+    #   $g wrapped with leading space.
     #   $e (SUBORDINATE UNIT) -> period-space '. '  [NOTE: differs from
-    #     x10's $e which is a RELATOR -> ', '; user confirmed follow spec]
+    #     x10's $e which is a RELATOR -> ', ' following the spec]
     #   $j (relator term)     -> comma-space ', '
     #   $q (name after jurisdiction) -> period-space '. '
-    # $a, $u: no punctuation. $n/$d/$c (number/date/location) via compound
-    #   group keys nd/dc/cc (same as x10). No $b/$p/$r/$s/$t keys: the
-    #   §5.4 table defines punctuation only for the subfields above.
+    #   $a, $u: no punctuation. $n/$d/$c via compound group keys nd/dc/cc.
+    #
+    # Title portion (§5.5) — uniform-title subfields on the name fields,
+    # same as x00/x30:
+    #   $t/.  $k/.  $l/.  $f/.  $h/.  ($h also used as medium, see §5.5)
+    #   $p -> ', '   $s -> '. '   (both are '.'/',' choices in §5.5)
+    #
     # KNOWN GAP: MULTIPLE $g -> each wrapped (a)(b), not (a : b) (same as x10).
     '111' => {
         pchrs => {
             e => '. ',
             j => ', ',
             q => '. ',
+
+            # title-portion (§5.5): uniform title, part/version etc.
+            t => '. ',
+            k => '. ',
+            l => '. ',
+            f => '. ',
+            h => '. ',
+            p => ', ',
+            s => '. ',
 
             # compound keys (group $n/$d/$c), take precedence in _decorate_field
             cc => ' ; ',
@@ -540,12 +603,23 @@ use constant RULES => {
 
     # 611 – Subject Added Entry – Meeting Name
     # Same as 111 but $v/$x/$y/$z (subject subdivisions) get NO punctuation
-    # (111's pchrs already omit them, so structure is identical).
+    # (111 has no $v; subject '/x/y/z are deliberately excluded).
+    # Title-portion (§5.5) keys retained, as for x00=600.
     '611' => {
         pchrs => {
             e => '. ',
             j => ', ',
             q => '. ',
+
+            # title-portion (§5.5)
+            t => '. ',
+            k => '. ',
+            l => '. ',
+            f => '. ',
+            h => '. ',
+            p => ', ',
+            s => '. ',
+
             cc => ' ; ',
             dc => ' : ',
             nd => ' : ',
@@ -562,6 +636,16 @@ use constant RULES => {
             j => ', ',
             q => '. ',
             v => ' ;',
+
+            # title-portion (§5.5)
+            t => '. ',
+            k => '. ',
+            l => '. ',
+            f => '. ',
+            h => '. ',
+            p => ', ',
+            s => '. ',
+
             cc => ' ; ',
             dc => ' : ',
             nd => ' : ',
@@ -663,8 +747,8 @@ sub _decorate_field {
 
 =head2 _decorate_260_pre
 
-Pre-callback for field 260. Handles the parenthetical grouping of C
-(producer), C (producer place) and C (production date)/C
+Pre-callback for field 260. Handles the parenthetical grouping of
+C<(producer)>, C<(producer place)> and C<(production date)>/C
 which form the C<($e : $f , $g)> group together.
 
 The  C< ; > separators between repeated C and after C
@@ -711,18 +795,42 @@ sub _decorate_260_pre {
 
 =head2 _decorate_x10_pre
 
-Pre-callback for the corporate/meeting-name fields (110/610/710/810). Groups
-consecutive C<$n> (meeting number), C<$d> (date of meeting) and C<$c>
-(location of meeting) subfields into a single pair of parentheses, e.g.
+Pre-callback for the corporate/meeting-name fields (110/610/710/810 and
+111/611/711/811). Groups a MEETING run of C<$n> (number), C<$d> (date) and
+C<$c> (location) into a single pair of parentheses, e.g.
 
     $d 1857 $c Waco, Tex.  ->  (1857 : Waco, Tex.)
 
-This mirrors I<enclose_in_parentheses(datafield, 'n', 'd', 'c')>
+This mirrors I<enclose_in_parentheses(datafield, 'n', 'd', 'c')>.
 The internal C<' : '> / C<'; '> separators are supplied by
 the compound pchrs keys C<nd>/C<dc>/C<cc> in step 4 of C<_decorate_field>.
 
 A leading space is added before the opening paren when the group is preceded
-by other content (e.g. C<$b State Convention (1857 : ...>).
+by other content (e.g. C).
+
+=head3 AMBIGUITY DECISION (2026-08-31) — $n (and $d/$c) in the title portion
+
+$n/$d/$c are ambiguous in the corporate/meeting family: they are the MEETING
+number/date/location in the NAME portion (grouped as $n : $d : $c) AND
+part/date elements in the spec §5.5 TITLE portion (e.g. the Ecuador 710
+example: $t ... $n Parte 1 $p ... $l ...). A broad rule could not tell them
+apart, and a single pchrs key on $n would over-fire on the meeting group.
+
+Decision: a run of n/d/c is the parenthetical MEETING group unless it
+sits in the TITLE portion — i.e. the run starts immediately after a
+C<$t> subfield. A n/d/c that starts right after $t is a §5.5 title element and
+is left PLAIN so the title punctuation (e.g. $t followed by $n, via the
+compound pchrs key C<tn>) applies instead of parens.
+Consequences:
+  - the Ecuador title $n is correctly un-parenthesized;
+  - a meeting run always starts in the name portion (after $a/$b/$g/...), so
+    all normal meeting groups are preserved, including those that start with
+    $d or $c alone (no $n), and lone meeting numbers;
+  - a title run like $t $n $d (a title part plus a date) would be treated as
+    title/plain and not grouped — that matches §5.5 but differs from a meeting
+    reading. Accepted for now; revisit if real records show a need.
+If this gets revisited, revisit BOTH the grouping here and the title-portation
+(§5.5) interplay.
 
 =cut
 
@@ -730,13 +838,21 @@ sub _decorate_x10_pre {
     my ( $sf, $value, $i, $subfields, $last_sf_ref ) = @_;
     my $last_sf = $$last_sf_ref;
 
+    # Meeting-group subfields.
     my %group_sf = map { $_ => 1 } qw(n d c);
 
-    # Not part of the n/d/c meeting group — leave untouched
+    # Not an n/d/c meeting-group subfield — leave untouched.
     return $value unless $group_sf{$sf};
 
     my $next    = $subfields->[ $i + 1 ];
     my $next_sf = $next ? $next->[0] : '';
+
+    # A run of n/d/c that starts immediately after $t is in the §5.5 TITLE
+    # portion (e.g. $t ... $n Parte 1...) — leave it PLAIN (no parens).
+    my $is_run_start = !$group_sf{$last_sf};
+    if ( $is_run_start && $last_sf eq 't' ) {
+        return $value;
+    }
 
     my $is_first = !$group_sf{$last_sf};
     my $is_last  = ( !defined $next_sf || !$group_sf{$next_sf} );
