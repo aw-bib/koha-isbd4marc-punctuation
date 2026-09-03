@@ -23,7 +23,7 @@ my $rules = Koha::Filter::MARC::ISBD4MARCPunctuation::rules_for($SET);
 ok( defined $rules, "rules_for('$SET') is defined" );
 
 # 2. Expected tags are present
-my @expected_tags = qw(020 100 110 111 130 210 222 240 242 243 245 246 247 250 260 264 300 490 502 505 520 600 610 611 630 700 710 711 730 800 810 811 830);
+my @expected_tags = qw(020 100 110 111 130 210 222 240 242 243 245 246 247 250 260 264 300 490 502 505 520 600 610 611 630 648 650 651 655 656 657 658 700 710 711 730 800 810 811 830);
 my @got_tags = sort keys %$rules;
 is_deeply( \@got_tags, \@expected_tags, "$SET has exactly the expected field tags" );
 

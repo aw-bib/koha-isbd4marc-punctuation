@@ -47,14 +47,15 @@ for my $file (@testfiles) {
     while ( my $line = <$fh> ) {
         next unless $line =~ /^\s*#\s*render:/;
         my $marker = $line;
-        # Optional [doc ...] provenance token may precede the tag.
-        my ($tag) = $marker =~ /render:\s*(?:\[doc\b[^\]]*\]\s*)?(\d{3})\b/ or next;
+        # Optional provenance token ([doc ...] or [LoC ...]) precedes the tag.
+        my ($tag) = $marker =~ /render:\s*(?:\[(?:doc|LoC)\b[^\]]*\]\s*)?(\d{3})\b/ or next;
         $tag =~ s/\D//g;    # defensive
 
-        # Provenance: [doc] token (possibly with section / '- derived') =
-        # drawn from / derived from the reference document; absent =>
-        # constructed. Keep the raw token for the per-example label.
-        my ($tok) = $marker =~ /render:\s*(\[doc\b[^\]]*\])\s*\d{3}/i;
+        # Provenance: [doc ...] / [LoC ...] token (possibly with section /
+        # '- derived') = drawn from / derived from the reference document or
+        # a real LoC record; absent => constructed. Keep the raw token for
+        # the per-example label.
+        my ($tok) = $marker =~ /render:\s*(\[(?:doc|LoC)\b[^\]]*\])\s*\d{3}/i;
         my $provenance =
             defined $tok ? $tok
           : 'constructed';
@@ -97,6 +98,13 @@ push @md, '';
 push @md,
     'Examples marked with `[doc]` were drawn from the '
   . '"Revised Final Report PCC ISBD and MARC Task Group, October 2016".';
+push @md, '';
+push @md,
+    'Examples marked `[LoC - derived]` were split from a real '
+  . 'pre-punctuated Library-of-Congress (MARC21 online) record into the '
+  . 'current subfields, to anchor the rules in realistic data; the combined '
+  . 'string matches the original MODULO the known subfield-concatenation '
+  . 'spacing gap (see the test notes). They are NOT reference-document examples.';
 push @md, '';
 push @md,
     'Examples marked `Constructed` are not taken from that document — they '
@@ -146,9 +154,14 @@ for my $section (@sections) {
         my $postfix  = render_field_string( $ftag, $ind1, $ind2, @out_postfix );
         my $combined = combined_string(@out_postfix);
 
-        # Provenance label from the parsed [doc ...] token.
+        # Provenance label from the parsed provenance token.
         my $label;
-        if ( $prov->{kind} ne 'doc' ) {
+        if ( $prov->{kind} eq 'LoC' ) {
+            $label = $prov->{derived}
+              ? ( $prov->{section} ? "Derived from LoC $prov->{section}" : 'Derived from LoC record' )
+              : ( $prov->{section} ? "LoC record $prov->{section}" : 'LoC record' );
+        }
+        elsif ( $prov->{kind} ne 'doc' ) {
             $label = 'Constructed (rules as written)';
         }
         elsif ( $prov->{derived} ) {

@@ -829,6 +829,96 @@ sub rules {
               'Koha::Filter::MARC::ISBD4MARCPunctuation::_decorate_x10_pre',
         },
 
+        # 650 – Topical Subject (spec §5.6 Subjects)
+        #
+        #   $a (topical term) N/A; $v/$x/$y/$z (form/general/chronological/
+        #   geographic subdivisions) N/A. So only:
+        #   $b (topical after geographic) -> '. '  (650 only)
+        #   $c (location of event)        -> ', '  (650 only)
+        #   $d (active dates)             -> ', '  (650 only)
+        #   $e (relator term)             -> ', '  (650 + 651)
+        #   $h (inverted text)            -> ', '  (new; may follow $a/$c/$x)
+        #   $j (remaining text)           -> ', '  (650 only, new)
+        #   $g (qualifying info)          -> one paren pair '(...)', multiple
+        #       $g separated by ' : ' (spec §5.6 / §5.7). Same structural
+        #       pattern as 020 $q / 210 $b / 222 $b / 240 $b, so the shared
+        #       _decorate_qualifier_group_pre callback is reused.
+        #
+        #   NOTE (2026-09-03): a single $g wraps as '(val)' with NO leading
+        #   space, matching the existing qualifier-group behaviour (020/210/
+        #   222/130/240). The spec examples print 'Val (val)' with a space
+        #   before '(' — this is the known subfield-concatenation spacing gap
+        #   (same family as 020 '...0723804(acid-free paper)'), awaiting an
+        #   ISBD-expert ruling; not fixed here.
+        '650' => {
+            pchrs => {
+                b => '. ',
+                c => ', ',
+                d => ', ',
+                e => ', ',
+                h => ', ',
+                j => ', ',
+            },
+            cb_pre => sub {
+                return
+                  Koha::Filter::MARC::ISBD4MARCPunctuation::_decorate_qualifier_group_pre(
+                    @_, 'g', ' : '
+                  );
+            },
+        },
+
+        # 651 – Geographic Subject (spec §5.6)
+        # $a N/A; $e (relator) -> ', '; $g qualifier group '(...)'/' : ';
+        # $v/$x/$y/$z N/A. ($b is 650-only — 651 has no $b.)
+        '651' => {
+            pchrs => {
+                e => ', ',
+            },
+            cb_pre => sub {
+                return
+                  Koha::Filter::MARC::ISBD4MARCPunctuation::_decorate_qualifier_group_pre(
+                    @_, 'g', ' : '
+                  );
+            },
+        },
+
+        # 655 – Index Term – Genre/Form (spec §5.7 Index Terms)
+        # $a/$b/$c N/A; $v/$x/$y/$z N/A; so only $h (inverted text) -> ', '
+        # and the $g qualifier group '(...)'/' : '.
+        '655' => {
+            pchrs => {
+                h => ', ',
+            },
+            cb_pre => sub {
+                return
+                  Koha::Filter::MARC::ISBD4MARCPunctuation::_decorate_qualifier_group_pre(
+                    @_, 'g', ' : '
+                  );
+            },
+        },
+
+        # 656 – Index Term – Occupation (spec §5.7); 657 – Function
+        # Both are the SAME shape as 655: $a/$k N/A (656) / $a N/A (657),
+        # $v/$x/$y/$z N/A, so the only punctuation is $h -> ', ' and the
+        # $g qualifier group. Alias to 655.
+        '656' => {
+            use_rules => '655',
+        },
+        '657' => {
+            use_rules => '655',
+        },
+
+        # 648 – Subject Added Entry – Chronological Term (spec §5.6)
+        # Only $a exists, and it is N/A -> NO punctuation. Explicit empty
+        # rule block so the field is visibly 'handled' (no-op) rather than
+        # accidentally overlooked.
+        '648' => {},
+
+        # 658 – Index Term – Curriculum Objective (spec §5.7)
+        # All subfields ($a/$b/$c/$d) are N/A -> NO punctuation. Explicit
+        # empty rule block (same rationale as 648).
+        '658' => {},
+
     };
 }
 

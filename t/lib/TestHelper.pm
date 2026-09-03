@@ -46,19 +46,22 @@ sub parse_render_marker {
     # Strip the leading '# render:' prefix and surrounding whitespace
     $marker =~ s/^\s*#?\s*render:\s*//i;
 
-    # Optional provenance token: [doc ...] = drawn from the reference
-    # document; absent = constructed (made up to cover 'rules as written').
-    # Grammar: [doc] | [doc <section>] | [doc - derived] | [doc <section> - derived].
+    # Optional provenance token. [doc ...] = drawn from the reference
+    # document; [LoC ...] = split from a real pre-punctuated
+    # Library-of-Congress / MARC21-online record; absent = constructed
+    # (made up to cover 'rules as written').
+    # Grammar for both kinds: [kind] | [kind <section>] | [kind - derived] |
+    #   [kind <section> - derived].
     #   section  e.g. '§5.5' or 'C.1a' (where in the doc the example comes from)
-    #   '- derived' marks an example reconstructed/adapted from a doc example
+    #   '- derived' marks an example reconstructed/adapted from its source
     #   (same values/meaning, but restructured for the $-inverted form the
     #   plugin handles, or with subfields adjusted) rather than a verbatim
-    #   doc Current/Future pair.
-    # Returned as a hashref { kind => 'doc'|'', section => '', derived => 0|1 }.
+    #   source Current/Future pair.
+    # Returned as a hashref { kind => 'doc'|'LoC'|'', section => '', derived => 0|1 }.
     my $prov = { kind => '', section => '', derived => 0 };
-    if ( $marker =~ s/^\[doc\b(.*?)\]\s*//i ) {
-        $prov->{kind} = 'doc';
-        my $inner = $1;
+    if ( $marker =~ s/^\[(doc|LoC)\b(.*?)\]\s*//i ) {
+        $prov->{kind} = $1;    # preserve case: 'doc' or 'LoC'
+        my $inner = $2;
         $prov->{derived} = 1 if $inner =~ /-\s*derived/i;
         $inner =~ s/-\s*derived//i;
         $inner =~ s/^\s*[-—–]\s*//;
