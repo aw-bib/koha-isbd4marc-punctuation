@@ -28,14 +28,22 @@ my @got_tags = sort keys %$rules;
 is_deeply( \@got_tags, \@expected_tags, "$SET has exactly the expected field tags" );
 
 # 3. Each rule has valid keys
-my @valid_keys = qw(pchrs post wrap cb_pre cb_post use_rules);
+my @valid_keys = qw(name pchrs post wrap cb_pre cb_post use_rules);
 for my $tag (@expected_tags) {
     my $entry = $rules->{$tag};
-ok( defined $entry, "Rules entry for $tag is defined" );
+    ok( defined $entry, "Rules entry for $tag is defined" );
 
     for my $key ( keys %$entry ) {
         ok( grep( /^$key$/, @valid_keys ), "Key '$key' in $tag is a valid rule key" );
     }
+}
+
+# 3b. Every rule has a non-empty human-readable name (metadata, not a
+#     punctuation rule). The engine ignores it; it documents what the
+#     tag stands for in plain words.
+for my $tag (@expected_tags) {
+    my $name = $rules->{$tag}{name};
+    ok( defined $name && $name ne '', "$tag has a non-empty 'name'" );
 }
 
 # 4. 247 has its own rules (no longer aliases to 246)

@@ -23,19 +23,16 @@ Trigger condition:
 
 Implemented fields:
 
-- `020`: ISBD
-- `110`: Main Entry-Corporate Name
-- `111`: Main Entry-Meeting Name
-- `100`: Main Entry-Personal Name
-- `610`: Subject Added Entry-Corporate Name
-- `611`: Subject Added Entry-Meeting Name
-- `600`: Subject Added Entry-Personal Name
-- `700`: Added Entry-Personal Name
-- `710`: Added Entry-Corporate Name
-- `711`: Added Entry-Meeting Name
-- `810`: Series Added Entry-Corporate Name
-- `811`: Series Added Entry-Meeting Name
-- `800`: Series Added Entry-Personal Name
+- `020`: International Standard Book Number
+- `100`: Main Entry – Personal Name
+- `110`: Main Entry – Corporate Name
+- `111`: Main Entry – Meeting Name
+- `130`: Main Entry – Uniform Title
+- `210`: Abbreviated Title
+- `222`: Key Title
+- `240`: Uniform Title
+- `242`: Translation of Title by Cataloging Agency
+- `243`: Collective Uniform Title
 - `245`: Title Statement
 - `246`: Varying Form of Title
 - `247`: Former Title
@@ -46,7 +43,26 @@ Implemented fields:
 - `490`: Series Statement
 - `502`: Dissertation Note
 - `505`: Formatted Contents Note
-- `520`: Summary
+- `520`: Summary, etc.
+- `600`: Subject Added Entry – Personal Name
+- `610`: Subject Added Entry – Corporate Name
+- `611`: Subject Added Entry – Meeting Name
+- `630`: Subject Added Entry – Uniform Title
+- `648`: Subject Added Entry – Chronological Term
+- `650`: Subject Added Entry – Topical Term
+- `651`: Subject Added Entry – Geographic Name
+- `655`: Index Term – Genre/Form
+- `656`: Index Term – Occupation
+- `657`: Index Term – Function
+- `658`: Index Term – Curriculum Objective
+- `700`: Added Entry – Personal Name
+- `710`: Added Entry – Corporate Name
+- `711`: Added Entry – Meeting Name
+- `730`: Added Entry – Uniform Title
+- `800`: Series Added Entry – Personal Name
+- `810`: Series Added Entry – Corporate Name
+- `811`: Series Added Entry – Meeting Name
+- `830`: Series Added Entry – Uniform Title
 
 
 ### Why it does this

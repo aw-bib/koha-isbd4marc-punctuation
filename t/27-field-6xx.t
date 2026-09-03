@@ -47,8 +47,12 @@ ok( defined $R->{'656'},    '656 rules defined (use_rules => 655)' );
 ok( defined $R->{'657'},    '657 rules defined (use_rules => 655)' );
 ok( defined $R->{'648'},    '648 rules defined (explicit empty)' );
 ok( defined $R->{'658'},    '658 rules defined (explicit empty)' );
-is_deeply( $R->{'648'}, {}, '648 is an explicit empty rule block (N/A)' );
-is_deeply( $R->{'658'}, {}, '658 is an explicit empty rule block (N/A)' );
+# 648/658 carry only a `name` (metadata); they define NO punctuation-rule
+# keys — the all-N/A fields are explicit no-ops, not accidentally overlooked.
+for my $t (qw(648 658)) {
+    my @rule_keys = grep { $_ ne 'name' } keys %{ $R->{$t} };
+    is_deeply( \@rule_keys, [], "$t has no punctuation-rule keys (explicit no-op)" );
+}
 is( $R->{'656'}{use_rules}, '655', '656 aliases 655' );
 is( $R->{'657'}{use_rules}, '655', '657 aliases 655' );
 
