@@ -214,10 +214,11 @@ ok( defined $rules_300, '300 rules loaded' );
     check_combined( \@result, \@result_pr, '300 ex5: combined string identical' );
 }
 
-# --- Example 6: $a + $b + $c + $e + $h (with accompanying material) ---
+# --- Example 6: $a + $b + $c + $e + $h/$i/$j (accompanying material) ---
 # Doc: Future:  300 ## $a 271 pages $b ill. $c 21 cm $e 1 atlas $h 37 pages, 19 leaves $i color maps $j 37 cm
 # Doc: Current: 300 ## $a 271 pages : $b ill. ; $c 21 cm + $e 1 atlas (37 pages, 19 leaves : color maps ; 37 cm)
-# Note: $h is wrapped in parentheses, but $i/$j grouping is not implemented (gap)
+# $h/$i/$j are grouped in ONE paren pair anchored on $h (see
+# _decorate_300_pre); separators via compound pchrs hi/ij.
 {
     # render: 300 ## $a 271 pages $b ill. $c 21 cm $e 1 atlas $h 37 pages, 19 leaves $i color maps $j 37 cm
     my $field = make_field(
@@ -244,12 +245,13 @@ ok( defined $rules_300, '300 rules loaded' );
         '300 ex6 postfix: $e (no punct when $h follows)' );
     is(
         $result[9],
-        '(37 pages, 19 leaves)',
-        '300 ex6 postfix: $h wrapped in parentheses'
+        ' (37 pages, 19 leaves : ',
+        '300 ex6 postfix: $h opens the group ( + " : " when $i follows)'
     );
-    is( $result[11], 'color maps',
-        '300 ex6 postfix: $i (no punct implemented - gap)' );
-    is( $result[13], '37 cm', '300 ex6 postfix: $j (last) unchanged' );
+    is( $result[11], 'color maps ; ',
+        '300 ex6 postfix: $i gets " ; " when $j follows' );
+    is( $result[13], '37 cm)',
+        '300 ex6 postfix: $j (last) closes the group' );
 
     my @result_pr =
       Koha::Filter::MARC::ISBD4MARCPunctuation::_decorate_field( $field,
@@ -261,11 +263,13 @@ ok( defined $rules_300, '300 rules loaded' );
         '300 ex6 prefix: $e gets " + " prepended' );
     is(
         $result_pr[9],
-        '(37 pages, 19 leaves)',
-        '300 ex6 prefix: $h wrapped in parentheses'
+        ' (37 pages, 19 leaves',
+        '300 ex6 prefix: $h opens the group (no sep yet)'
     );
-    is( $result_pr[11], 'color maps', '300 ex6 prefix: $i unchanged (gap)' );
-    is( $result_pr[13], '37 cm',      '300 ex6 prefix: $j unchanged' );
+    is( $result_pr[11], ' : color maps',
+        '300 ex6 prefix: $i gets " : " prepended' );
+    is( $result_pr[13], ' ; 37 cm)',
+        '300 ex6 prefix: $j gets " ; " prepended and closes the group' );
 
     check_combined( \@result, \@result_pr, '300 ex6: combined string identical' );
 }
@@ -380,6 +384,8 @@ ok( defined $rules_300, '300 rules loaded' );
 }
 
 # --- Edge case: $a + $h (no $e in between -- rare but possible) ---
+# $h is preceded by $a, so the group opener gets a leading space:
+# $a 5 boxes + $h -> own paren, preceded content -> " (24 linear ft.)"
 {
     # render: 300 ## $a 5 boxes $h 24 linear ft.
     my $field = make_field(
@@ -395,8 +401,8 @@ ok( defined $rules_300, '300 rules loaded' );
         '300 edge $a+$h postfix: $a unchanged ($h not in pchrs)' );
     is(
         $result[3],
-        '(24 linear ft.)',
-        '300 edge $a+$h postfix: $h wrapped in ()'
+        ' (24 linear ft.)',
+        '300 edge $a+$h postfix: $h wrapped in () with leading space'
     );
 
     my @result_pr =
@@ -405,11 +411,132 @@ ok( defined $rules_300, '300 rules loaded' );
     is( $result_pr[1], '5 boxes', '300 edge $a+$h prefix: $a unchanged' );
     is(
         $result_pr[3],
-        '(24 linear ft.)',
-        '300 edge $a+$h prefix: $h wrapped in ()'
+        ' (24 linear ft.)',
+        '300 edge $a+$h prefix: $h wrapped in () with leading space'
     );
 
     check_combined( \@result, \@result_pr, '300 edge $a+$h: combined string identical' );
+}
+
+# --- Edge case: $e + $h + $j (extent + dimensions, no $i) ---
+# $i absent: the group is $h; $j via the COMPOUND hj key -> " ; "
+# render: 300 ## $a 1 atlas $e 1 map $h 20 x 30 cm $j 45 cm
+{
+    # render: 300 ## $a 1 atlas $e 1 map $h 20 x 30 cm $j 45 cm
+    my $field = make_field(
+        '300', '#', '#',
+        a => '1 atlas',
+        e => '1 map',
+        h => '20 x 30 cm',
+        j => '45 cm',
+    );
+
+    my @result =
+      Koha::Filter::MARC::ISBD4MARCPunctuation::_decorate_field( $field,
+        $rules_300, 'postfix' );
+    is( $result[1], '1 atlas + ',
+        '300 edge $e+$h+$j postfix: $a gets " + " when $e follows' );
+    is(
+        $result[3],
+        '1 map',
+        '300 edge $e+$h+$j postfix: $e (no punct when $h follows)'
+    );
+    is(
+        $result[5],
+        ' (20 x 30 cm ; ',
+        '300 edge $e+$h+$j postfix: $h opens group + " ; " when $j follows (hj)'
+    );
+    is( $result[7], '45 cm)',
+        '300 edge $e+$h+$j postfix: $j (last) closes the group' );
+
+    my @result_pr =
+      Koha::Filter::MARC::ISBD4MARCPunctuation::_decorate_field( $field,
+        $rules_300, 'prefix' );
+    is( $result_pr[1], '1 atlas', '300 edge $e+$h+$j prefix: $a unchanged' );
+    is( $result_pr[3], ' + 1 map',
+        '300 edge $e+$h+$j prefix: $e gets " + " prepended' );
+    is(
+        $result_pr[5],
+        ' (20 x 30 cm',
+        '300 edge $e+$h+$j prefix: $h opens group (no sep yet)'
+    );
+    is(
+        $result_pr[7],
+        ' ; 45 cm)',
+        '300 edge $e+$h+$j prefix: $j gets " ; " prepended and closes'
+    );
+
+    check_combined( \@result, \@result_pr,
+        '300 edge $e+$h+$j: combined string identical' );
+}
+
+# --- Edge case: lone $i / $j (no preceding $h) is a documented gap ---
+# Per agreement (Option A): a run may only open at $h, so a lone $i/$j gets
+# NO parentheses (the group callback skips it). However the compound pchrs
+# key ij (and hj) still fires on an adjacent $i/$j in the engine's step 4,
+# inserting a bare " ; " with no parens. There is no real-world test case
+# for this yet (the spec example always has $h) — accepted provisionally.
+# A lone $j with NO adjacent $i/$j is genuinely untouched.
+{
+    # render: 300 ## $a 1 videocassette $i color $j 1/2 in.
+    my $field = make_field(
+        '300', '#', '#',
+        a => '1 videocassette',
+        i => 'color',
+        j => '1/2 in.',
+    );
+
+    my @result =
+      Koha::Filter::MARC::ISBD4MARCPunctuation::_decorate_field( $field,
+        $rules_300, 'postfix' );
+    is( $result[1], '1 videocassette',
+        '300 edge lone $i postfix: $a unchanged (i/j not in pchrs)' );
+    is( $result[3], 'color ; ',
+        '300 edge lone $i postfix: lone $i gets no parens; bare " ; " leaks from ij (Option A)' );
+    is( $result[5], '1/2 in.',
+        '300 edge lone $i postfix: $j (last) unchanged' );
+
+    my @result_pr =
+      Koha::Filter::MARC::ISBD4MARCPunctuation::_decorate_field( $field,
+        $rules_300, 'prefix' );
+    is( $result_pr[1], '1 videocassette',
+        '300 edge lone $i prefix: $a unchanged' );
+    is( $result_pr[3], 'color',
+        '300 edge lone $i prefix: lone $i gets no parens' );
+    is( $result_pr[5], ' ; 1/2 in.',
+        '300 edge lone $i prefix: lone $j gets bare " ; " prepended (Option A)' );
+
+    check_combined( \@result, \@result_pr,
+        '300 edge lone $i: combined string identical' );
+}
+
+# --- Edge case: lone $j only (no $h, no $i) is genuinely untouched ---
+{
+    # render: 300 ## $a 1 filmstrip $j 35 mm
+    my $field = make_field(
+        '300', '#', '#',
+        a => '1 filmstrip',
+        j => '35 mm',
+    );
+
+    my @result =
+      Koha::Filter::MARC::ISBD4MARCPunctuation::_decorate_field( $field,
+        $rules_300, 'postfix' );
+    is( $result[1], '1 filmstrip',
+        '300 edge lone $j postfix: $a unchanged' );
+    is( $result[3], '35 mm',
+        '300 edge lone $j postfix: lone $j untouched (no parens, no separator)' );
+
+    my @result_pr =
+      Koha::Filter::MARC::ISBD4MARCPunctuation::_decorate_field( $field,
+        $rules_300, 'prefix' );
+    is( $result_pr[1], '1 filmstrip',
+        '300 edge lone $j prefix: $a unchanged' );
+    is( $result_pr[3], '35 mm',
+        '300 edge lone $j prefix: lone $j untouched (no parens, no separator)' );
+
+    check_combined( \@result, \@result_pr,
+        '300 edge lone $j: combined string identical' );
 }
 
 # --- Edge case: $a directly followed by another $a (scores with parts, adjacent) ---

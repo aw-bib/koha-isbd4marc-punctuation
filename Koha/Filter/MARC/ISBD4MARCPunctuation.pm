@@ -412,6 +412,119 @@ subfield's code) and C<$sep> (the run-internal separator).
 
 =cut
 
+=head2 _decorate_300_pre
+
+Pre-callback for field 300 (Physical Description). Groups the
+accompanying-material DETAIL run of C (extent of accompanying material),
+C (other physical details) and C (dimensions of accompanying material)
+into a single pair of parentheses, mirroring the I<enclose_in_parentheses>
+grouping used by the x10/x11 meeting run. E.g. (doc example 6):
+
+    $e 1 atlas $h 37 pages, 19 leaves $i color maps $j 37 cm
+      ->  1 atlas (37 pages, 19 leaves : color maps ; 37 cm)
+
+Per spec §4.14 the group is only anchored at C: C is
+"((((" and C/C are "(( or prev :/; " respectively. The internal
+C<' : '>/C<'; '> separators are supplied by the compound pchrs keys
+C<hi>/C<ij>/C<hj> in step 4 of C<_decorate_field> (same mechanism as the
+x10 C<nd>/C<dc>/C<cc> keys).
+
+=head3 AMBIGUITY DECISION (2026-09-02) — lone $i / $j (no $h)
+
+§4.14 gives C and C an "or": enclosing parens C<(( ))> I<or> a preceding
+space-colon/space-semicolon. That is decodable while a C anchors the run
+(C<hh> present -> the in-run separator applies). But a C or C that
+appears I<without> a preceding C is the genuinely ambiguous case: the spec
+would wrap it in its own parens, yet we have no example and it is a
+cataloguer judgment call. Per agreement, a group run may only open at
+C; a lone C/C (run not started by C) is left without
+parentheses and is a documented gap for cataloguers (via leader/18).
+
+NOTE (2026-09-02, Option A): a lone C/C still gets a bare C<' ; '>
+from the C<ij>/C<hj> compound pchrs keys when adjacent to another
+C/C (the engine's step 4 fires on C<sf.next_sf> regardless of whether
+C anchors the run). There is I<no> real-world test case for a lone
+C/C yet (the spec example always has C), so this behaviour is
+accepted provisionally and may need revision by an ISBD expert.
+
+A leading space is added before the opening paren when the group is
+preceded by other content (e.g. C<$e 1 atlas (>: the space after
+"atlas").
+
+=cut
+
+sub _decorate_300_pre {
+    my ( $sf, $value, $i, $subfields, $last_sf_ref ) = @_;
+    my $last_sf = $$last_sf_ref;
+
+    # Accompanying-material detail group subfields.
+    my %group_sf = map { $_ => 1 } qw(h i j);
+
+    # Not an h/i/j group subfield — leave untouched.
+    return $value unless $group_sf{$sf};
+
+    # Determine the start of the contiguous group run by scanning back.
+    my $run_start = $sf;
+    for ( my $k = $i - 1; $k >= 0; $k-- ) {
+        my $prev = $subfields->[$k][0];
+        last unless $group_sf{$prev};
+        $run_start = $prev;
+    }
+
+    # A run may ONLY open at $h. A lone $i/$j (no leading $h) is the §4.14
+    # "or" case — not mechanically decodable; leave the whole run untouched
+    # (documented gap, cataloguer decides via leader/18).
+    return $value unless $run_start eq 'h';
+
+    my $next    = $subfields->[ $i + 1 ];
+    my $next_sf = $next ? $next->[0] : '';
+
+    my $is_first = ( $i == 0 || !$group_sf{ $subfields->[ $i - 1 ][0] } );
+    my $is_last  = ( !defined $next_sf || !$group_sf{$next_sf} );
+
+    if ($is_first) {
+
+        # Leading space unless this is the very first subfield of the field
+        my $lead = ( defined $last_sf && length $last_sf ) ? ' ' : '';
+        $value = $lead . '(' . $value;
+    }
+    if ($is_last) {
+        $value .= ')';
+    }
+
+    return $value;
+}
+
+=head2 _decorate_qualifier_group_pre
+
+I<Shared> pre-callback + helper for a REPEATABLE I<qualifying> subfield that
+is wrapped in a single pair of parentheses, with multiple occurrences
+separated by a per-field separator. This is the pattern used by:
+
+    020 $q  (separator " ; ")
+    210 $b  (separator ", ")
+    222 $b  (separator ". ")
+
+Example (020, $code q, $sep " ; "):
+
+    $a 0914378260 $q pbk. $q v. 1  ->  (pbk. ; v. 1)
+
+Because the separator differs per field, the rule set passes it in; the data
+files therefore reference this helper via small closures that supply
+C and C. A naive C E<lt> wrap => { b => ['(',')'] } E<gt> would
+instead produce C<(a)(b)>, not C<(a, b)>, so this grouping is structural
+and lives in C<cb_pre> (the parens/separator are attached to the run as a
+unit), matching the 020/210/222 reference reading.
+
+Non-group subfields pass through unchanged; a single occurrence is wrapped
+entirely (C<(...)>); the first/middle/last of a run open the paren, add only
+the separator, or add the separator and close the paren, respectively.
+
+Called with the standard C<cb_pre> signature followed by C (the group
+subfield's code) and C (the run-internal separator).
+
+=cut
+
 sub _decorate_qualifier_group_pre {
     my ( $sf, $value, $i, $subfields, $last_sf_ref, $code, $sep ) = @_;
 

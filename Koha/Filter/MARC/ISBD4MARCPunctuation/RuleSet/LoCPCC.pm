@@ -381,18 +381,34 @@ sub rules {
         },
 
         # 300 – Physical Description
-        # ISBD punct: $a : $b ; $c + $e
-        # $h wrapped in parentheses
-        # $a-to-$a (scores with parts) gets preceding +
-        # Known gaps: $h/$i/$j accompanying material grouping (rare)
+        # ISBD punct: $a : $b ; $c + $e ($h : $i ; $j)
+        # $e gets preceding + (accompanying material).
+        # $h/$i/$j (details of accompanying material) are grouped in ONE
+        # paren pair by _decorate_300_pre, anchored on $h (doc ex 6):
+        #   $e 1 atlas $h ... $i color maps $j 37 cm
+        #     ->  1 atlas (... : color maps ; 37 cm)
+        # Internal separators via COMPOUND pchrs keys (like x10's nd/dc/cc):
+        #   hi => ' : ' (between $h and $i)
+        #   ij => ' ; ' (between $i and $j)
+        #   hj => ' ; ' (between $h and $j, when no $i)
+        # $a-to-$a (scores with parts) gets preceding +.
+        # KNOWN GAP: a lone $i or $j (no leading $h) is the §4.14 "or" case
+        #            and is left to cataloguers WITHOUT parentheses. Note that
+        #            a lone $i/$j adjacent to another still gets a bare " ; "
+        #            from the hi/ij/hj keys (engine fires on sf.next_sf) — see
+        #            _decorate_300_pre pod (Option A; no real-world case yet).
         300 => {
             pchrs => {
-                b => ' : ',
-                c => ' ; ',
-                e => ' + ',
-                a => ' + ',  # second+ $a in multi-$a fields (scores with parts)
+                b  => ' : ',
+                c  => ' ; ',
+                e  => ' + ',
+                a  => ' + ',  # second+ $a in multi-$a fields (scores with parts)
+                hi => ' : ',
+                ij => ' ; ',
+                hj => ' ; ',
             },
-            wrap => { h => [ '(', ')' ] },
+            cb_pre =>
+              'Koha::Filter::MARC::ISBD4MARCPunctuation::_decorate_300_pre',
         },
 
         # 490 - Series statement
