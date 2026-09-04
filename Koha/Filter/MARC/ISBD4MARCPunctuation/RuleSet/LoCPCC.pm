@@ -686,8 +686,6 @@ sub rules {
 
         # ISBD punct (§3.17 location of originals/duplicates): $b/$c/$d '; '.
         # $a/$g N/A. $3 lead-in suppressed via empty COMPOUND keys.
-        # (533/534 are implemented separately — see below — they
-        # need the '.()' wrap+period pattern.)
         '535' => {
             name  => 'Location of Originals/Duplicates Note',
             pchrs => {
@@ -1110,6 +1108,128 @@ sub rules {
         '730' => {
             name      => 'Added Entry – Uniform Title',
             use_rules => '240',
+        },
+
+        # ISBD punct (§4.35 linking-entry fields): content subfields get a
+        #   preceding '. ' ($b $c $d $g $h $k $m $n $p $s $t $1) — the period
+        #   lands on the PREVIOUS subfield in postfix, so N/A $a still ends
+        #   its heading; $i (relationship info) ': ' via the shared
+        #   display-text cb_pre. $e/$f (775), $j (786) and
+        #   $o/$q/$r/$u/$v/$w/$x/$y/$z N/A (no punctuation).
+        #
+        # DECISIONS / GAPS:
+        #   - All 16 §4.35 tags share this exact table -> 760 is canonical;
+        #     761..787 alias it via use_rules.
+        #   - Embedded-field $j/$1 encoding NOT processed: $j is N/A and $1
+        #     takes a preceding '. ' like any content subfield.
+        '760' => {
+            name  => 'Main Series Entry',
+            pchrs => {
+                b   => '. ',
+                c   => '. ',
+                d   => '. ',
+                g   => '. ',
+                h   => '. ',
+                k   => '. ',
+                m   => '. ',
+                n   => '. ',
+                p   => '. ',
+                s   => '. ',
+                t   => '. ',
+                '1' => '. ',
+            },
+            cb_pre =>
+              'Koha::Filter::MARC::ISBD4MARCPunctuation::_decorate_display_text_pre',
+        },
+
+        # Identical structure to 760
+        '761' => {
+            name      => 'Subseries Entry',
+            use_rules => '760',
+        },
+
+        # Identical structure to 760
+        '762' => {
+            name      => 'Subseries Entry',
+            use_rules => '760',
+        },
+
+        # Identical structure to 760
+        '765' => {
+            name      => 'Original Language Entry',
+            use_rules => '760',
+        },
+
+        # Identical structure to 760
+        '767' => {
+            name      => 'Translation Entry',
+            use_rules => '760',
+        },
+
+        # Identical structure to 760
+        '770' => {
+            name      => 'Supplement/Special Issue Entry',
+            use_rules => '760',
+        },
+
+        # Identical structure to 760
+        '772' => {
+            name      => 'Supplement Parent Entry',
+            use_rules => '760',
+        },
+
+        # Identical structure to 760
+        '773' => {
+            name      => 'Host Item Entry',
+            use_rules => '760',
+        },
+
+        # Identical structure to 760
+        '774' => {
+            name      => 'Constituent Unit Entry',
+            use_rules => '760',
+        },
+
+        # Identical structure to 760
+        '775' => {
+            name      => 'Other Edition Entry',
+            use_rules => '760',
+        },
+
+        # Identical structure to 760
+        '776' => {
+            name      => 'Additional Physical Form Entry',
+            use_rules => '760',
+        },
+
+        # Identical structure to 760
+        '777' => {
+            name      => 'Issued With Entry',
+            use_rules => '760',
+        },
+
+        # Identical structure to 760
+        '780' => {
+            name      => 'Preceding Entry',
+            use_rules => '760',
+        },
+
+        # Identical structure to 760
+        '785' => {
+            name      => 'Succeeding Entry',
+            use_rules => '760',
+        },
+
+        # Identical structure to 760
+        '786' => {
+            name      => 'Data Source Entry',
+            use_rules => '760',
+        },
+
+        # Identical structure to 760
+        '787' => {
+            name      => 'Other Relationship Entry',
+            use_rules => '760',
         },
 
         # Same as 100 but $v (volume) gets ' ;' punctuation (600 differs)

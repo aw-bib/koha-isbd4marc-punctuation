@@ -88,6 +88,22 @@ Implemented fields:
 - `710`: Added Entry – Corporate Name
 - `711`: Added Entry – Meeting Name
 - `730`: Added Entry – Uniform Title
+- `760`: Main Series Entry
+- `761`: Subseries Entry
+- `762`: Subseries Entry
+- `765`: Original Language Entry
+- `767`: Translation Entry
+- `770`: Supplement/Special Issue Entry
+- `772`: Supplement Parent Entry
+- `773`: Host Item Entry
+- `774`: Constituent Unit Entry
+- `775`: Other Edition Entry
+- `776`: Additional Physical Form Entry
+- `777`: Issued With Entry
+- `780`: Preceding Entry
+- `785`: Succeeding Entry
+- `786`: Data Source Entry
+- `787`: Other Relationship Entry
 - `800`: Series Added Entry – Personal Name
 - `810`: Series Added Entry – Corporate Name
 - `811`: Series Added Entry – Meeting Name
