@@ -203,8 +203,9 @@ is( $R->{'657'}{use_rules}, '655', '657 aliases 655' );
 
 # --- 650 ex 7: LoC-derived — qualifier baked in $a, split to $g ---
 # LoC: 650 #0 $a BASIC (Computer program language).  ->  $a BASIC $g Computer program language
-# NOTE: combined 'BASIC(Computer program language)' lacks the space before
-# '( ' — the known qualifier leading-space gap.
+# NOTE: combined now renders 'BASIC (Computer program language)' -- the
+# single-space join convention supplies the space before '(' (qualifier
+# leading-space gap resolved 2026-09-03).
 {
     # render: [LoC - derived] 650 ## $a BASIC $g Computer program language
     my $field = make_field( '650', ' ', ' ', a => 'BASIC', g => 'Computer program language' );
@@ -242,7 +243,9 @@ is( $R->{'657'}{use_rules}, '655', '657 aliases 655' );
 
 # --- 650 ex 9: LoC-derived — subdivision $v is N/A (pass-through) ---
 # LoC: 650 #0 $a Flour industry $v Periodicals.
-# NOTE: combined 'Flour industryPeriodicals' (no space) — N/A spacing gap.
+# NOTE: combined now renders 'Flour industry Periodicals' -- the single-space
+# join convention supplies the space between N/A subfields (spacing gap
+# resolved 2026-09-03).
 {
     # render: [LoC - derived] 650 ## $a Flour industry $v Periodicals
     my $field = make_field( '650', ' ', ' ', a => 'Flour industry', v => 'Periodicals' );
@@ -262,7 +265,9 @@ is( $R->{'657'}{use_rules}, '655', '657 aliases 655' );
 
 # --- 650 ex 10: LoC-derived — $z/$y subdivisions N/A (pass-through) ---
 # LoC: 650 #0 $a Vocal music $z France $y 18th century.
-# NOTE: combined 'Vocal musicFrance18th century' (no spaces) — N/A spacing gap.
+# NOTE: combined now renders 'Vocal music France 18th century' -- the
+# single-space join convention supplies the spaces between N/A subfields
+# (spacing gap resolved 2026-09-03).
 {
     # render: [LoC - derived] 650 ## $a Vocal music $z France $y 18th century
     my $field = make_field( '650', ' ', ' ', a => 'Vocal music', z => 'France', y => '18th century' );

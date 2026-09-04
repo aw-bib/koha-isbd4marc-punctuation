@@ -60,11 +60,6 @@ sub check_combined {
         n => '1st',
         d => '1983'
     );
-    is(
-        combined($r),
-        'Brussels Hemoglobin Symposium (1st : 1983)',
-        '111 ex1: combined'
-    );
     is( $r->[1], 'Brussels Hemoglobin Symposium', '111 ex1: $a unchanged' );
     is( $r->[3], ' (1st : ',
         '111 ex1: $n opens group (lead space) + " : " (nd)' );
@@ -87,11 +82,6 @@ sub check_combined {
         g => 'N.Y.',
         d => '1982',
         c => 'Albany, N.Y.'
-    );
-    is(
-        combined($r),
-        "Governor's Conference on Aging (N.Y.) (1982 : Albany, N.Y.)",
-        '111 ex2: combined'
     );
     is( $r->[1], "Governor's Conference on Aging", '111 ex2: $a unchanged' );
     is( $r->[3], ' (N.Y.)',       '111 ex2: $g wrapped (lead space)' );
@@ -117,11 +107,6 @@ sub check_combined {
         n => '9th',
         d => '1980',
         c => 'United States Air Force Academy'
-    );
-    is(
-        combined($r),
-'Military History Symposium (U.S.) (9th : 1980 : United States Air Force Academy)',
-        '111 ex4: combined'
     );
     is( $r->[3], ' (U.S.)',  '111 ex4: $g wrapped (lead space)' );
     is( $r->[5], ' (9th : ', '111 ex4: $n opens group + " : " (nd)' );
@@ -154,11 +139,6 @@ sub check_combined {
         e => 'Organizing Committee',
         e => 'Arts and Culture Program',
         e => 'Visual Arts Section'
-    );
-    is(
-        combined($r),
-'Olympic Games (21st : 1976 : Montréal, Québec). Organizing Committee. Arts and Culture Program. Visual Arts Section',
-        '111: $e chain after group'
     );
     is( $r->[3], ' (21st : ',           '111: $n opens group (lead space)' );
     is( $r->[5], '1976 : ',             '111: $d gets " : " (dc)' );
@@ -196,11 +176,6 @@ sub check_combined {
         d => '1980',
         c => 'Boston, Mass.'
     );
-    is(
-        combined($r),
-        'Boston. a city on a hill (1980 : Boston, Mass.)',
-        '111: $q gets ". " then group'
-    );
     is( $r->[1], 'Boston. ',         '111: $a gets ". " before $q' );
     is( $r->[3], 'a city on a hill', '111: $q unchanged (last before group)' );
     is( $r->[5], ' (1980 : ',        '111: $d opens group' );
@@ -223,11 +198,6 @@ sub check_combined {
         g => 'Canada',
         j => 'issuing body'
     );
-    is(
-        combined($r),
-        'Canadian Meteorological Society (Canada), issuing body',
-        '111: $j relator'
-    );
     is( $r->[3], ' (Canada), ',  '111: $g wrapped + $j next ", "' );
     is( $r->[5], 'issuing body', '111: $j last' );
     check_combined(
@@ -248,11 +218,10 @@ sub check_combined {
         c => 'Berlin',
         c => 'Leipzig'
     );
-    is(
-        combined($r),
-        'Meeting (1983 : Berlin ; Leipzig)',
-        '111: multiple $c use " ; " (cc)'
-    );
+    is( $r->[1], 'Meeting',    '111: $a unchanged' );
+    is( $r->[3], ' (1983 : ',  '111: $d opens group' );
+    is( $r->[5], 'Berlin ; ',  '111: first $c gets " ; " (cc)' );
+    is( $r->[7], 'Leipzig)',   '111: last $c closes group' );
     check_combined(
         '111', '111: $a+$d+$c+$c',
         a => 'Meeting',
@@ -267,7 +236,6 @@ sub check_combined {
 {
     # render: [doc §5.4 - derived] 111 2# $a Symposium $n 1st
     my $r = _decorate( '111', 'postfix', a => 'Symposium', n => '1st' );
-    is( combined($r), 'Symposium (1st)', '111: lone $n wrapped (meeting)' );
     is( $r->[3],      ' (1st)',          '111: lone $n opens+closes group' );
     check_combined( '111', '111: $a+$n', a => 'Symposium', n => '1st' )
 }
@@ -276,7 +244,7 @@ sub check_combined {
 {
     # render: 111 2# $a ABC $u USA
     my $r = _decorate( '111', 'postfix', a => 'ABC', u => 'USA' );
-    is( combined($r), 'ABCUSA', '111: $u unchanged (no ISBD punct)' );
+    is( $r->[3], 'USA', '111: $u unchanged (no ISBD punct)' );
     check_combined( '111', '111: $a+$u', a => 'ABC', u => 'USA' )
 }
 
@@ -284,7 +252,7 @@ sub check_combined {
 {
     # render: 111 2# $a Canada
     my $r = _decorate( '111', 'postfix', a => 'Canada' );
-    is( combined($r), 'Canada', '111: $a alone unchanged' );
+    is( $r->[1], 'Canada', '111: $a alone unchanged' );
     check_combined( '111', '111: $a alone', a => 'Canada' )
 }
 
@@ -296,11 +264,6 @@ sub check_combined {
         '711', 'postfix',
         a => 'Theatertreffen Berlin',
         g => 'Festival'
-    );
-    is(
-        combined($r),
-        'Theatertreffen Berlin (Festival)',
-        '711 ex3: $g wrapped'
     );
     is( $r->[3], ' (Festival)', '711 ex3: $g wrapped (lead space)' );
     check_combined(
@@ -320,11 +283,11 @@ sub check_combined {
         c => 'Montréal, Québec',
         e => 'Organizing Committee'
     );
-    is(
-        combined($r),
-        'Olympic Games (21st : 1976 : Montréal, Québec). Organizing Committee',
-        '711: group + $e'
-    );
+    is( $r->[1], 'Olympic Games',          '711: $a unchanged' );
+    is( $r->[3], ' (21st : ',               '711: $n opens group' );
+    is( $r->[5], '1976 : ',                 '711: $d gets " : " (dc)' );
+    is( $r->[7], 'Montréal, Québec). ',     '711: $c closes group + ". " for $e' );
+    is( $r->[9], 'Organizing Committee',    '711: $e last' );
     check_combined(
         '711', '711: $a+$n+$d+$c+$e',
         a => 'Olympic Games',
@@ -346,11 +309,6 @@ sub check_combined {
         c => 'Berlin',
         x => 'History',
         v => 'Periodicals'
-    );
-    is(
-        combined($r),
-        'Meeting (1980 : Berlin)HistoryPeriodicals',
-        '611: subdivisions no punct'
     );
     is( $r->[3], ' (1980 : ',   '611: $d opens group' );
     is( $r->[5], 'Berlin)',     '611: $c closes group' );
@@ -378,11 +336,6 @@ sub check_combined {
         c => 'Paris',
         v => 'no. 3'
     );
-    is(
-        combined($r),
-        'Symposium (5th : 1990 : Paris) ;no. 3',
-        '811: group + $v " ;"'
-    );
     is( $r->[1], 'Symposium', '811: $a unchanged' );
     is( $r->[3], ' (5th : ',  '811: $n opens group' );
     is( $r->[5], '1990 : ',   '811: $d gets " : " (dc)' );
@@ -406,7 +359,6 @@ sub check_combined {
 {
     # render: [doc §5.5 - derived] 111 2# $a Symposium $t Proceedings
     my $r = _decorate( '111', 'postfix', a => 'Symposium', t => 'Proceedings' );
-    is( combined($r), 'Symposium. Proceedings', '111 tp: $t gets ". "' );
     is( $r->[1],      'Symposium. ', '111 tp: $a gets ". " before $t' );
     is( $r->[3],      'Proceedings', '111 tp: $t last' );
     check_combined(
@@ -424,11 +376,6 @@ sub check_combined {
         a => 'Symposium',
         t => 'Proceedings',
         k => 'Selections'
-    );
-    is(
-        combined($r),
-        'Symposium. Proceedings. Selections',
-        '111 tp: $k gets ". "'
     );
     is( $r->[1], 'Symposium. ',   '111 tp: $a gets ". " (t)' );
     is( $r->[3], 'Proceedings. ', '111 tp: $t gets ". " before $k' );
@@ -450,11 +397,9 @@ sub check_combined {
         t => 'Proceedings',
         l => 'English'
     );
-    is(
-        combined($r),
-        'Symposium. Proceedings. English',
-        '111 tp: $l gets ". "'
-    );
+    is( $r->[1], 'Symposium. ',   '111 tp: $a gets ". " before $t' );
+    is( $r->[3], 'Proceedings. ', '111 tp: $t gets ". " before $l' );
+    is( $r->[5], 'English',       '111 tp: $l last' );
     check_combined(
         '111', '111 tp: $a+$t+$l',
         a => 'Symposium',
@@ -476,13 +421,10 @@ sub check_combined {
         p => 'Volume 1',
         k => 'Selections'
     );
-    is(
-        combined($r),
-        'Symposium. Proceedings, Volume 1. Selections',
-        '111 tp: $p in title chain'
-    );
+    is( $r->[1], 'Symposium. ',   '111 tp: $a gets ". " before $t' );
     is( $r->[3], 'Proceedings, ', '111 tp: $t gets ", " before $p (key p)' );
     is( $r->[5], 'Volume 1. ',    '111 tp: $p gets ". " before $k (key k)' );
+    is( $r->[7], 'Selections',    '111 tp: $k last' );
     check_combined(
         '111', '111 tp: $a+$t+$p+$k',
         a => 'Symposium',
@@ -501,7 +443,9 @@ sub check_combined {
         t => 'Proceedings',
         f => '2005'
     );
-    is( combined($r), 'Symposium. Proceedings. 2005', '111 tp: $f gets ". "' );
+    is( $r->[1], 'Symposium. ',   '111 tp: $a gets ". " before $t' );
+    is( $r->[3], 'Proceedings. ', '111 tp: $t gets ". " before $f' );
+    is( $r->[5], '2005',          '111 tp: $f last' );
     check_combined(
         '111', '111 tp: $a+$t+$f',
         a => 'Symposium',
@@ -519,11 +463,9 @@ sub check_combined {
         t => 'Proceedings',
         s => '2nd ed.'
     );
-    is(
-        combined($r),
-        'Symposium. Proceedings. 2nd ed.',
-        '111 tp: $s gets ". "'
-    );
+    is( $r->[1], 'Symposium. ',   '111 tp: $a gets ". " before $t' );
+    is( $r->[3], 'Proceedings. ', '111 tp: $t gets ". " before $s' );
+    is( $r->[5], '2nd ed.',       '111 tp: $s last' );
     check_combined(
         '111', '111 tp: $a+$t+$s',
         a => 'Symposium',
@@ -541,11 +483,9 @@ sub check_combined {
         t => 'Proceedings',
         h => 'microform'
     );
-    is(
-        combined($r),
-        'Symposium. Proceedings. microform',
-        '111 tp: $h gets ". "'
-    );
+    is( $r->[1], 'Symposium. ',   '111 tp: $a gets ". " before $t' );
+    is( $r->[3], 'Proceedings. ', '111 tp: $t gets ". " before $h' );
+    is( $r->[5], 'microform',     '111 tp: $h last' );
     check_combined(
         '111', '111 tp: $a+$t+$h',
         a => 'Symposium',
@@ -563,11 +503,6 @@ sub check_combined {
         t => 'Proceedings',
         l => 'English',
         v => 'no. 3'
-    );
-    is(
-        combined($r),
-        'Symposium. Proceedings. English ;no. 3',
-        '811 tp: title chain + $v'
     );
     is( $r->[1], 'Symposium. ',   '811 tp: $a gets ". " before $t' );
     is( $r->[3], 'Proceedings. ', '811 tp: $t gets ". " before $l' );
