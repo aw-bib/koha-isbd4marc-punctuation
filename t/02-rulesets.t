@@ -33,8 +33,8 @@ my $active = Koha::Filter::MARC::ISBD4MARCPunctuation::rules_for();
 ok( defined $active, 'rules_for() returns a defined hash' );
 is(
     scalar( keys %$active ),
-    40,
-    'rules_for() (active default LoC/PCC) has 40 field tags'
+    67,
+    'rules_for() (active default LoC/PCC) has 67 field tags'
 );
 my $active135 = $active->{'245'}{pchrs}{b};
 is( $active135, ' : ', 'active set 245 $b punctuation is " : " (LoC/PCC)' );

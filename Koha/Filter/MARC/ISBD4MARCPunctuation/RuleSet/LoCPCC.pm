@@ -470,6 +470,24 @@ sub rules {
             wrap => { l => [ '(', ')' ] },
         },
 
+        # ISBD punct (§4.21 general note): $i ': ' via cb_pre (display text);
+        # $z ' -- ' (source; §4.20 allows preceding dash OR period-space, we
+        # pick ' -- ' for consistency with 520). $a N/A.
+        '500' => {
+            name  => 'General Note',
+            pchrs => { z => ' -- ' },
+            cb_pre =>
+              'Koha::Filter::MARC::ISBD4MARCPunctuation::_decorate_display_text_pre',
+        },
+
+        # ISBD punct (§4.22 with note): $i ': ' via cb_pre (display text).
+        # $a N/A. No $z.
+        '501' => {
+            name  => 'With Note',
+            cb_pre =>
+              'Koha::Filter::MARC::ISBD4MARCPunctuation::_decorate_display_text_pre',
+        },
+
         # ISBD punct: (b) -- c, d
         # $b wrapped in parentheses, $c gets preceding dash,
         # $d gets preceding comma
@@ -482,6 +500,14 @@ sub rules {
             wrap => {
                 b => [ '(', ')' ],
             },
+        },
+
+        # ISBD punct (§4.24 bibliography note): $i ': ' via cb_pre (display
+        # text). $a/$b N/A.
+        '504' => {
+            name  => 'Bibliography, etc. Note',
+            cb_pre =>
+              'Koha::Filter::MARC::ISBD4MARCPunctuation::_decorate_display_text_pre',
         },
 
         # ISBD punct: $t -- $t / $r  (between titles), $g wrapped in (...)
@@ -502,10 +528,72 @@ sub rules {
                 gn => ' -- ',
             },
             wrap   => { g => [ '(', ')' ] },
-            cb_pre => sub {
-                my ( $sf, $value ) = @_;
-                return $sf eq 'i' ? "$value: " : $value;
+            cb_pre =>
+              'Koha::Filter::MARC::ISBD4MARCPunctuation::_decorate_display_text_pre',
+        },
+
+        # ISBD punct (§3.9 restrictions on access): $b/$c/$d/$e '; ',
+        # $f '. ', $u ': '. $a N/A.
+        '506' => {
+            name  => 'Restrictions on Access Note',
+            pchrs => {
+                b => '; ',
+                c => '; ',
+                d => '; ',
+                e => '; ',
+                f => '. ',
+                u => ': ',
             },
+        },
+
+        # ISBD punct (§3.10 scale note for graphic material): $b '; '.
+        # $a N/A.
+        '507' => {
+            name  => 'Scale Note for Graphic Material',
+            pchrs => { b => '; ' },
+        },
+
+        # ISBD punct (§4.26 creation/production credits): repeatable $a
+        # separated by ' ; ' via the COMPOUND pchrs key `aa` (fires only when
+        # $a follows $a). A single $a gets no punct (a naive single `a` key
+        # would also fire on $3-$a / any-X-$a, over-firing like 260's aa/ba
+        # lesson).
+        '508' => {
+            name  => 'Creation/Production Credits Note',
+            pchrs => { aa => ' ; ' },
+        },
+
+        # ISBD punct (§3.11 citation references): $b/$c/$x ', '. $a/$u N/A.
+        '510' => {
+            name  => 'Citation References Note',
+            pchrs => {
+                b => ', ',
+                c => ', ',
+                x => ', ',
+            },
+        },
+
+        # ISBD punct (§4.27 participant or performer note): repeatable $a
+        # separated by ' ; ' via the COMPOUND pchrs key `aa` (fires only when
+        # $a follows $a). A single $a (even after $3) gets no punct.
+        '511' => {
+            name  => 'Participant or Performer Note',
+            pchrs => { aa => ' ; ' },
+        },
+
+        # ISBD punct (§3.12 type of report and period covered): $b '; '.
+        # $a N/A. (Spec table says "colon-space" but its own example uses
+        # ' ; ' — we follow the example.)
+        '513' => {
+            name  => 'Type of Report and Period Covered Note',
+            pchrs => { b => '; ' },
+        },
+
+        # ISBD punct (§4.28 numbering peculiarities): $z '. ' (source;
+        # §4.20 allows preceding dash OR period-space; 515/525 pick '. ').
+        '515' => {
+            name  => 'Numbering Peculiarities Note',
+            pchrs => { z => '. ' },
         },
 
         # ISBD punct: $a $z (takes preceding -- or .)
@@ -515,6 +603,231 @@ sub rules {
             name  => 'Summary, etc.',
             pchrs => {
                 z => ' -- ',
+            },
+        },
+
+        # ISBD punct (§4.30 supplement note): $z '. ' (source). $a N/A.
+        '525' => {
+            name  => 'Supplement Note',
+            pchrs => { z => '. ' },
+        },
+
+        # ISBD punct (§3.13 study program information): only $i ': ' via
+        # cb_pre (display text). $a/$b/$c/$d/$x/$z N/A.
+        '526' => {
+            name  => 'Study Program Information Note',
+            cb_pre =>
+              'Koha::Filter::MARC::ISBD4MARCPunctuation::_decorate_display_text_pre',
+        },
+
+        # ISBD punct (§3.14 additional physical form available): $b/$c/$d
+        # '; '. $a/$u N/A.
+        # $3 lead-in: suppress a following '; ' after $3 (see 541 comment).
+        '530' => {
+            name  => 'Additional Physical Form Available Note',
+            pchrs => {
+                b  => '; ',
+                c  => '; ',
+                d  => '; ',
+                '3b' => '',
+                '3c' => '',
+                '3d' => '',
+            },
+        },
+
+        # ISBD punct: accessibility note — all subfields N/A (whole field is
+        # a single free-text note; NOT in the LoC/PCC spec, added in 2018 as
+        # a NEW MARC field; listed here as an explicit empty block per the
+        # K10plus isbd.py which also defines no punctuation for it).
+        '532' => {
+            name  => 'Accessibility Note',
+        },
+
+        # ISBD punct (§3.17 location of originals/duplicates): $b/$c/$d '; '.
+        # $a/$g N/A. $3 lead-in suppressed via empty COMPOUND keys.
+        # (533/534 are implemented separately — see below — they
+        # need the '.()' wrap+period pattern.)
+        '535' => {
+            name  => 'Location of Originals/Duplicates Note',
+            pchrs => {
+                b  => '; ',
+                c  => '; ',
+                d  => '; ',
+                '3b' => '',
+                '3c' => '',
+                '3d' => '',
+            },
+        },
+
+        # ISBD punct (§4.31 system details): $i ': ' via cb_pre (display
+        # text). $a/$u N/A.
+        '538' => {
+            name  => 'System Details Note',
+            cb_pre =>
+              'Koha::Filter::MARC::ISBD4MARCPunctuation::_decorate_display_text_pre',
+        },
+
+        # ISBD punct (§3.18 terms governing use and reproduction):
+        # $b/$c/$d '; ', $u ': '. $a N/A. $3 lead-in suppressed.
+        '540' => {
+            name  => 'Terms Governing Use and Reproduction Note',
+            pchrs => {
+                b  => '; ',
+                c  => '; ',
+                d  => '; ',
+                u  => ': ',
+                '3b' => '',
+                '3c' => '',
+                '3d' => '',
+                '3u' => '',
+            },
+        },
+
+        # ISBD punct (§3.19 immediate source of acquisition): $a/$b/$c/$d/$e/
+        # $f/$h/$n '; '. $o N/A.
+        # $3 (materials specified) is a leading control subfield — it never
+        # takes a following '; '. When $3 precedes a keyed subfield, suppress
+        # via explicit empty COMPOUND keys '3a'/'3b'/... (compound precedence
+        # over the single key; '' appends nothing). Without these, a blanket
+        # single key would append a spurious '; ' to $3 (the doc's "$3 Ref
+        # print $c ..." / "$3 5 diaries $n ..." show no punct after $3).
+        '541' => {
+            name  => 'Immediate Source of Acquisition Note',
+            pchrs => {
+                a  => '; ',
+                b  => '; ',
+                c  => '; ',
+                d  => '; ',
+                e  => '; ',
+                f  => '; ',
+                h  => '; ',
+                n  => '; ',
+                '3a' => '',
+                '3b' => '',
+                '3c' => '',
+                '3d' => '',
+                '3e' => '',
+                '3f' => '',
+                '3h' => '',
+                '3n' => '',
+            },
+        },
+
+        # ISBD punct (§3.20 location of other archival materials):
+        # $a/$b/$c/$e '; '. $d/$n N/A.
+        # $3 lead-in: suppress a following '; ' after $3 via explicit empty
+        # COMPOUND keys (see the 541 comment for the rationale).
+        '544' => {
+            name  => 'Location of Other Archival Materials Note',
+            pchrs => {
+                a  => '; ',
+                b  => '; ',
+                c  => '; ',
+                e  => '; ',
+                '3a' => '',
+                '3b' => '',
+                '3c' => '',
+                '3e' => '',
+            },
+        },
+
+        # ISBD punct (§3.21 language note): $b '; '. $a N/A. $3 lead-in
+        # suppressed.
+        '546' => {
+            name  => 'Language Note',
+            pchrs => {
+                b  => '; ',
+                '3b' => '',
+            },
+        },
+
+        # ISBD punct (§4.32 former title complexity): $i ': ' via cb_pre
+        # (display text). $a N/A.
+        '547' => {
+            name  => 'Former Title Complexity Note',
+            cb_pre =>
+              'Koha::Filter::MARC::ISBD4MARCPunctuation::_decorate_display_text_pre',
+        },
+
+        # ISBD punct (§4.33 issuing body): $i ': ' via cb_pre (display
+        # text). $a N/A.
+        '550' => {
+            name  => 'Issuing Body Note',
+            cb_pre =>
+              'Koha::Filter::MARC::ISBD4MARCPunctuation::_decorate_display_text_pre',
+        },
+
+        # ISBD punct (§3.22 cumulative index/finding aids): $b/$c/$d '; ',
+        # $u '. '. $a N/A. $3 lead-in suppressed.
+        '555' => {
+            name  => 'Cumulative Index/Finding Aids Note',
+            pchrs => {
+                b  => '; ',
+                c  => '; ',
+                d  => '; ',
+                u  => '. ',
+                '3b' => '',
+                '3c' => '',
+                '3d' => '',
+                '3u' => '',
+            },
+        },
+
+        # ISBD punct (§3.23 copy and version identification): $b/$c/$d/$e
+        # '; '. $a N/A. $3 lead-in suppressed.
+        '562' => {
+            name  => 'Copy and Version Identification Note',
+            pchrs => {
+                b  => '; ',
+                c  => '; ',
+                d  => '; ',
+                e  => '; ',
+                '3b' => '',
+                '3c' => '',
+                '3d' => '',
+                '3e' => '',
+            },
+        },
+
+        # ISBD punct (§3.24 case file characteristics): $b/$c/$d/$e '; '.
+        # $a N/A. $3 lead-in suppressed.
+        '565' => {
+            name  => 'Case File Characteristics Note',
+            pchrs => {
+                b  => '; ',
+                c  => '; ',
+                d  => '; ',
+                e  => '; ',
+                '3b' => '',
+                '3c' => '',
+                '3d' => '',
+                '3e' => '',
+            },
+        },
+
+        # ISBD punct (§4.34 linking entry complexity): repeatable $i ': '
+        # via cb_pre (display text); $a repeatable but N/A (no punct between
+        # $a runs; intervening $i carries the ':' ).
+        # GAP: the §4.34 example's comma before a later $i ("$a ... (1977),
+        # to form: ...") is NOT reproduced by any rule (belongs to neither
+        # the $a value nor the $i) — we omit it following K10plus; status
+        # unclear, may need review.
+        '580' => {
+            name  => 'Linking Entry Complexity Note',
+            cb_pre =>
+              'Koha::Filter::MARC::ISBD4MARCPunctuation::_decorate_display_text_pre',
+        },
+
+        # ISBD punct (§3.25 accumulation and frequency of use): $a/$b '. '.
+        # $3 lead-in suppressed (doc shows "$3 General subject files $a ...",
+        # no '.' after $3).
+        '584' => {
+            name  => 'Accumulation and Frequency of Use Note',
+            pchrs => {
+                a  => '. ',
+                b  => '. ',
+                '3a' => '',
+                '3b' => '',
             },
         },
 

@@ -41,9 +41,36 @@ Implemented fields:
 - `264`: Production, Publication, Distribution, Manufacture, and Copyright Notice
 - `300`: Physical Description
 - `490`: Series Statement
+- `500`: General Note
+- `501`: With Note
 - `502`: Dissertation Note
+- `504`: Bibliography, etc. Note
 - `505`: Formatted Contents Note
+- `506`: Restrictions on Access Note
+- `507`: Scale Note for Graphic Material
+- `508`: Creation/Production Credits Note
+- `510`: Citation/References Note
+- `511`: Participant or Performer Note
+- `513`: Type of Report and Period Covered Note
+- `515`: Numbering Peculiarities Note
 - `520`: Summary, etc.
+- `525`: Supplement Note
+- `526`: Study Program Information Note
+- `530`: Additional Physical Form Available Note
+- `532`: Accessibility Note
+- `535`: Location of Originals/Duplicates Note
+- `538`: System Details Note
+- `540`: Terms Governing Use and Reproduction Note
+- `541`: Immediate Source of Acquisition Note
+- `544`: Location of Other Archival Materials Note
+- `546`: Language Note
+- `547`: Former Title Complexity Note
+- `550`: Issuing Body Note
+- `555`: Cumulative Index/Finding Aids Note
+- `562`: Copy and Version Identification Note
+- `565`: Case File Characteristics Note
+- `580`: Linking Entry Complexity Note
+- `584`: Accumulation and Frequency of Use Note
 - `600`: Subject Added Entry – Personal Name
 - `610`: Subject Added Entry – Corporate Name
 - `611`: Subject Added Entry – Meeting Name

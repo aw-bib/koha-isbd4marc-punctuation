@@ -554,6 +554,35 @@ sub _decorate_qualifier_group_pre {
     return "($value)";
 }
 
+=head2 _decorate_display_text_pre
+
+I<Shared> pre-callback for the display-text subfield C used by the
+5xx note fields (500/501/504/505/538/547/550/580) per the spec's
+\"display text\" rule: C always carries a trailing C<': '> (the
+current form's trailing colon-space, eliminated by moving the caption into
+C). E.g.
+
+    $i At head of title $a STP-PT-023  ->  At head of title: STP-PT-023
+
+The punctuation is a structural always-on prefix on C itself, so it lives
+in C<cb_pre> (same mechanism 505 used previously). Because it is shared by
+many fields, the rule sets reference it by method-name string (resolved via
+C<_resolve_cb()> \/ C<can()>), exactly like C<_decorate_260_pre> and
+C<_decorate_x10_pre>. Non-I<C> subfields pass through unchanged.
+
+NOTE (580, \"to form\" comma): in the §4.34 example the current form has a
+comma before a later C ($a ... (1977), to form: ...) that no rule
+reproduces in the split form (the comma belongs to neither the preceding
+C value nor the following C). Following K10plus, we omit it and leave a
+documented gap of unclear status.
+
+=cut
+
+sub _decorate_display_text_pre {
+    my ( $sf, $value ) = @_;
+    return $sf eq 'i' ? "$value: " : $value;
+}
+
 =head2 log
 
 Logging hook. By default prints to STDERR via C<warn>. In Koha
