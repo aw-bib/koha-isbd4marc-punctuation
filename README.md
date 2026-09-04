@@ -58,6 +58,8 @@ Implemented fields:
 - `526`: Study Program Information Note
 - `530`: Additional Physical Form Available Note
 - `532`: Accessibility Note
+- `533`: Reproduction Note
+- `534`: Original Version Note
 - `535`: Location of Originals/Duplicates Note
 - `538`: System Details Note
 - `540`: Terms Governing Use and Reproduction Note

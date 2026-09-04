@@ -62,6 +62,28 @@ value is the punctuation to append to the I<current> subfield.
 E.g. C<< { b => ' : ' } >> means "if the next subfield is C,
 append ' : ' to the current subfield."
 
+Two special values are recognized:
+
+=over
+
+=item C<'.()'>
+
+Append a I<bare period> (no trailing space) to the current subfield and wrap
+the I<next> subfield's content in parentheses. The space before the '(' comes
+from the single-space join between subfield values, not from the punctuation.
+Used for e.g. 533/534 C<$f> (series statement of the reproduction / original).
+Handled mode-symmetrically: in postfix the period lands on the current
+subfield, in prefix it is prepended OUTSIDE the parens of the next subfield
+so both modes yield an identical combined string.
+
+=item punctuation ending in C<':'>
+
+A value that already ends in a colon never takes further stacked punctuation
+(after a trailing-colon suffix from C<post>); the next subfield's pchrs is
+skipped. Mirrors the K10plus reference loop.
+
+=back
+
 =item C<post>
 
 Hashref of always-appended suffixes. The value is appended to the
@@ -195,11 +217,22 @@ sub _decorate_field {
     my @new_subfields = ();
     my $last_sf       = '';
     my $pending       = '';
+    my $deferred_wrap = 0;    # index of a subfield to wrap in parens ('.()')
 
     for my $i ( 0 .. $#subfields ) {
         my ( $sf, $value ) = @{ $subfields[$i] };
         next unless defined $value;
         $value =~ s/\s+$//;
+
+        # 0a) '.()' deferred paren-wrap set by the PREVIOUS subfield's look-ahead.
+        # Wrap this subfield's CONTENT first, so in prefix mode a pending
+        # period lands OUTSIDE the parens ('. (value)' not '(. value)').
+        if ( $deferred_wrap && $i >= $deferred_wrap ) {
+            if ( $i == $deferred_wrap ) {
+                $value = '(' . $value . ')';
+            }
+            $deferred_wrap = 0;
+        }
 
         # 0) Prefix mode: prepend pending punctuation from previous subfield
         if ( $attach_mode eq 'prefix' && $pending ) {
@@ -237,11 +270,36 @@ sub _decorate_field {
                 $punct = $rules->{pchrs}{$next_sf};
             }
             if ( defined $punct ) {
-                if ( $attach_mode eq 'prefix' ) {
-                    $pending = $punct;
+                # Colon-skip: never stack punctuation after a value that ends
+                # in ':' (e.g. 534 $p, whose trailing ' : ' comes from `post`;
+                # mirror of the K10plus reference loop). Check both the value
+                # decorated so far AND this subfield's `post` suffix, because
+                # `post` is applied in step 5 (after this one).
+                my $post_suffix = $rules->{post}{$sf};
+                if ( $value =~ /:\s*$/ || ( defined $post_suffix && $post_suffix =~ /:\s*$/ ) ) {
+                    $punct = undef;
                 }
-                else {
-                    $value .= $punct;
+                # '.()' sentinel: append a bare period to the current subfield
+                # and defer a paren-wrap onto the next subfield. The space
+                # before '(' comes from the single-space join in
+                # combined_string(), not from the punctuation itself.
+                elsif ( $punct eq '.()' ) {
+                    $deferred_wrap = $i + 1;
+                    if ( $attach_mode eq 'prefix' ) {
+                        $pending = '. ';
+                    }
+                    else {
+                        $value .= '.';
+                    }
+                    $punct = undef;
+                }
+                if ( defined $punct ) {
+                    if ( $attach_mode eq 'prefix' ) {
+                        $pending = $punct;
+                    }
+                    else {
+                        $value .= $punct;
+                    }
                 }
             }
         }

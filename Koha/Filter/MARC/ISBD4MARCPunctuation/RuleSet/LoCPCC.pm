@@ -643,6 +643,47 @@ sub rules {
             name  => 'Accessibility Note',
         },
 
+        # ISBD punct (§3.15 reproduction note): $b '. ', $c ' : ', $d ', ',
+        # $e/$m/$n '. ', $f '.()' (series statement wrapped in parens with a
+        # preceding period — see the '.()' engine pattern in the module pod).
+        # $a N/A. Uses the ENGINE '.()' sentinel: a bare '.' is appended to
+        # the preceding subfield and the $f content is wrapped in ( ).
+        '533' => {
+            name  => 'Reproduction Note',
+            pchrs => {
+                b => '. ',
+                c => ' : ',
+                d => ', ',
+                e => '. ',
+                f => '.()',
+                m => '. ',
+                n => '. ',
+            },
+        },
+
+        # ISBD punct (§3.16 original version note): most content subfields
+        # '. ', $f '.()' (parens), $p trailing ': ' (post). A subfield
+        # following $p gets no extra '. ' because $p already ends in ':'
+        # (engine colon-skip dedup). $a N/A.
+        '534' => {
+            name  => 'Original Version Note',
+            pchrs => {
+                b => '. ',
+                c => '. ',
+                e => '. ',
+                f => '.()',
+                k => '. ',
+                l => '. ',
+                m => '. ',
+                n => '. ',
+                o => '. ',
+                t => '. ',
+                x => '. ',
+                z => '. ',
+            },
+            post => { p => ': ' },
+        },
+
         # ISBD punct (§3.17 location of originals/duplicates): $b/$c/$d '; '.
         # $a/$g N/A. $3 lead-in suppressed via empty COMPOUND keys.
         # (533/534 are implemented separately — see below — they
