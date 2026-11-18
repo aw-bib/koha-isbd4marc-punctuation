@@ -140,10 +140,10 @@ sub rules {
 #   - $n has NO broad single key: a plain `n => '. '` would over-fire
 #     on the $n/$d/$c meeting group (e.g. "Symposium. (2nd : ...)" —
 #     broke tests). Only the COMPOUND `tn` fires (title part).
-#   - $u (affiliation): NO punctuation (spec §5.3 N/A). K10plus used
-#     '. '; we follow the PDF.
+#   - $u (affiliation): NO punctuation (spec §5.3 N/A). The D-A-CH rules
+#     use '. '; we follow the PDF.
 #   - MULTIPLE $g -> each wrapped (a)(b), not (a : b). Known
-#     imperfection (K10plus same).
+#     imperfection (the D-A-CH rules group them the same way).
         '110' => {
             name  => 'Main Entry – Corporate Name',
             pchrs => {
@@ -259,7 +259,7 @@ sub rules {
         #   $m ', '  $n '. '  $o '; '  $p ', '  $r ', '  $s '. '
         #
         # DECISIONS / GAPS:
-        #   - $s '. ' chosen over §5.5's '( )' alternative (K10plus-aligned,
+        #   - $s '. ' chosen over §5.5's '( )' alternative (D-A-CH-aligned,
         #     subject to review).
         #   - $p ', ' chosen over '. ' (contextual, like 245; the C.5 240
         #     example would want '. ' before the part name — documented gap).
@@ -329,7 +329,7 @@ sub rules {
         # DECISION / GAP: $p can be ', ' or '. ' depending on context — we pick
         # ', ' as more likely. $o (conjunction) is not decodable in MARC.
         # NOTE: $g (bulk dates) is N/A - no preceding punct (spec §4.6; matches
-        # LoC + K10plus). The old `g => ', '` was a spec deviation, removed.
+        # LoC + the D-A-CH rules). The old `g => ', '` was a spec deviation, removed.
         '245' => {
             name  => 'Title Statement',
             pchrs => {
@@ -807,7 +807,7 @@ sub rules {
         # ISBD punct: accessibility note — all subfields N/A (whole field is
         # a single free-text note; NOT in the LoC/PCC spec, added in 2018 as
         # a NEW MARC field; listed here as an explicit empty block per the
-        # K10plus isbd.py which also defines no punctuation for it).
+        # D-A-CH isbd.py which also defines no punctuation for it).
         '532' => {
             name  => 'Accessibility Note',
         },
@@ -1018,8 +1018,8 @@ sub rules {
         # $a runs; intervening $i carries the ':' ).
         # GAP: the §4.34 example's comma before a later $i ("$a ... (1977),
         # to form: ...") is NOT reproduced by any rule (belongs to neither
-        # the $a value nor the $i) — we omit it following K10plus; status
-        # unclear, may need review.
+        # the $a value nor the $i) — we omit it following the D-A-CH rules;
+        # status unclear, may need review.
         '580' => {
             name  => 'Linking Entry Complexity Note',
             cb_pre =>
@@ -1134,8 +1134,8 @@ sub rules {
         # subject-only subfield: $e (relator term, 630 only) -> ', ' per
         # §5.5. $v (volume) is NOT in 630 (830 only); $x/$y/$z subject
         # subdivisions have no punct here (uniform-title block defines none
-        # of them). K10plus confirms the family grouping (its ISBDX30 is
-        # shared by 130/630/730/830 with 630 = base minus $v).
+        # of them). The D-A-CH rules confirm the family grouping (their
+        # ISBDX30 is shared by 130/630/730/830 with 630 = base minus $v).
         #
         # Implemented as its own standalone block (like 830) rather than an
         # alias, because use_rules is a FULL alias (no merge) and 630 needs

@@ -24,12 +24,12 @@
 # 'num' is null and 'status' mirrors the provenance kind.
 #
 # Usage:
-#   ./scripts/doc_coverage.pl [--set=LoC/PCC|K10Plus] [OUTFILE] [TESTFILE...]
+#   ./scripts/doc_coverage.pl [--set=LoC/PCC|DACH] [OUTFILE] [TESTFILE...]
 #
 # By default only the LoC/PCC markers are collected (the coverage table is
-# LoC/PCC-scoped). Pass --set=K10Plus (or any set name, matched against each
+# LoC/PCC-scoped). Pass --set=DACH (or any set name, matched against each
 # test file's 'my $SET = ...' declaration) to collect that set's markers
-# instead, e.g. for a future K10plus coverage run.
+# instead, e.g. for a future DACH coverage run.
 #
 # Sync check (to assert the table is up to date with the tests):
 #   perl scripts/doc_coverage.pl && git diff --exit-code docs/doc_coverage.yaml
@@ -46,7 +46,7 @@ use t::lib::TestHelper qw( parse_render_marker );
 # Which rule set's markers to collect. Every marker-bearing test file declares
 # 'my $SET = ...'; we only collect files whose declared set matches this.
 # Default 'LoC/PCC' keeps docs/doc_coverage.yaml (and the t/99 byte-identity
-# gate) LoC/PCC-pure - the K10plus markers in t/50-k10plus-*.t are excluded.
+# gate) LoC/PCC-pure - the DACH markers in t/50-dach-*.t are excluded.
 my $set_filter = 'LoC/PCC';
 my @rest;
 for my $a (@ARGV) {

@@ -235,30 +235,38 @@ fetches+prepares it once, or `t/99` explains how when run on its own.
 The punctuation rules are organised as **rule sets**, one per
 catalogue tradition. Currently there are two sets:
 - **`LoC/PCC`** (the default, following the reference document above)
-- **`K10Plus`** (one of the German union catalogues). These rules were
-  kindly provided by BSZ and are used in their migration scripts.
+- **`D-A-CH`** (the German, Austrian and Swiss cataloguing practice,
+  as applied by the German union catalogues). These rules were kindly
+  provided by BSZ and are used in their migration scripts.
 
 A `None` set (no automatic punctuation) is also supported. Each set is
 fully self-contained: `LoC/PCC` follows the reference document above, and
-`K10Plus` mirrors the German-union `isbd.py` reference that BSZ use in
-their migration scripts (the two are independent data, not programmatic
-deltas of each other). The K10plus-only fields `249` and `532` live only
-in `K10Plus`.
+`D-A-CH` mirrors the `isbd.py` reference that BSZ use in their migration
+scripts (the two are independent data, not programmatic deltas of each
+other). The `D-A-CH`-only fields `249` and `532` live only in that set.
+
+Note on naming: the set's *identifier* in the code (package and file name,
+the `rules_for()` argument, the test suites) is `DACH` - ASCII and without
+hyphens. `D-A-CH` is its *display name*, i.e. the spelling used in user-facing
+text such as this README, and it is reported by `ruleset_label('DACH')`. In
+other words: **the `D-A-CH` rules are implemented in the `DACH` module.**
 
 - Each set lives in its own package under
   `Koha/Filter/MARC/ISBD4MARCPunctuation/RuleSet/` and is just data
   (`pchrs` / `post` / `wrap` / `cb_pre` / `cb_post` / `use_rules` per
   tag).
 - The engine loads the active set via `rules_for()`; `ruleset()`
-  gets/sets the active set and defaults to `LoC/PCC`.
+  gets/sets the active set and defaults to `LoC/PCC`; `rulesets()` lists
+  the known set identifiers and `ruleset_label()` maps an identifier to
+  its display name.
 - Shared structural callbacks (e.g. the `$n/$d/$c` meeting-group and
   `$e/$f/$g` imprint grouping) stay in the engine and are referenced
   from the rule data by name, so rule-set files stay readable data.
 - The coverage/render tooling (`scripts/doc_coverage.pl`,
   `scripts/render_examples.pl`) is segmented by set: they pick up each
   test file's `my $SET = ...` declaration, default to the LoC/PCC
-  markers, and accept a `--set=K10Plus` flag to run on the K10plus
-  marker set (so the LoC/PCC coverage table and report stay pure).
+  markers, and accept a `--set=DACH` flag to run on the D-A-CH marker
+  set (so the LoC/PCC coverage table and report stay pure).
 
 **To add a new field** to the current (`LoC/PCC`) set: add its rule
 block to `RuleSet/LoCPCC.pm` (data only; reuse the shared grouping
@@ -267,8 +275,8 @@ callbacks where relevant), then add a test in the matching
 marker, and regenerate the example report.
 
 **To add a whole new rule set**: create `RuleSet/<Name>.pm` exposing
-`rules()` and register it in `rules_for()` (see `RuleSets.md` at the
-project root for the design).
+`rules()` and register it in the rule-set table in
+`ISBD4MARCPunctuation.pm` (`%SETS`: identifier, `rules` and `label`).
 
 ## What is not automated
 

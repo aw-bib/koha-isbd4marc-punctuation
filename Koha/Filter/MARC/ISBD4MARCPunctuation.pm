@@ -22,7 +22,7 @@ use MARC::Field;
 use base qw(Koha::RecordProcessor::Base);
 
 use Koha::Filter::MARC::ISBD4MARCPunctuation::RuleSet::LoCPCC;
-use Koha::Filter::MARC::ISBD4MARCPunctuation::RuleSet::K10Plus;
+use Koha::Filter::MARC::ISBD4MARCPunctuation::RuleSet::DACH;
 
 our $NAME    = 'ISBD4MARCPunctuation';
 our $VERSION = '0.02';
@@ -81,7 +81,7 @@ so both modes yield an identical combined string.
 
 A value that already ends in a colon never takes further stacked punctuation
 (after a trailing-colon suffix from C<post>); the next subfield's pchrs is
-skipped. Mirrors the K10plus reference loop.
+skipped. Mirrors the reference loop in I<isbd.py>.
 
 =item punctuation ending in the SAME char (KNOWN GAP, deferred)
 
@@ -159,15 +159,48 @@ empty hash (a no-op "no automatic punctuation" set). With no argument,
 returns the I<active> set's rules.
 
 Passing a set name I<activates> it (same as calling C<ruleset($name)>):
-after C<< rules_for('K10Plus') >>, the active set is I<K10Plus>, so any
-C<use_rules> alias is resolved against I<K10Plus> (not the previous default).
+after C<< rules_for('DACH') >>, the active set is I<DACH>, so any
+C<use_rules> alias is resolved against I<DACH> (not the previous default).
 This keeps alias resolution within the set the rules came from.
+
+=item C<rulesets>
+
+Returns the list of known rule-set identifiers (sorted). These are the
+values accepted by C<rules_for()> and C<ruleset()>.
+
+=item C<ruleset_label>
+
+Returns the human-readable display name for a rule-set identifier
+(e.g. C<DACH> -> C<D-A-CH>). With no argument, returns the label of the
+active set. The label is meant for user-facing output (a UI selector
+later on); the identifier is what the code uses.
 
 =back
 
 =cut
 
 use constant DEFAULT_RULESET => 'LoC/PCC';
+
+# Known rule sets: identifier => { rules => sub returning the rules hash,
+# label => display name for user-facing output }. The identifier is the
+# ASCII, hyphen-free form used in code (package names, rules_for(), tests);
+# the label is the spelling shown to humans. Adding a set = one entry here.
+my %SETS = (
+    'None' => {
+        rules => sub { {} },
+        label => 'None',
+    },
+    'LoC/PCC' => {
+        rules =>
+          \&Koha::Filter::MARC::ISBD4MARCPunctuation::RuleSet::LoCPCC::rules,
+        label => 'LoC/PCC',
+    },
+    'DACH' => {
+        rules =>
+          \&Koha::Filter::MARC::ISBD4MARCPunctuation::RuleSet::DACH::rules,
+        label => 'D-A-CH',
+    },
+);
 
 # Name of the currently selected rule set. For the moment this is a
 # package-level default; a per-plugin-instance override can be layered on
@@ -178,6 +211,17 @@ sub ruleset {
     my $set = shift;
     if ( defined $set ) { $ACTIVE_RULESET = $set; }
     return $ACTIVE_RULESET;
+}
+
+sub rulesets {
+    return sort keys %SETS;
+}
+
+sub ruleset_label {
+    my $set = shift;
+    $set = $ACTIVE_RULESET unless defined $set;
+    return unless defined $SETS{$set};
+    return $SETS{$set}{label};
 }
 
 sub rules_for {
@@ -193,21 +237,9 @@ sub rules_for {
         $set = ruleset();
     }
 
-    if ( $set eq 'None' ) {
-        return {};
-    }
+    die "Unknown rule set '$set'\n" unless defined $SETS{$set};
 
-    if ( $set eq 'LoC/PCC' ) {
-        return
-          Koha::Filter::MARC::ISBD4MARCPunctuation::RuleSet::LoCPCC::rules();
-    }
-
-    if ( $set eq 'K10Plus' ) {
-        return
-          Koha::Filter::MARC::ISBD4MARCPunctuation::RuleSet::K10Plus::rules();
-    }
-
-    die "Unknown rule set '$set'\n";
+    return $SETS{$set}{rules}->();
 }
 
 =head2 _resolve_cb
@@ -793,7 +825,7 @@ C<_decorate_x10_pre>. Non-I<C> subfields pass through unchanged.
 NOTE (580, \"to form\" comma): in the §4.34 example the current form has a
 comma before a later C ($a ... (1977), to form: ...) that no rule
 reproduces in the split form (the comma belongs to neither the preceding
-C value nor the following C). Following K10plus, we omit it and leave a
+C value nor the following C). Following I<isbd.py>, we omit it and leave a
 documented gap of unclear status.
 
 =cut

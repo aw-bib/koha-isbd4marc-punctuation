@@ -1,8 +1,8 @@
 #!/usr/bin/perl
 #
-# K10plus EQUAL-FIELD GUARD (descendant-vs-baseline).
+# DACH EQUAL-FIELD GUARD (descendant-vs-baseline).
 #
-# LoC/PCC is the BASELINE rule set; every later set (K10plus first) is built
+# LoC/PCC is the BASELINE rule set; every later set (DACH first) is built
 # as a DELTA over it. This file pins the tags where a descendant's resolved
 # rules (pchrs/wrap/post/cb_pre, after use_rules) are byte-identical to
 # LoC/PCC's: for those, a single equality assert per tag IS the test (no
@@ -14,8 +14,8 @@
 # tag legitimately deviates later, it stops matching here and must move to the
 # deltas test - the guard going red is the signal.
 #
-# The K10plus-only fields (249, 532) and the deviating tags are tested in
-# 50-k10plus-02-deltas.t / 50-k10plus-03-exclusive.t.
+# The DACH-only fields (249, 532) and the deviating tags are tested in
+# 50-dach-02-deltas.t / 50-dach-03-exclusive.t.
 
 use strict;
 use warnings;
@@ -26,10 +26,10 @@ use t::lib::TestHelper qw(make_field combined_string check_combined);
 use Test::More;
 use Koha::Filter::MARC::ISBD4MARCPunctuation;
 
-my $SET = 'K10Plus';
+my $SET = 'DACH';
 note( "Rule set under test: $SET (baseline: LoC/PCC)" );
 
-my $k10 = Koha::Filter::MARC::ISBD4MARCPunctuation::rules_for($SET);
+my $dach = Koha::Filter::MARC::ISBD4MARCPunctuation::rules_for($SET);
 my $lcp = Koha::Filter::MARC::ISBD4MARCPunctuation::rules_for('LoC/PCC');
 
 # Resolve use_rules alias within a set, keeping the tag's own name.
@@ -59,23 +59,23 @@ sub _sig {
 # Collect tags present in BOTH sets whose resolved signatures are identical.
 my @identical =
   sort { $a <=> $b }
-  grep { _sig( _resolved( $k10, $_ ) ) eq _sig( _resolved( $lcp, $_ ) ) }
-  grep { $lcp->{$_} } keys %$k10;
+  grep { _sig( _resolved( $dach, $_ ) ) eq _sig( _resolved( $lcp, $_ ) ) }
+  grep { $lcp->{$_} } keys %$dach;
 
 ok( scalar(@identical) >= 1, 'Found at least one identical (shared) tag for the guard' );
 
 for my $tag (@identical) {
-    my $kr = _resolved( $k10, $tag );
+    my $kr = _resolved( $dach, $tag );
     my $lr = _resolved( $lcp, $tag );
     is_deeply(
         { pchrs => $kr->{pchrs} || {}, wrap => $kr->{wrap} || {}, post => $kr->{post} || {} },
         { pchrs => $lr->{pchrs} || {}, wrap => $lr->{wrap} || {}, post => $lr->{post} || {} },
-        "K10Plus tag $tag keeps LoC/PCC baseline rules"
+        "D-A-CH tag $tag keeps LoC/PCC baseline rules"
     );
     is(
         ( ref $kr->{cb_pre} eq 'CODE' ? ref($kr->{cb_pre}) : ( $kr->{cb_pre} || '' ) ),
         ( ref $lr->{cb_pre} eq 'CODE' ? ref($lr->{cb_pre}) : ( $lr->{cb_pre} || '' ) ),
-        "K10Plus tag $tag cb_pre matches LoC/PCC baseline"
+        "D-A-CH tag $tag cb_pre matches LoC/PCC baseline"
     );
 }
 

@@ -33,8 +33,8 @@ use t::lib::TestHelper qw( parse_render_marker render_field_string combined_stri
 
 # The rule set the report is rendered for (default LoC/PCC). A --set=NAME
 # flag (matched against each test file's 'my $SET = ...' declaration)
-# selects a set's markers, so a K10plus report can be produced with:
-#   perl scripts/render_examples.pl --set=K10Plus <outfile> t/50-k10plus-*.t
+# selects a set's markers, so a DACH report can be produced with:
+#   perl scripts/render_examples.pl --set=DACH <outfile> t/50-dach-*.t
 my $SET = 'LoC/PCC';
 my @rest;
 for my $a (@ARGV) {
@@ -56,6 +56,11 @@ for my $f ( glob('t/*.t') ) {
 }
 
 my $outfile   = shift // 'examples/koha-isbd4marc-puncuation-output.md';
+
+# Activate the target set ONCE, before anything is rendered: the header line
+# reports its display label and every marker resolves its rules in that set.
+Koha::Filter::MARC::ISBD4MARCPunctuation::rules_for($SET);
+
 my @testfiles = @ARGV;
 @testfiles = glob('t/*.t') unless @testfiles;
 @testfiles = grep { ( $file_set{$_} // '' ) eq $SET } @testfiles;
@@ -125,7 +130,9 @@ for my $file (@testfiles) {
 my @md;
 push @md, '# ISBD punctuation plugin — rendered examples';
 push @md, '';
-push @md, "Rule set: $SET";
+# The report shows the DISPLAY name of the set (e.g. DACH -> D-A-CH), so the
+# human-readable spelling comes from the engine's registry, not the identifier.
+push @md, "Rule set: " . Koha::Filter::MARC::ISBD4MARCPunctuation::ruleset_label($SET);
 push @md, '';
 push @md,
     'These examples are generated from the plugin\'s own test suite. '  

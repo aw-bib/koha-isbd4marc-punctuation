@@ -860,8 +860,8 @@ for my $t ( qw(500 501 504 508 511 515 525 538 547 550 580) ) {
 # repeatable $i ': ' (cb_pre); $a repeatable but N/A (no punct between runs).
 # KNOWN GAP (comma before a later $i): the §4.34 example's ", to form:" comma
 # (e.g. "... (1977), to form: ...") is NOT reproduced by any rule — the comma
-# belongs to neither the $a value nor the $i. Following K10plus we omit it;
-# the rendered form is "... (1977) to form: ...". Status unclear; may need
+# belongs to neither the $a value nor the $i. Following the D-A-CH rules we
+# omit it; the rendered form is "... (1977) to form: ...". Status unclear; may need
 # ISBD-expert review.
 # =====================================================================
 

@@ -2,11 +2,11 @@
 # isbdmarc2016.pdf §5.5 (Uniform Titles).
 #
 # 630 is part of the same §5.5 uniform-title family as 130/240/243/730/830
-# (K10plus confirms the grouping: its ISBDX30 dict is shared by 130/630/730/
-# 830, with 630 = base minus $v). $a is the (plain) title and $b is the
-# repeatable QUALIFYING-INFORMATION group wrapped in ONE pair of parens,
-# multiple $b separated by ' : ' (shared _decorate_qualifier_group_pre, same
-# as 240/130/243/730/830).
+# (the D-A-CH rules confirm the grouping: their ISBDX30 dict is shared by
+# 130/630/730/830, with 630 = base minus $v). $a is the (plain) title and
+# $b is the repeatable QUALIFYING-INFORMATION group wrapped in ONE pair of
+# parens, multiple $b separated by ' : ' (shared _decorate_qualifier_group_pre,
+# same as 240/130/243/730/830).
 #
 # 630's ONE genuine difference from the base uniform-title block: $e (relator
 # term, 630 only) -> ', ' per §5.5. $v (volume, 830-only) is absent, and the

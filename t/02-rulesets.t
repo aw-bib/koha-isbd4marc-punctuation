@@ -1,10 +1,12 @@
 #!/usr/bin/perl
 #
-# Test the switchable RULE SETS layer (RuleSets.md):
+# Test the switchable RULE SETS layer:
 #   - ruleset() get/set accessor, defaulting to LoC/PCC
 #   - rules_for() with no argument returns the ACTIVE set
 #   - rules_for('None') returns an empty set (no-op)
 #   - rules_for('LoC/PCC') returns the LoC/PCC set
+#   - rules_for('DACH') returns the D-A-CH set
+#   - rulesets() / ruleset_label(): identifiers vs display names
 #   - rules_for(<unknown>) dies
 #   - the engine decorates via the ACTIVE set, and switching sets (here a
 #     no-op 'None') actually changes the applied rules without touching the
@@ -56,37 +58,55 @@ is(
     "LoC/PCC 020 inline cb_pre is a code-ref"
 );
 
-# 4b. rules_for('K10Plus') returns the K10Plus set (a DESCENDANT of LoC/PCC:
-#     LoC/PCC is the baseline; every later set is built as a deviation from
-#     it, like K10Plus was). It activates K10Plus (Option-2 fix) so use_rules
-#     aliases resolve against K10Plus, not the previous default.
-my $k10 = Koha::Filter::MARC::ISBD4MARCPunctuation::rules_for('K10Plus');
+# 4b. rules_for('DACH') returns the set behind the D-A-CH rules. It activates
+#     DACH (Option-2 fix) so use_rules aliases resolve against DACH, not the
+#     previous default. Note the identifier/display-name split: the code key is
+#     'DACH', the label reported for humans is 'D-A-CH'.
+my $dach = Koha::Filter::MARC::ISBD4MARCPunctuation::rules_for('DACH');
 is(
-    scalar( keys %$k10 ),
+    scalar( keys %$dach ),
     97,
-    'rules_for(K10Plus) has 97 field tags (96 shared + 249)'
+    'rules_for(DACH) has 97 field tags (96 shared + 249)'
 );
 is(
-    ( exists $k10->{'249'} ? 1 : 0 ),
+    ( exists $dach->{'249'} ? 1 : 0 ),
     1,
-    'K10Plus set contains the German-only field 249'
+    'DACH set contains the German-only field 249'
 );
 is(
-    ( exists $k10->{'532'} ? 1 : 0 ),
+    ( exists $dach->{'532'} ? 1 : 0 ),
     1,
-    'K10Plus set contains the K10plus-only field 532'
+    'DACH set contains the DACH-only field 532'
 );
 is(
-    $k10->{'100'}{pchrs}{n},
+    $dach->{'100'}{pchrs}{n},
     ', ',
-    'K10Plus 100 $n punctuation is ", " (deviates from LoC/PCC ". ")'
+    'D-A-CH 100 $n punctuation is ", " (deviates from LoC/PCC ". ")'
 );
 # Dispatching a set by name activates it (so use_rules resolves within it).
 is(
     Koha::Filter::MARC::ISBD4MARCPunctuation::ruleset(),
-    'K10Plus',
-    'rules_for(K10Plus) activated the K10Plus set (alias resolution scope)'
+    'DACH',
+    'rules_for(DACH) activated the DACH set (alias resolution scope)'
 );
+
+# 4c. The set registry: identifiers are what the code uses, labels are what
+#     users see. DACH/D-A-CH is the one place where they differ.
+is_deeply(
+    [ Koha::Filter::MARC::ISBD4MARCPunctuation::rulesets() ],
+    [ 'DACH', 'LoC/PCC', 'None' ],
+    'rulesets() lists every known set identifier (sorted)'
+);
+is( Koha::Filter::MARC::ISBD4MARCPunctuation::ruleset_label('DACH'),
+    'D-A-CH', 'DACH label is D-A-CH' );
+is( Koha::Filter::MARC::ISBD4MARCPunctuation::ruleset_label('LoC/PCC'),
+    'LoC/PCC', 'LoC/PCC label is its own identifier' );
+is( Koha::Filter::MARC::ISBD4MARCPunctuation::ruleset_label('None'),
+    'None', 'None label is its own identifier' );
+is( Koha::Filter::MARC::ISBD4MARCPunctuation::ruleset_label(),
+    'D-A-CH', 'ruleset_label() with no arg describes the ACTIVE set' );
+ok( !defined Koha::Filter::MARC::ISBD4MARCPunctuation::ruleset_label('Nope'),
+    'ruleset_label() of an unknown set is undef' );
 
 # 5. rules_for('DoesNotExist') dies
 eval { Koha::Filter::MARC::ISBD4MARCPunctuation::rules_for('DoesNotExist') };

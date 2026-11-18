@@ -1,11 +1,11 @@
 #!/usr/bin/perl
 #
-# K10plus DELTAS test (deviation-from-LoC/PCC pins).
+# DACH DELTAS test (deviation-from-LoC/PCC pins).
 #
-# LoC/PCC is the BASELINE rule set; every later set (K10plus first) is built
-# as a DELTA over it. The equal-field guard (50-k10plus-01-equal.t) pins the
+# LoC/PCC is the BASELINE rule set; every later set (DACH first) is built
+# as a DELTA over it. The equal-field guard (50-dach-01-equal.t) pins the
 # tags that stay byte-identical to the baseline as a cheap loop. THIS file
-# pins the tags where K10plus DEVIATES: for each, the punctuation comes from
+# pins the tags where DACH DEVIATES: for each, the punctuation comes from
 # isbd.py (the German-union reference), NOT from the baseline.
 #
 # Aliases (use_rules) of a deviating base are exercised once through their
@@ -24,7 +24,7 @@ use t::lib::TestHelper qw(make_field combined_string check_combined);
 use Test::More;
 use Koha::Filter::MARC::ISBD4MARCPunctuation;
 
-my $SET = 'K10Plus';
+my $SET = 'DACH';
 note( "Rule set under test: $SET (deltas vs LoC/PCC baseline)" );
 
 my $rules = Koha::Filter::MARC::ISBD4MARCPunctuation::rules_for($SET);
@@ -331,7 +331,7 @@ my $rules = Koha::Filter::MARC::ISBD4MARCPunctuation::rules_for($SET);
     is( $pre[3], '(Ph. D.)', '502 prefix: $b wrapped ( )' );
     is( $pre[5], ' -Univ.',  '502 prefix: $c gets " -" prepended (single dash)' );
     is( $pre[7], ', 2020',   '502 prefix: $d gets ", " prepended' );
-    # NOTE: no check_combined symmetry here. The K10plus $c separator is a
+    # NOTE: no check_combined symmetry here. The DACH $c separator is a
     # SINGLE dash ' -' (isbd.py) vs LoCPCC's double ' -- '. A leading-space
     # hyphen does not glue identically in both modes (combined_string glues
     # '- X' when the dash rides the pre-value in postfix, but ' -X' when
@@ -482,7 +482,7 @@ my $rules = Koha::Filter::MARC::ISBD4MARCPunctuation::rules_for($SET);
         776 => '760', 777 => '760', 780 => '760', 785 => '760',
         786 => '760', 787 => '760',
     );
-    # NOTE: 730/830 are NOT use_rules aliases in K10Plus - they are
+    # NOTE: 730/830 are NOT use_rules aliases in D-A-CH - they are
     # standalone X30 blocks (distinct $v/$x) pinned above, so they are
     # intentionally absent here.
     for my $tag ( sort { $a <=> $b } keys %alias ) {

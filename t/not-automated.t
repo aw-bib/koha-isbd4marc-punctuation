@@ -297,7 +297,7 @@ sub decorate_pair {
 }
 
 # --- Case 10: 580 $i comma before a later $i (NOT HANDLED) ---
-# The comma before a later "$i to form" is not reproduced (following K10plus).
+# The comma before a later "$i to form" is not reproduced (following the D-A-CH rules).
 {
     # Doc: Current: 580 ## $a Merged with: Index chemicus (Philadelphia, Pa. : 1977), to form: Current abstracts of chemistry.
     # render: [doc 4.34 - NOT HANDLED: comma before a later $i ("... , to form") not reproduced] 580 ## $i Merged with $a Index chemicus (Philadelphia, Pa. : 1977) $i to form $a Current abstracts of chemistry

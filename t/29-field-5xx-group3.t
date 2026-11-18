@@ -8,7 +8,7 @@
 # This file covers the note fields from the spec's §3.9-§3.25 "Extraction of
 # Punctuation" series (a SEPARATE cohort from the §4.x notes in t/28).
 # Phase 1 implements all except 533/534, which need the '.()' wrap+period
-# pattern and are done separately in a follow-up task. 532 is K10plus-only
+# pattern and are done separately in a follow-up task. 532 is D-A-CH-only
 # (added to MARC in 2018, not in the LoC/PCC spec), all-N/A -> explicit
 # empty block.
 #
@@ -19,7 +19,7 @@
 #   513: $b '; ', $a N/A
 #   526: $i ': ' (cb_pre display text), rest N/A
 #   530: $b/$c/$d '; ', $a/$u N/A
-#   532: all N/A (K10plus-only; explicit empty block)
+#   532: all N/A (D-A-CH-only; explicit empty block)
 #   535: $b/$c/$d '; ', $a/$g N/A
 #   540: $b/$c/$d '; ', $u ': ', $a N/A
 #   541: $a/$b/$c/$d/$e/$f/$h/$n '; ', $o N/A
@@ -62,7 +62,7 @@ for my $t ( qw(506 507 510 513 526 530 532 535 540 541 544 546 555 562 565 584) 
     ok( defined $R->{$t}, "$t rules defined" );
 }
 
-# 532 is K10plus-only; confirm it's an explicit empty (name-only) block.
+# 532 is D-A-CH-only; confirm it's an explicit empty (name-only) block.
 ok( !exists $R->{532}{pchrs}, '532 has no pchrs (all N/A)' );
 ok( !exists $R->{532}{cb_pre}, '532 has no cb_pre (all N/A)' );
 

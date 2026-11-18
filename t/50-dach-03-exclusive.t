@@ -1,10 +1,10 @@
 #!/usr/bin/perl
 #
-# Tests for the K10plus-EXCLUSIVE fields: 249 and 532.
+# Tests for the DACH-EXCLUSIVE fields: 249 and 532.
 #
-# These two tags exist ONLY in the K10plus rule set (they are not part of the
+# These two tags exist ONLY in the DACH rule set (they are not part of the
 # LoC/PCC baseline), so they can never appear in the equal-field guard
-# (50-k10plus-01-equal.t) nor in the deltas test (50-k10plus-02-deltas.t) -
+# (50-dach-01-equal.t) nor in the deltas test (50-dach-02-deltas.t) -
 # they get their own dedicated pins. See RuleSets.md for the switchable-set
 # model ("all RuleSets are descendants of the LoC/PCC set").
 #
@@ -33,13 +33,13 @@ use t::lib::TestHelper qw(make_field combined_string check_combined);
 use Test::More;
 use Koha::Filter::MARC::ISBD4MARCPunctuation;
 
-my $SET = 'K10Plus';
+my $SET = 'DACH';
 note( "Rule set under test: $SET (exclusive tags 249 + 532)" );
 
 my $rules_249 = Koha::Filter::MARC::ISBD4MARCPunctuation::rules_for($SET)->{249};
 my $rules_532 = Koha::Filter::MARC::ISBD4MARCPunctuation::rules_for($SET)->{532};
-ok( defined $rules_249, '249 rules loaded (K10plus-only tag)' );
-ok( defined $rules_532, '532 rules loaded (K10plus-only tag)' );
+ok( defined $rules_249, '249 rules loaded (DACH-only tag)' );
+ok( defined $rules_532, '532 rules loaded (DACH-only tag)' );
 
 # --- 249: single $a$v block ---
 {

@@ -1,15 +1,15 @@
 #!/usr/bin/perl
 #
-# K10plus SUFFICIENCY GATE.
+# DACH SUFFICIENCY GATE.
 #
-# Guards that the K10plus rule set faithfully represents every isbd.py
+# Guards that the DACH rule set faithfully represents every isbd.py
 # subfield rule. isbd.py (project root) is the German-union reference: a
 # flat tag -> { subfield -> punctuation } mapping (no x.y reference-doc
 # structure). The sufficiency guarantee analogous to the LoC/PCC
 # doc-coverage gate is therefore: EVERY non-empty isbd.py key is "answered"
-# by K10Plus.pm - either as a resolved pchrs/post/wrap key, or via a shared
+# by DACH.pm - either as a resolved pchrs/post/wrap key, or via a shared
 # structural callback (cb_pre), or as a documented known gap. In the reverse
-# direction, every SINGLE-character subfield key K10Plus.pm adds must be
+# direction, every SINGLE-character subfield key DACH.pm adds must be
 # traceable to isbd.py or a documented LoCPCC keep (multi-char keys like
 # cc/dc/nd/aa/ba/3X are engine compound/mechanism keys, never subfield codes,
 # and are auto-allowed).
@@ -26,7 +26,7 @@ use Koha::Filter::MARC::ISBD4MARCPunctuation;
 
 use Test::More;
 
-my $SET = 'K10Plus';
+my $SET = 'DACH';
 note( "Rule set under test: $SET (sufficiency vs isbd.py)" );
 
 # --------------------------------------------------------------------------
@@ -123,10 +123,10 @@ my %CB = (
 );
 
 # --------------------------------------------------------------------------
-# Documented KNOWN GAPS: isbd.py keys that K10Plus.pm genuinely does not
+# Documented KNOWN GAPS: isbd.py keys that DACH.pm genuinely does not
 # implement (surfaced, not hidden - if one is later fixed, remove it here and
 # the gate stays consistent). The former 630 d/t gap (isbd.py X30
-# $d-wrapped-() and $t '. ' keys) was CLOSED 2026-09-15 (see 50-k10plus-02
+# $d-wrapped-() and $t '. ' keys) was CLOSED 2026-09-15 (see 50-dach-02
 # deltas) - the gate now reports none.
 # --------------------------------------------------------------------------
 my %KNOWN_GAP = ();
@@ -134,7 +134,7 @@ my %KNOWN_GAP = ();
 # --------------------------------------------------------------------------
 # Documented single-char LoCPCC keeps NOT in isbd.py (reverse extras). These
 # are deliberate: LoCPCC's richer subject inverted-name / relator handling
-# carried into K10Plus subject & series fields.
+# carried into D-A-CH subject & series fields.
 # --------------------------------------------------------------------------
 my %SINGLE_EXTRA = (
   # $h inverted-name split (LoCPCC subject/series extra)
@@ -146,14 +146,14 @@ my %SINGLE_EXTRA = (
   '630' => { map { $_ => 1 } qw(e j) },
 );
 
-my $k10 = Koha::Filter::MARC::ISBD4MARCPunctuation::rules_for($SET);
+my $dach = Koha::Filter::MARC::ISBD4MARCPunctuation::rules_for($SET);
 
 # Resolve a use_rules alias within the set (keep the tag's own name).
 sub _resolved {
     my ($tag) = @_;
-    my $r = $k10->{$tag} or return undef;
+    my $r = $dach->{$tag} or return undef;
     return $r unless $r->{use_rules};
-    return ( $k10->{ $r->{use_rules} } || $r );
+    return ( $dach->{ $r->{use_rules} } || $r );
 }
 
 ok( scalar( keys %ISBD ) >= 20, 'isbd.py key table has content (20+ tags transcribed)' );
@@ -181,7 +181,7 @@ is_deeply(
 note( 'Documented known gaps (surfaced for a later decision): '
       . ( @{ [ sort { $a <=> $b } keys %KNOWN_GAP ] } ? join( ', ', sort { $a <=> $b } keys %KNOWN_GAP ) : '(none)' ) );
 
-# ---- REVERSE: single-char K10Plus keys are isbd.py keys or documented. ---
+# ---- REVERSE: single-char D-A-CH keys are isbd.py keys or documented. ---
 # Multi-char keys (cc/dc/nd/gg/aa/ba/ab/cb/de/ef/cd/ep/gn/tn/3X...) are engine
 # compound/mechanism keys, never subfield codes - auto-allowed.
 my @rv_extra;
@@ -198,7 +198,7 @@ for my $tag ( sort { $a <=> $b } keys %ISBD ) {
 }
 is_deeply(
     \@rv_extra, [],
-    'Reverse: every single-char K10Plus key is an isbd.py key or a documented LoCPCC keep'
+    'Reverse: every single-char D-A-CH key is an isbd.py key or a documented LoCPCC keep'
 );
 
 done_testing();

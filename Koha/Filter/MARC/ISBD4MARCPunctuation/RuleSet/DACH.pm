@@ -1,4 +1,4 @@
-package Koha::Filter::MARC::ISBD4MARCPunctuation::RuleSet::K10Plus;
+package Koha::Filter::MARC::ISBD4MARCPunctuation::RuleSet::DACH;
 
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -20,14 +20,15 @@ use MARC::Field;    # for clarity; callbacks may construct fields
 
 =head1 NAME
 
-Koha::Filter::MARC::ISBD4MARCPunctuation::RuleSet::K10Plus
+Koha::Filter::MARC::ISBD4MARCPunctuation::RuleSet::DACH
 
 =head1 DESCRIPTION
 
-The I<K10plus> ISBD punctuation rule set. This is a self-contained reading
-derived from the German union catalogue K10plus ISBD rules, as encoded in the
-reference files I<isbd.py> and I<add_isbd_punctuation.py> (project root),
-which mirror the DNB/MARC21 practice.
+The I<D-A-CH> ISBD punctuation rule set. This is a self-contained reading
+derived from the D-A-CH (Germany, Austria, Switzerland) ISBD rules, as encoded
+in the reference files I<isbd.py> and I<add_isbd_punctuation.py> (project root),
+which mirror the DNB/MARC21 practice. The set identifier used in the code and
+in C<rules_for()> is C<DACH>; C<D-A-CH> is its display name.
 
 This module is one of several possible I<rule sets> selectable by the plugin.
 Each rule set is a self-contained hash in the shape of the legacy C<RULES>
@@ -48,7 +49,7 @@ mixture of pure data plus self-contained closures a no code duplication.
 sub rules {
     return {
 
-        # K10plus (isbd.py ISBD015): $a/$z/$2 N/A; repeatable $q separated by
+        # DACH (isbd.py ISBD015): $a/$z/$2 N/A; repeatable $q separated by
         # ' ; ' (plain - NOT wrapped in parens; differs from LoCPCC which groups
         # $q in one paren pair).
         '015' => {
@@ -56,7 +57,7 @@ sub rules {
             pchrs => { q => ' ; ' },
         },
 
-        # K10plus (isbd.py ISBD020): $a/$z N/A; $c ' : '; repeatable $q
+        # DACH (isbd.py ISBD020): $a/$z N/A; $c ' : '; repeatable $q
         # separated by ' ; ' (plain - NOT wrapped in parens; differs from
         # LoCPCC which groups $q in one paren pair).
         '020' => {
@@ -67,7 +68,7 @@ sub rules {
             },
         },
 
-        # K10plus (isbd.py ISBD024): $a/$d/$z N/A; $c ' : '; repeatable $q
+        # DACH (isbd.py ISBD024): $a/$d/$z N/A; $c ' : '; repeatable $q
         # separated by ' ; ' (plain - NOT wrapped in parens; differs from
         # LoCPCC which groups $q in one paren pair).
         '024' => {
@@ -105,18 +106,18 @@ sub rules {
                 k => '. ',
                 l => '. ',
                 m => ', ',
-                n => ', ',   # K10plus (isbd.py ISBDX00): $n ',' (LoCPCC uses '. ')
+                n => ', ',   # DACH (isbd.py ISBDX00): $n ',' (LoCPCC uses '. ')
                 o => '; ',
-                p => '. ',   # K10plus (isbd.py ISBDX00): $p '.' (LoCPCC uses ', ')
+                p => '. ',   # DACH (isbd.py ISBDX00): $p '.' (LoCPCC uses ', ')
                 r => ', ',
                 s => '. ',
                 t => '. ',
-                # K10plus (isbd.py) omits $h / $g -> no punctuation (placeholder)
+                # DACH (isbd.py) omits $h / $g -> no punctuation (placeholder)
             },
             wrap => { q => [ '(', ')' ] },   # $q qualifier wrapped (isbd.py q:'()')
         },
 
-# K10plus (isbd.py ISBDX10): name portion only - isbd.py does NOT define
+# DACH (isbd.py ISBDX10): name portion only - isbd.py does NOT define
 # punctuation for the title-portion subfields $k/$l/$m/$f/$h/$j (LoCPCC has
 # them via sec 5.5: k '. ', l '. ', m ', ', o '; ', f '. ', h '. ', j ', '
 # + compound tn '. '). Per the mirror-isbd.py rule these get NO punct here;
@@ -194,7 +195,7 @@ sub rules {
             cb_pre => 'Koha::Filter::MARC::ISBD4MARCPunctuation::_decorate_x10_pre',
         },
 
-        # K10plus (isbd.py ISBDX30, main entry): uniform title. isbd.py treats
+        # DACH (isbd.py ISBDX30, main entry): uniform title. isbd.py treats
         # X30 DIFFERENTLY from ISBD240 (130/630/730/830 are their own dict):
         #   $d '('')'  and  $g '('')'  (wrapped individually, unlike 240's
         #     d ',' / g '.')
@@ -202,7 +203,7 @@ sub rules {
         #   $o '; '  $p ', '  $r ', '  $s '. '  $t '. '
         #   $e/$i/$y/$z N/A (no rule)
         #   $v ' ;' and $x '. ' apply to 730/830 only -> their own blocks add them.
-        # NOTE: LoCPCC 130 aliases 240; K10Plus does NOT (X30 != 240).
+        # NOTE: LoCPCC 130 aliases 240; DACH does NOT (X30 != 240).
         '130' => {
             name  => 'Main Entry - Uniform Title',
             pchrs => {
@@ -252,8 +253,8 @@ sub rules {
             },
         },
 
-        # K10plus (isbd.py ISBD240): uniform title.
-        #   $d ', ' (NEW to K10plus; LoCPCC keeps $d as a documented gap)
+        # DACH (isbd.py ISBD240): uniform title.
+        #   $d ', ' (NEW to DACH; LoCPCC keeps $d as a documented gap)
         #   $f '. '  $g '. '  $h '. '  $k '. '  $l '. '  $m ', '
         #   $n ', ' + compound nn '. ' (n-then-n)  -- isbd.py n:',', nn:'.'
         #   $o '; '  $p '. '  $r ', '  $s '. '
@@ -282,7 +283,7 @@ sub rules {
             },
         },
 
-        # K10plus (isbd.py ISBD242): $a ' ;' (SUBSEQUENT same-author title;
+        # DACH (isbd.py ISBD242): $a ' ;' (SUBSEQUENT same-author title;
         # LoCPCC left 242 $a unkeyed - added here per isbd.py), $b ' : ',
         # $c ' / ', $n '. ', $p ', '; $h wrapped [ ].  isbd.py 242 does NOT
         # define $e/$q -> dropped (LoCPCC 242 had e '. ' / q ', ').
@@ -308,7 +309,7 @@ sub rules {
             use_rules => '240',
         },
 
-        # K10plus (isbd.py ISBD245): $a N/A, $b ' : ', $c ' / ', $f ', ',
+        # DACH (isbd.py ISBD245): $a N/A, $b ' : ', $c ' / ', $f ', ',
         # $k ' : ', $n '. ', $p ', ', $s '. '; $h wrapped [ ].
         # isbd.py 245 does NOT define $d/$e/$q/$r/$t -> dropped (mirror-
         # literally; LoCPCC had d ' ; ', e '. ', q ', ', r/t ' = ').
@@ -328,7 +329,7 @@ sub rules {
             wrap => { h => [ '[', ']' ] },
         },
 
-        # K10plus (isbd.py ISBD246): $a N/A, $b ' : ', $n '. ', $p ', ';
+        # DACH (isbd.py ISBD246): $a N/A, $b ' : ', $n '. ', $p ', ';
         # $g wrapped ( ), $h wrapped [ ]; $i display-text ': ' via cb_pre.
         # isbd.py 246: $f ':'' (no punct - NOT ', ' as LoCPCC), and no
         # $q/$r/$t -> dropped (mirror-literally; LoCPCC had f ', ', q ', ',
@@ -347,7 +348,7 @@ sub rules {
             },
         },
 
-        # K10plus (isbd.py ISBD247): $a N/A, $b ' : ', $f ', ', $n '. ',
+        # DACH (isbd.py ISBD247): $a N/A, $b ' : ', $f ', ', $n '. ',
         # $p ', '; $g wrapped ( ), $h wrapped [ ]. isbd.py 247 does NOT
         # define $q/$r/$t -> dropped (mirror-literally; LoCPCC had q ', ',
         # r/t ' = '). No $i subfield.
@@ -364,7 +365,7 @@ sub rules {
             # NOTE: No cb_pre — 247 has no $i subfield
         },
 
-        # K10plus (isbd.py ISBD249) - Weitere Titel bei Zusammenstellungen
+        # DACH (isbd.py ISBD249) - Weitere Titel bei Zusammenstellungen
         # (collective title / additional titles), GERMANY ONLY (DNB).
         # $a$v form ONE repeatable group (there can be many $a$v blocks):
         #   $a = a title (like 245 $a), $v = its statement/value (like 245 $c).
@@ -387,7 +388,7 @@ sub rules {
         },
 
         # ISBD punct: $a / $c ; $d = $r = $t
-        # K10plus (isbd.py ISBD250): $a N/A; $b gets ' / '.
+        # DACH (isbd.py ISBD250): $a N/A; $b gets ' / '.
         # isbd.py 250 defines ONLY $b; LoCPCC's $c/$d/$r/$t are NOT defined
         # in isbd.py 250 -> no punct here (mirror-literally).
         '250' => {
@@ -397,14 +398,14 @@ sub rules {
             },
         },
 
-        # K10plus (isbd.py ISBD254): $a N/A only - isbd.py 254 defines no
+        # DACH (isbd.py ISBD254): $a N/A only - isbd.py 254 defines no
         # punctuation (LoCPCC had $r ' = ' for parallel musical presentation;
         # mirror-literally drops it). Explicit empty block (no-op).
         '254' => {
             name  => 'Musical Presentation Statement',
         },
 
-        # K10plus (isbd.py ISBD255): $a N/A; $b ' ; '.
+        # DACH (isbd.py ISBD255): $a N/A; $b ' ; '.
         # isbd.py 255 has c:'(), d:'(), e:' ;' (i.e. $c/$d wrapped INDIVIDUALLY
         # and $e a preceding ' ;') - but we KEEP the LoCPCC c/d/e paren RUN-GROUP
         # (shared _decorate_paren_group_pre) instead: isbd.py again likely did
@@ -431,7 +432,7 @@ sub rules {
             pchrs => { b => ' : ' },
         },
 
-        # K10plus (isbd.py ISBD260): $a ' ;' (subsequent places) via aa/ba
+        # DACH (isbd.py ISBD260): $a ' ;' (subsequent places) via aa/ba
         # compounds, $b ' : ', $c ', '; $3 ': ' via post; $e/$f/$g grouped in
         # parens by _decorate_260_pre (isbd.py enclose_in_parentheses(e,f,g)).
         # isbd.py 260 does NOT define $r/$t/$q -> dropped (LoCPCC had r/t ' = '
@@ -450,7 +451,7 @@ sub rules {
               'Koha::Filter::MARC::ISBD4MARCPunctuation::_decorate_260_pre',
         },
 
-        # K10plus (isbd.py ISBD264): $a ' ;' (subsequent places) via aa/ba
+        # DACH (isbd.py ISBD264): $a ' ;' (subsequent places) via aa/ba
         # compounds, $b ' : ', $c ', '; $3 ': ' via post. $r/$t (parallel
         # imprint) and $q (address) are NOT defined in isbd.py 264 -> dropped
         # (LoCPCC has r ' = '/t ' = '/wrap q; mirror-literally omits them).
@@ -484,7 +485,7 @@ sub rules {
         # LOPCC-RULE LACKING IN isbd.py: the $h/$i/$j accompanying-material
         # group is implemented in LoCPCC (from reference doc sec 4.14) but is
         # ABSENT from isbd.py 300 (which is bare b/c/e + ba/ca, no $h). We KEEP
-        # it in K10Plus (doc-backed; $h/$i/$j are the new sec 4.14 subfields).
+        # it in DACH (doc-backed; $h/$i/$j are the new sec 4.14 subfields).
         # KNOWN GAP: a lone $i or $j (no leading $h) is the §4.14 "or" case
         #            and is left to cataloguers WITHOUT parentheses (same as
         #            LoCPCC; see _decorate_300_pre pod).
@@ -511,7 +512,7 @@ sub rules {
             pchrs => { b => '; ' },
         },
 
-        # K10plus (isbd.py ISBD310): $a N/A, $b ', '. isbd.py 310 defines no
+        # DACH (isbd.py ISBD310): $a N/A, $b ', '. isbd.py 310 defines no
         # $n (LoCPCC wrapped $n in parens for qualifying info; mirror-literally
         # drops it).
         '310' => {
@@ -519,13 +520,13 @@ sub rules {
             pchrs => { b => ', ' },
         },
 
-        # K10plus (isbd.py ISBD321): identical to 310 - $b ', ' only, no $n.
+        # DACH (isbd.py ISBD321): identical to 310 - $b ', ' only, no $n.
         '321' => {
             name  => 'Former Publication Frequency',
             pchrs => { b => ', ' },
         },
 
-        # K10plus (isbd.py ISBD343): $a N/A; $b/$c/$d/$e/$g/$h/$i '; '.
+        # DACH (isbd.py ISBD343): $a N/A; $b/$c/$d/$e/$g/$h/$i '; '.
         # isbd.py 343 has NO $f (LoCPCC 343 $f '; ' dropped; mirror-literally).
         '343' => {
             name  => 'Planar Coordinate Data',
@@ -580,7 +581,7 @@ sub rules {
             },
         },
 
-        # K10plus (isbd.py ISBD362): $a N/A, $z '. ' only. isbd.py 362 is
+        # DACH (isbd.py ISBD362): $a N/A, $z '. ' only. isbd.py 362 is
         # MINIMAL ({a:'', z:'.'}) - LoCPCC's fuller new-sequence/display-text
         # machinery (bb/bc/dc/e/f/i compounds + $d paren run-group) is NOT in
         # isbd.py 362 -> reduced here (mirror-literally; breadcrumb: LoCPCC had
@@ -592,7 +593,7 @@ sub rules {
             },
         },
 
-        # K10plus (isbd.py ISBD490): $l '()' (wrapped), $v ' ;', $x ', ';
+        # DACH (isbd.py ISBD490): $l '()' (wrapped), $v ' ;', $x ', ';
         # $3 ': ' via post. isbd.py 490 defines ONLY these - LoCPCC's
         # $b/$c/$d/$n/$p/$r/$t/$y are NOT in isbd.py 490 -> dropped
         # (mirror-literally; breadcrumb: LoCPCC had b ' : ', c ' / ', d ' ; ',
@@ -607,7 +608,7 @@ sub rules {
             wrap => { l => [ '(', ')' ] },
         },
 
-        # K10plus (isbd.py ISBD500): $a N/A only - no $z source subfield.
+        # DACH (isbd.py ISBD500): $a N/A only - no $z source subfield.
         # $i display-text ': ' kept via cb_pre (LoCPCC feature; isbd.py 500 =
         # {a:''} omits $i - in many German catalogues $i is a static display
         # string, so keeping it is useful). LoCPCC's $z ' -- ' dropped.
@@ -625,7 +626,7 @@ sub rules {
               'Koha::Filter::MARC::ISBD4MARCPunctuation::_decorate_display_text_pre',
         },
 
-        # K10plus (isbd.py ISBD502): (b) - c, d.
+        # DACH (isbd.py ISBD502): (b) - c, d.
         # $b wrapped (), $c preceded by SINGLE dash ' -' (isbd.py c:' -';
         # LoCPCC uses double ' -- '), $d preceded comma.
         '502' => {
@@ -726,7 +727,7 @@ sub rules {
             pchrs => { b => '; ' },
         },
 
-        # K10plus (isbd.py ISBD515): $a N/A only - isbd.py defines no $z.
+        # DACH (isbd.py ISBD515): $a N/A only - isbd.py defines no $z.
         # LoCPCC 515 $z '. ' (source) dropped (mirror-literally). Empty block.
         '515' => {
             name  => 'Numbering Peculiarities Note',
@@ -735,7 +736,7 @@ sub rules {
         # ISBD punct: $a $z (takes preceding -- or .)
         # $z gets ' -- ' prepended
         # (from eliminated preceding dash or period-space)
-        # K10plus (isbd.py ISBD520): $a/$c/$u N/A; $b gets '. '.
+        # DACH (isbd.py ISBD520): $a/$c/$u N/A; $b gets '. '.
         # LoCPCC uses $z ' -- '; isbd.py 520 uses $b '.' - subfield map delta.
         '520' => {
             name  => 'Summary, etc.',
@@ -744,7 +745,7 @@ sub rules {
             },
         },
 
-        # K10plus (isbd.py ISBD525): $a N/A only - isbd.py defines no $z.
+        # DACH (isbd.py ISBD525): $a N/A only - isbd.py defines no $z.
         # LoCPCC 525 $z '. ' (source) dropped (mirror-literally). Empty block.
         '525' => {
             name  => 'Supplement Note',
@@ -776,7 +777,7 @@ sub rules {
         # ISBD punct: accessibility note — all subfields N/A (whole field is
         # a single free-text note; NOT in the LoC/PCC spec, added in 2018 as
         # a NEW MARC field; listed here as an explicit empty block per the
-        # K10plus isbd.py which also defines no punctuation for it).
+        # DACH isbd.py which also defines no punctuation for it).
         '532' => {
             name  => 'Accessibility Note',
         },
@@ -799,7 +800,7 @@ sub rules {
             },
         },
 
-        # K10plus (isbd.py ISBD534): most content subfields '. ', $f '.()'
+        # DACH (isbd.py ISBD534): most content subfields '. ', $f '.()'
         # (parens), $k ': ' (isbd.py k:':' - LoCPCC had k '. '), $x ', '
         # (isbd.py x:',' - LoCPCC had x '. '), plus compound tc ', ' ($t then
         # $c). $p trailing ': ' via post (isbd.py says $p always ends with ':').
@@ -990,7 +991,7 @@ sub rules {
         # $a runs; intervening $i carries the ':' ).
         # GAP: the §4.34 example's comma before a later $i ("$a ... (1977),
         # to form: ...") is NOT reproduced by any rule (belongs to neither
-        # the $a value nor the $i) — we omit it following K10plus; status
+        # the $a value nor the $i) — we omit it following DACH; status
         # unclear, may need review.
         '580' => {
             name  => 'Linking Entry Complexity Note',
@@ -1050,7 +1051,7 @@ sub rules {
         #   - $x, $y, $z (general/chronological/geographic subdivisions)
         #     also excluded Title-portion (§5.5) keys retained
         #     (as for x00=600).
-        # K10plus (isbd.py ISBDX10, subject): $c/$d/$u ADDED 2026-09-14 to match
+        # DACH (isbd.py ISBDX10, subject): $c/$d/$u ADDED 2026-09-14 to match
         # the isbd.py X10 base (c:',', d:',', u:'.') - they were missing here
         # while present in the main-entry 110. $g grouping kept via gg key +
         # shared _decorate_x10_pre.
@@ -1113,7 +1114,7 @@ sub rules {
         # subject-only subfield: $e (relator term, 630 only) -> ', ' per
         # §5.5. $v (volume) is NOT in 630 (830 only); $x/$y/$z subject
         # subdivisions have no punct here (uniform-title block defines none
-        # of them). K10plus confirms the family grouping (its ISBDX30 is
+        # of them). DACH confirms the family grouping (its ISBDX30 is
         # shared by 130/630/730/830 with 630 = base minus $v).
         #
         # Implemented as its own standalone block (like 830) rather than an
@@ -1256,9 +1257,9 @@ sub rules {
             use_rules => '111',
         },
 
-        # K10plus (isbd.py ISBDX30, added entry): same X30 block as 130 but ADDS
+        # DACH (isbd.py ISBDX30, added entry): same X30 block as 130 but ADDS
         # $x '. ' (ISSN; isbd.py x:'.' for 730/830). $d/$g wrapped individually.
-        # $v ' ;' is 830-only (see 830). LoCPCC 730 aliases 240; K10Plus does NOT.
+        # $v ' ;' is 830-only (see 830). LoCPCC 730 aliases 240; DACH does NOT.
         '730' => {
             name  => 'Added Entry - Uniform Title',
             pchrs => {
@@ -1281,13 +1282,13 @@ sub rules {
             },
         },
 
-        # K10plus (isbd.py ISBD7XX): content subfields get a preceding
+        # DACH (isbd.py ISBD7XX): content subfields get a preceding
         # '. ' ($b $c $d $g $h $k $m $n $p $s $t) - same set as LoCPCC but
         # WITHOUT $1 (isbd.py 7XX has no embedded-field $1 key). PLUS the
         # compound ab ': ' (isbd.py ab:' :' - a $b DIRECTLY after $a gets ' :'
         # instead of the '. ' that a standalone $b would take, e.g.
         # $a heading : $b title). LoCPCC 760 has only `b => '. '`, so it
-        # renders $a$b with '. '; K10Plus mirrors isbd.py via the ab compound
+        # renders $a$b with '. '; DACH mirrors isbd.py via the ab compound
         # (compound takes precedence over the single `b` key in the engine).
         # $i (relationship info) ': ' via the shared display-text cb_pre
         # (isbd.py appends ':' to $i via its I_TAGS loop - same effect).
@@ -1433,7 +1434,7 @@ sub rules {
         },
 
         # Same as 110 but $v (volume) gets ' ;' punctuation (610 differs)
-        # K10plus (isbd.py ISBDX10, series): $c/$d/$u ADDED 2026-09-14 to match
+        # DACH (isbd.py ISBDX10, series): $c/$d/$u ADDED 2026-09-14 to match
         # the isbd.py X10 base (c:',', d:',', u:'.') - they were missing here
         # while present in the main-entry 110. $g grouping kept via gg key +
         # shared _decorate_x10_pre.
@@ -1493,11 +1494,11 @@ sub rules {
             cb_pre => 'Koha::Filter::MARC::ISBD4MARCPunctuation::_decorate_x10_pre',
         },
 
-        # K10plus (isbd.py ISBDX30, series added entry): same X30 block as 130
+        # DACH (isbd.py ISBDX30, series added entry): same X30 block as 130
         # but ADDS $v ' ;' (volume; isbd.py v:' ;' for 830) and $x '. ' (ISSN;
         # x:'.' for 830). $d/$g wrapped individually. NO $b group (isbd.py X30
         # omits $b). LoCPCC 830 has its own block with a $b cb_pre group;
-        # K10Plus mirrors isbd.py and drops it.
+        # DACH mirrors isbd.py and drops it.
         '830' => {
             name  => 'Series Added Entry - Uniform Title',
             pchrs => {
