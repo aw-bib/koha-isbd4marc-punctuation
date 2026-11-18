@@ -57,14 +57,14 @@ note( "Rule set under test: $SET" );
 
 my $R = Koha::Filter::MARC::ISBD4MARCPunctuation::rules_for($SET);
 
-# --- all 16 phase-1 note fields are defined ---
-for my $t ( qw(506 507 510 513 526 530 532 535 540 541 544 546 555 562 565 584) ) {
+# --- all 15 LoC/PCC phase-1 note fields are defined (532 excluded: D-A-CH) ---
+for my $t ( qw(506 507 510 513 526 530 535 540 541 544 546 555 562 565 584) ) {
     ok( defined $R->{$t}, "$t rules defined" );
 }
 
-# 532 is D-A-CH-only; confirm it's an explicit empty (name-only) block.
-ok( !exists $R->{532}{pchrs}, '532 has no pchrs (all N/A)' );
-ok( !exists $R->{532}{cb_pre}, '532 has no cb_pre (all N/A)' );
+# 532 is D-A-CH-only -> it must NOT be in the LoC/PCC set. Its empty (name-
+# only) block and pass-through behaviour are pinned in t/50-dach-03-exclusive.
+ok( !exists $R->{532}, '532 is not in the LoC/PCC set (D-A-CH-only field)' );
 
 # =====================================================================
 # 506 – Restrictions on Access Note (spec §3.9)

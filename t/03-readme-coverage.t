@@ -30,12 +30,24 @@ my $readme = File::Spec->catfile( $RealBin, '..', 'README.md' );
 ok( -f $readme, "README.md found at $readme" )
     or BAIL_OUT( 'README.md not found next to the repo root' );
 
-# Extract the MARC tags listed in the "Implemented fields:" section.
-# Only lines of the form "  - `NNN`: ..." are collected, so the helper stays
-# scoped to that one list regardless of where it sits in the file.
+# Extract the MARC tags listed in the "Implemented fields:" section ONLY.
+# Capturing is switched on by the "Implemented fields:" line and off by the
+# first blank line or heading after it, so the helper cannot pick up a tag
+# that is merely MENTIONED later in the README (e.g. the note that 249/532
+# are D-A-CH-only, which must NOT count as LoC/PCC coverage).
 open my $fh, '<', $readme or die "open $readme: $!";
 my @readme_tags;
+my $in_list = 0;
 while ( my $line = <$fh> ) {
+    if ( $line =~ /^Implemented fields:/ ) { $in_list = 1; next; }
+    next unless $in_list;
+    # Skip the blank line(s) between the heading and the first list item;
+    # once the list has STARTED, a blank line ends it.
+    if ( $line =~ /^\s*$/ ) {
+        last if @readme_tags;
+        next;
+    }
+    last if $line =~ /^#/;
     push @readme_tags, $1 if $line =~ /^- `(\d{3})`:/;
 }
 close $fh;
@@ -46,5 +58,12 @@ close $fh;
 # entry (doc without rule). Human-friendly diagnostic below.
 is_deeply( \@readme_tags, \@rule_tags,
     "README Implemented-fields list matches the $SET rule set (" . scalar(@rule_tags) . " tags)" );
+
+# Scope guard: the capture must stop at the end of the list. The README
+# mentions D-A-CH-only tags (249, 532) further down; if the capture leaked
+# past the list, those would show up here and the equality above would fail
+# for the WRONG reason. Pinning the absence keeps the diagnostic honest.
+ok( !grep( { $_ eq '532' or $_ eq '249' } @readme_tags ),
+    'README capture stops at the list end (no D-A-CH-only tags leaked in)' );
 
 done_testing();

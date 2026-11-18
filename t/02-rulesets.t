@@ -35,8 +35,8 @@ my $active = Koha::Filter::MARC::ISBD4MARCPunctuation::rules_for();
 ok( defined $active, 'rules_for() returns a defined hash' );
 is(
     scalar( keys %$active ),
-    96,
-    'rules_for() (active default LoC/PCC) has 96 field tags'
+    95,
+    'rules_for() (active default LoC/PCC) has 95 field tags'
 );
 my $active135 = $active->{'245'}{pchrs}{b};
 is( $active135, ' : ', 'active set 245 $b punctuation is " : " (LoC/PCC)' );
@@ -66,7 +66,7 @@ my $dach = Koha::Filter::MARC::ISBD4MARCPunctuation::rules_for('DACH');
 is(
     scalar( keys %$dach ),
     97,
-    'rules_for(DACH) has 97 field tags (96 shared + 249)'
+    'rules_for(DACH) has 97 field tags (95 shared + 249 + 532)'
 );
 is(
     ( exists $dach->{'249'} ? 1 : 0 ),
@@ -77,6 +77,11 @@ is(
     ( exists $dach->{'532'} ? 1 : 0 ),
     1,
     'DACH set contains the DACH-only field 532'
+);
+is(
+    ( exists $loc->{'532'} ? 1 : 0 ),
+    0,
+    'LoC/PCC set does NOT contain 532 (D-A-CH-only tag)'
 );
 is(
     $dach->{'100'}{pchrs}{n},

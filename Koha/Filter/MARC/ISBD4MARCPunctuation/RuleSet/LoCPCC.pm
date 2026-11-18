@@ -804,13 +804,9 @@ sub rules {
             },
         },
 
-        # ISBD punct: accessibility note — all subfields N/A (whole field is
-        # a single free-text note; NOT in the LoC/PCC spec, added in 2018 as
-        # a NEW MARC field; listed here as an explicit empty block per the
-        # D-A-CH isbd.py which also defines no punctuation for it).
-        '532' => {
-            name  => 'Accessibility Note',
-        },
+        # 532 (Accessibility Note) is NOT in the LoC/PCC set: it is not part
+        # of the reference document (a NEW MARC field added in 2018) and only
+        # the D-A-CH practice defines it -> empty block in RuleSet/DACH.pm.
 
         # ISBD punct (§3.15 reproduction note): $b '. ', $c ' : ', $d ', ',
         # $e/$m/$n '. ', $f '.()' (series statement wrapped in parens with a

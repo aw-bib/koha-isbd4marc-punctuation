@@ -83,22 +83,23 @@ A value that already ends in a colon never takes further stacked punctuation
 (after a trailing-colon suffix from C<post>); the next subfield's pchrs is
 skipped. Mirrors the reference loop in I<isbd.py>.
 
-=item punctuation ending in the SAME char (KNOWN GAP, deferred)
+=item punctuation ending in the SAME char (dedup, IMPLEMENTED)
 
-There is I<no> dedup when a value already ends in the I<same> punctuation
-character that is about to be added -- e.g. a value ending in C<'.'> when a
-C<'. '> is about to be appended produces a doubled C<'.. '>. This occurs in
-German (and other) cataloguing where abbreviations carry a mandatory
-terminal period (C<Aufl.>, C<Übers.>, C<Orig.>, C<Hrsg.>): the C<'.'> marks
-the abbreviation, while the C<'. '> we add marks the end of the sentence/
-unit -- the same character but a different function. German convention
-treats the combined form as a valid sentence and does I<not> duplicate the
-period (desired: C<2. Aufl.>), whereas a different punct (e.g. a colon)
-would stack cleanly (C<2. Aufl.:>). Handling this properly needs a
-"does the current value end in the char we are about to add? if so, avoid
-the duplicate" check analogous to the colon-skip -- a subtle, uncontracted
-case, so it is deliberately I<not> implemented yet. Documented as a gap;
-see also the inline note at step 4 of C<_decorate_field>.
+Step 4 of C<_decorate_field> suppresses the punctuation that is about to be
+added when the value already ends in the I<same> leading character -- e.g.
+a value ending in C<'.'> when a C<'. '> would follow is left alone
+(C<2. Aufl.>, not C<2. Aufl.. >). This occurs in German (and other)
+cataloguing where abbreviations carry a mandatory terminal period
+(C<Aufl.>, C<Übers.>, C<Orig.>, C<Hrsg.>): the C<'.'> marks the abbreviation,
+the C<'. '> we add marks the end of the unit -- same character, two
+functions, so the unit is not doubled. A I<different> punct (e.g. a colon)
+still stacks cleanly (C<2. Aufl.:>).
+
+The check generalises the colon-skip above to any leading character: it looks
+at the value decorated so far I<and> at the C<post> suffix (which is applied
+after step 4, so it must be considered here). Only the character that the
+punct I<starts> with is compared. Pinned in F<t/13-field-490.t>; the
+`.()' sentinel and the colon-skip are handled before this check.
 
 =back
 
@@ -839,8 +840,8 @@ sub _decorate_display_text_pre {
 
 Logging hook. By default prints to STDERR via C<warn>. In Koha
 this can be overridden (or the method can be monkey-patched) to
-use Koha's internal logging. Set C to enable
-debug output.
+use Koha's internal logging. Set C<$ENV{ISBD_DEBUG}> to enable
+debug output; C<'error'> level always logs.
 
 =cut
 

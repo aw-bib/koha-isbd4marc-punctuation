@@ -69,7 +69,6 @@ Implemented fields:
 - `525`: Supplement Note
 - `526`: Study Program Information Note
 - `530`: Additional Physical Form Available Note
-- `532`: Accessibility Note
 - `533`: Reproduction Note
 - `534`: Original Version Note
 - `535`: Location of Originals/Duplicates Note
@@ -120,6 +119,15 @@ Implemented fields:
 - `811`: Series Added Entry – Meeting Name
 - `830`: Series Added Entry – Uniform Title
 
+The list above is the `LoC/PCC` set. The `D-A-CH` set covers the same tags plus
+the following two, which exist only in that set:
+
+- `249`: Former Title
+- `532`: Accessibility Note
+
+They are listed separately because they are not `LoC/PCC` fields: `249` is a
+pre-246 variant used in German-speaking practice, and `532` is a MARC field
+added in 2018 that the PCC reference document does not cover.
 
 ### Why it does this
 
