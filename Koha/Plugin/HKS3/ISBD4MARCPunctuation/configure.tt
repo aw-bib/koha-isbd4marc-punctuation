@@ -1,0 +1,78 @@
+[% USE raw %]
+[% INCLUDE 'doc-head-open.inc' %]
+<title>Koha: ISBD4MARC Punctuation: Configuration</title>
+[% INCLUDE 'doc-head-close.inc' %]
+</head>
+
+<body>
+[% WRAPPER 'header.inc' %]
+    [% INCLUDE 'cat-search.inc' %]
+[% END %]
+
+[% WRAPPER 'sub-header.inc' %]
+    [% WRAPPER breadcrumbs %]
+        [% WRAPPER breadcrumb_item %]
+            <a href="/cgi-bin/koha/plugins/plugins-home.pl">Plugins</a>
+        [% END %]
+        [% WRAPPER breadcrumb_item bc_active=1 %]
+            <span>ISBD4MARC Punctuation configuration</span>
+        [% END %]
+    [% END #/ WRAPPER breadcrumbs %]
+[% END #/ WRAPPER sub-header.inc %]
+
+<div class="main container-fluid">
+    <div class="row">
+        <div class="col-sm-10 col-sm-push-1">
+            <h1>ISBD4MARC Punctuation configuration</h1>
+
+            [% IF saved %]
+                <div class="alert alert-info">Configuration saved.</div>
+            [% END %]
+
+            <form method="post" action="/cgi-bin/koha/plugins/run.pl">
+                <input type="hidden" name="class" value="[% CLASS %]" />
+                <input type="hidden" name="method" value="[% METHOD %]" />
+                <input type="hidden" name="save" value="1" />
+                [% INCLUDE 'csrf-token.inc' %]
+
+                <fieldset class="rows">
+                    <legend>Punctuation rules</legend>
+                    <ol>
+                        <li>
+                            <label for="ruleset">Rule set:</label>
+                            <select id="ruleset" name="ruleset">
+                                [% FOREACH set IN sets %]
+                                    [% IF set.id == config.ruleset %]
+                                        <option value="[% set.id | html %]" selected="selected">[% set.label | html %]</option>
+                                    [% ELSE %]
+                                        <option value="[% set.id | html %]">[% set.label | html %]</option>
+                                    [% END %]
+                                [% END %]
+                            </select>
+                            <div class="hint">The cataloguing practice whose punctuation rules are applied.</div>
+                        </li>
+                        <li>
+                            <label for="attach_mode">Punctuation placement:</label>
+                            <select id="attach_mode" name="attach_mode">
+                                [% FOREACH mode IN modes %]
+                                    [% IF mode.id == config.attach_mode %]
+                                        <option value="[% mode.id | html %]" selected="selected">[% mode.label | html %]</option>
+                                    [% ELSE %]
+                                        <option value="[% mode.id | html %]">[% mode.label | html %]</option>
+                                    [% END %]
+                                [% END %]
+                            </select>
+                            <div class="hint">Postfix appends punctuation to the end of a subfield; prefix prepends it to the following one, which avoids dangling punctuation when a subfield is not displayed.</div>
+                        </li>
+                    </ol>
+                </fieldset>
+
+                <fieldset class="action">
+                    <input type="submit" class="btn btn-primary" value="Save configuration" />
+                </fieldset>
+            </form>
+        </div>
+    </div>
+</div>
+
+[% INCLUDE 'intranet-bottom.inc' %]

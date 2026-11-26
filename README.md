@@ -286,6 +286,79 @@ marker, and regenerate the example report.
 `rules()` and register it in the rule-set table in
 `ISBD4MARCPunctuation.pm` (`%SETS`: identifier, `rules` and `label`).
 
+#### Building the plugin archive
+
+Koha installs a plugin from a `.kpz` archive - a zip whose paths start
+with `Koha/`. `configure.tt` lives in a *subdirectory* next to the
+plugin module, so an archive built by hand from a `*.pm` glob would
+silently omit it and the Configure screen would fail with a template
+error. Build the archive with:
+
+```bash
+./scripts/build_kpz.sh            # -> ../isbd4marcpunctuation.kpz
+./scripts/build_kpz.sh /tmp/out   # -> /tmp/out/isbd4marcpunctuation.kpz
+```
+
+The script packs the code, then **verifies the archive contents** and
+refuses to leave a stale or incomplete `.kpz` behind: it fails if the
+plugin module, the template, the filter or any rule-set module is
+missing, or if the archive holds paths outside `Koha/`.
+
+Template syntax errors are otherwise invisible until someone clicks
+Configure on a live server, because the test suite does not render the
+template. `./scripts/check_templates.sh` compiles every `.tt` under
+`Koha/` with the real Template Toolkit parser (Koha's shared includes
+are stubbed, as they are not part of this repository).
+
+#### Configuring the plugin
+
+Once installed, the plugin offers a **Configure** screen in the staff
+interface (Administration → Manage plugins → ISBD4MARC Punctuation →
+Actions → Configure). Two settings are stored for the **whole Koha
+instance** - the configuration is not per record:
+
+| Setting | Values | Default | Meaning |
+|---------|--------|---------|---------|
+| `ruleset` | `LoC/PCC`, `D-A-CH`, `None` | `LoC/PCC` | which rule set is applied |
+| `attach_mode` | `postfix`, `prefix` | `postfix` | where the punctuation is added |
+
+- `postfix` appends punctuation to the end of a subfield, depending on the
+  subfield that follows. `prefix` prepends it to the following subfield,
+  which avoids dangling punctuation when a subfield is not displayed.
+  It is clearer, but prefix punctuation is stored differently in the
+  record - choose one mode and keep it.
+- The settings are stored as one JSON value under the plugin's
+  `isbd_config` key. The filter reads them through the plugin object, so
+  a change applies without restarting Koha.
+- Nothing is ever stored unvalidated: an unknown rule set or mode falls
+  back to `LoC/PCC` / `postfix`.
+- If the plugin is disabled or has no stored settings, the filter falls
+  back to the same defaults, so the plugin stays usable without any
+  configuration.
+
+#### Trying it out
+
+On a freshly installed Koha, field `250` is a convenient way to see what
+the plugin does. Take a record with leader/18 set to `c` or `n` (the
+plugin changes nothing otherwise) and an edition statement such as
+`250 $a 2. Aufl. $b [Bearb.]`:
+
+| Rule set | Displays as |
+|----------|-------------|
+| `LoC/PCC` | `2. Aufl. [Bearb.]` |
+| `D-A-CH`  | `2. Aufl. / [Bearb.]` |
+
+Switch the rule set on the Configure screen and reload the record; the
+separator changes without a restart.
+
+Be aware that **most subfield differences between the rule sets are not
+visible in a stock Koha**: its intranet detail view renders only part of
+each field, and some of the fields the rules cover are not shown there at
+all. A record that looks identical under both rule sets is therefore not
+proof that nothing changed - the punctuation is applied to the record
+itself, and the rule-by-rule evidence lives in the test suite (`t/`).
+Sites with a customised XSLT will see a different subset still.
+
 ## What is not automated
 
 The plugin automates the mechanical punctuation rules according to

@@ -17,6 +17,11 @@ package Koha::Filter::MARC::ISBD4MARCPunctuation;
 
 use Modern::Perl;
 
+use Exporter qw(import);
+our @EXPORT_OK = qw(
+  ATTACH_MODES DEFAULT_ATTACH_MODE DEFAULT_RULESET
+  is_valid_attach_mode rulesets ruleset_label
+);
 use MARC::Field;
 
 use base qw(Koha::RecordProcessor::Base);
@@ -181,6 +186,39 @@ later on); the identifier is what the code uses.
 =cut
 
 use constant DEFAULT_RULESET => 'LoC/PCC';
+
+# The attach modes the engine implements. postfix is the default: punctuation
+# is appended to the subfield BEFORE the one that triggers it.
+use constant DEFAULT_ATTACH_MODE => 'postfix';
+use constant ATTACH_MODES => ( 'postfix', 'prefix' );
+
+sub is_valid_attach_mode {
+    my ($mode) = @_;
+    return 0 unless defined $mode;
+    return scalar grep { $_ eq $mode } ATTACH_MODES;
+}
+
+# Effective settings for this request: the plugin's, or the built-in defaults
+# when plugins are unavailable (none enabled, no DB, plugin not loaded).
+# Never dies - a broken plugin configuration must not break the display.
+# The plugin is found by its method, not its class name, so any class that
+# offers punctuation_config() is accepted (this is also what the tests stub).
+sub configured_settings {
+    my $available = eval {
+        require Koha::Plugins;
+        1;
+    };
+    return undef unless $available;
+
+    my @plugins =
+      eval { grep { $_->can('punctuation_config') } Koha::Plugins->get_enabled_plugins() };
+    return undef unless @plugins;
+
+    my $config = eval { $plugins[0]->punctuation_config };
+    return undef unless ref $config eq 'HASH';
+
+    return $config;
+}
 
 # Known rule sets: identifier => { rules => sub returning the rules hash,
 # label => display name for user-facing output }. The identifier is the
@@ -862,9 +900,22 @@ active rule set (see C<rules_for>).
 
 sub filter {
     my ( $self, $record, $attach_mode ) = @_;
-    $attach_mode //= 'postfix';
 
     return $record unless defined $record and ref($record) eq 'MARC::Record';
+
+    # Precedence: explicit argument > plugin configuration > built-in default.
+    # The argument is what an embedding caller asked for; the configuration is
+    # what the administrator chose; the default keeps the plugin usable with
+    # no configuration at all (and in a DB-less test run).
+    my $config = configured_settings() || {};
+    my $ruleset =
+      defined $config->{ruleset}
+      ? $config->{ruleset}
+      : DEFAULT_RULESET;
+    $attach_mode = $config->{attach_mode}
+      unless defined $attach_mode
+      and is_valid_attach_mode($attach_mode);
+    $attach_mode = DEFAULT_ATTACH_MODE unless is_valid_attach_mode($attach_mode);
 
     my $leader = $record->leader();
 
@@ -875,7 +926,7 @@ sub filter {
     if ($punctuation_omitted) {
         $self->log( 'debug', "Processing record (leader18=$leader18)" );
 
-        my $rules = rules_for();
+        my $rules = rules_for($ruleset);
 
         foreach my $field ( $record->fields ) {
             my $tag = $field->tag();
