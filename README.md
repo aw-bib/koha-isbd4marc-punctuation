@@ -9,6 +9,10 @@ The plugin registers the `ISBD4MARCPunctuation` filter during XSLT processing.
 
 - `Koha/Filter/MARC/ISBD4MARCPunctuation.pm`
 
+The hook was implemented in 
+https://bugs.koha-community.org/bugzilla3/show_bug.cgi?id=40972
+and released in 26.05 and pushed to 25.11.x
+
 ## Documentation
 
 ### What it does

@@ -25,7 +25,7 @@ use URI::Escape qw( uri_escape_utf8 );
 use Koha::Filter::MARC::ISBD4MARCPunctuation
   qw( ATTACH_MODES DEFAULT_ATTACH_MODE DEFAULT_RULESET is_valid_attach_mode rulesets ruleset_label );
 
-our $VERSION = "0.04";
+our $VERSION = "0.99";
 
 our $metadata = {
     name   => 'ISBD4MARC Punctuation',
